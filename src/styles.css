@@ -1,0 +1,143 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+@theme {
+    --color-dark: #0F0F0F;
+    --color-light: #E5E7EB;
+
+    --color-card-dark: #1A1A1A;
+    --color-card-light: #F9FAFB;
+
+    --color-text-dark: #E5E7EB;
+    --color-text-light: #0F0F0F;
+
+    --color-brand-color: var(--color-info);
+}
+
+/* Anemations */
+@keyframes sideLeft {
+  0%,100% { transform: translateX(-500px); opacity: 0; }
+  100% { transform: translateX(0px); opacity: 1;}
+}
+@keyframes sideRight {
+  0%,100% { transform: translateX(500px); opacity: 0; }
+  100% { transform: translateX(0px); opacity: 1;}
+}
+
+@keyframes down {
+  0%,100% { transform: translateY(-100%);  }
+  100% { transform: translateY(0px);}
+}
+@keyframes up {
+  0%,100% { transform: translateY(100%); }
+  100% { transform: translateY(0px);}
+}
+
+@keyframes opacity {
+  0%,100% { opacity: 0; }
+  100% { opacity: 1;}
+}
+
+
+/* Custom scrollbar styles using brand color */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-light dark:bg-dark;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-secondary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-secondary);
+}
+
+*{
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-brand-color) var(--color-light);
+  scroll-behavior: smooth;
+}
+
+
+@layer components {
+
+* {
+@apply scroll-smooth box-border m-0 p-0  font-sans ;
+}
+
+body {
+@apply bg-light dark:bg-dark;
+}
+
+.active-link {
+@apply   text-brand-color  md:border-b-2  ;
+}
+
+.ngCard {
+@apply  bg-card-light dark:bg-card-dark rounded-2xl shadow shadow-dark/30;
+}
+
+
+.ngLink {
+@apply link link-info;
+}
+
+.ngBtnIcon {
+@apply cursor-pointer bg-card-light dark:bg-card-dark hover:text-info duration-200 transition-colors;
+}
+
+.ngBtn {
+@apply btn btn-info;
+}
+
+.ngText {
+@apply  text-text-light dark:text-text-dark font-medium ;
+}
+
+.ng-input {
+@apply w-full input input-sm sm:input-md input-info bg-card-light  dark:bg-card-dark text-text-light dark:text-text-dark ;
+}
+.ng-checkbox {
+@apply checkbox checkbox-info ;
+}
+.ng-radio {
+@apply radio radio-info ;
+}
+
+.ng-select {
+@apply w-full  select select-sm sm:select-md select-info bg-card-light dark:bg-card-dark text-text-light dark:text-text-dark ;
+}
+
+.ng-textarea {
+@apply  w-full  textarea textarea-sm sm:textarea-md textarea-info bg-card-light  dark:bg-card-dark text-text-light dark:text-text-dark ;
+}
+
+
+  /* animation styles */
+  .animate-down {
+    animation:  down 0.5s  ease-in-out;
+  }
+  .animate-up {
+    animation:  up 0.5s  ease-in-out;
+  }
+  .animate-sideLeft {
+    animation:  sideLeft 0.4s  ease-in-out;
+  }
+  .animate-sideRight{
+    animation:  sideRight 0.4s  ease-in-out;
+  }
+  .animate-opacity{
+    animation:  opacity 0.8s  ease-in;
+  }
+
+}

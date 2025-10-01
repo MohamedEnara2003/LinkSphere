@@ -1,0 +1,1 @@
+export type ProfileListTypes =  'Posts' | 'About' | 'Photos' | 'Friends' 
