@@ -1,26 +1,33 @@
-import { Component, input } from '@angular/core';
-
+import { Component, inject, input } from '@angular/core';
 import { NgImage } from "../../../../../../shared/components/ng-image/ng-image";
 import { IUser } from '../../../../../../core/models/user.model';
+import { UserProfileService } from '../../services/user-profile.service';
+
 
 @Component({
 selector: 'app-user-picture',
-imports: [NgImage],
+imports: [NgImage ],
 template: `
         <app-ng-image
         [options]="{
-                src : '/man-empty-avatar-photo.webp',
-                alt : '',
-                placeholder : '/man-empty-avatar-photo.webp' ,
-                width  : 100,
-                height : 100,
-                class : styleClass() || 'size-50'
-    }"
-    />
+        src :  userProfileService.user?.picture || '',
+        alt : 'Profile picture ' + userProfileService.user?.userName || '',
+        placeholder : userProfileService.user?.placeholder  ,
+        width  : 200,
+        height : 200,
+        class : styleClass() || 'size-50',
+        loading : 'eager' ,
+        decoding : 'async' ,
+        fetchpriority : 'high', 
+        }"
+        [isPreview]="isPreview()"
+        />
 `
 })
 export class UserPicture {
-styleClass = input('');
-user = input<IUser>() ;
+userProfileService = inject(UserProfileService);
+styleClass = input<string>('');
+isPreview = input<boolean>(false);
+
 
 }

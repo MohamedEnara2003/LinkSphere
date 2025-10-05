@@ -10,7 +10,7 @@ import { btnOpenModelUpsertPost } from "../../posts/components/btn-open-model-up
   imports: [ProfileCard, Posts, btnOpenModelUpsertPost],
   template: `
   
-<section class="relative w-full grid grid-cols-1 md:grid-cols-4 gap-5 p-1">
+<section class="relative w-full grid grid-cols-1 md:grid-cols-4 gap-5 p-1 md:p-4">
   
   <!-- ProfileCard -->
   <app-profile-card 

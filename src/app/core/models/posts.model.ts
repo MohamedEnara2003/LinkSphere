@@ -10,27 +10,25 @@ export interface IUserTag {
   picture?: string;
 }
 
+
+export interface ICreatedBy{
+  id: string;
+  userName: string;
+  picture?: string;
+  createdAt?: string; // ISO string من السيرفر
+}
 // ---- Comment ----
 export interface IComment {
 id: string;
 content: string;
-createdBy: {
-id: string;
-userName: string;
-picture?: string;
-};
-createdAt: string; // ISO string من السيرفر
+createdBy: ICreatedBy;
+createdAt?: string; // ISO string من السيرفر
 }
 
 // ---- Post ----
 export interface IPost {
   id: string;
-  createdBy: {
-    id: string;
-    userName: string;
-    picture?: string;
-  };
-
+  createdBy: ICreatedBy;
   content?: string;
   attachments?: string[];
   assetsFolderId: string;
@@ -81,4 +79,20 @@ export interface IFreezeUnfreezeResponse {
   message: string; // "Post frozen" | "Post unfrozen"
   postId: string;
   availability: Availability;
+}
+
+
+export interface ICreatePost {
+  availability?: 'public' | 'private' | 'friends';
+  content?: string;
+  attachments?: File[];
+  tags?: string[];
+}
+
+export interface IUpdatePost {
+  content?: string;
+  attachments?: File[];
+  removedAttachments?: string[];
+  tags?: string[];
+  removedTags?: string[];
 }

@@ -10,8 +10,19 @@ export const authRoutes: Routes = [
   {path : 'login'   , 
   loadComponent : () => import('../auth/pages/login/login').then((c) => c.Login)
   },
-  {path : 'verify-otp'   ,
-  loadComponent : () => import('../auth/pages/verify-otp/verify-otp').then((c) => c.VerifyOTP)
+
+  {path : 'confirm-email'   ,
+  loadComponent : () => import('../auth/pages/confirm-email/confirm-email').then((c) => c.confirmEmail)
+  },
+
+  {path : 'forget-password'   ,
+  loadComponent : () => import('../auth/pages/forget-password/forget-password')
+  .then((c) => c.ForgetPassword)
+  },
+  
+  {path : 'change-forget-password'   ,
+  loadComponent : () => import('../auth/pages/change-forget-password/change-forget-password')
+  .then((c) => c.changeForgetPassword)
   },
 
 {path : '' , redirectTo : 'register', pathMatch :'full'},

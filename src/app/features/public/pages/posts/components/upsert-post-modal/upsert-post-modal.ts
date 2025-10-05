@@ -1,22 +1,22 @@
-import { afterNextRender, ChangeDetectionStrategy, Component, inject, OnDestroy, PLATFORM_ID, signal } 
+import { afterNextRender, ChangeDetectionStrategy, Component, inject, OnDestroy} 
 from '@angular/core';
 
-import { DOCUMENT, isPlatformBrowser} 
-from '@angular/common';
 
 import { RouterModule } from '@angular/router';
 import { UpserPostForm } from "./components/upsert-post-form";
 import { UserPicture } from "../../../profile/components/user-picture/user-picture";
-
-
+import { DomService } from '../../../../../../core/services/dom.service';
 
 @Component({
-  selector: 'app-upsert-post-modal',
+  selector: 'app-upsert-post-model',
   imports: [RouterModule, UpserPostForm, UserPicture],
   template: `
-  <section class="size-full fixed top-0 left-0 flex justify-center items-center  z-20">
+  <section class="w-full h-svh fixed top-0 left-0 flex justify-center items-center  z-20">
 
-  <article class="relative w-full md:w-2xl 2xl:w-4xl h-full md:h-[90%] ngCard 
+  <article 
+  role="dialog"
+  aria-modal="true" 
+  class="relative w-full md:w-2xl 2xl:w-4xl h-full md:h-[90%] ngCard 
   rounded-none md:rounded-2xl border border-brand-color/10  overflow-hidden
   p-5 z-10 animate-sideLeft space-y-2">
 
@@ -32,7 +32,7 @@ import { UserPicture } from "../../../profile/components/user-picture/user-pictu
 
   <h2 class="ngText text-xl">Create Post</h2>
 
-  <button [routerLink]="['/public' ,{ outlets: { model: null } }]"
+  <button 
   type="submit" class="ngBtn btn-sm">
   Post
   </button>
@@ -40,9 +40,7 @@ import { UserPicture } from "../../../profile/components/user-picture/user-pictu
 </header>
 
 <div class="flex items-center gap-2">
-<app-user-picture 
-styleClass="size-10 object-cover  rounded-full cursor-pointer shadow shadow-dark"
-/>
+<app-user-picture styleClass="size-10 object-cover  rounded-full shadow shadow-dark"/>
 
 <h2 class="card-title ngText capitalize"> Mohamed enara</h2>
 </div>
@@ -58,27 +56,18 @@ styleClass="size-10 object-cover  rounded-full cursor-pointer shadow shadow-dark
 `,
 changeDetection : ChangeDetectionStrategy.OnPush
 })
-export class UpsertPostModal implements  OnDestroy{
-private document = inject(DOCUMENT);
-private platform_id = inject(PLATFORM_ID);
-private isBrowser = signal<boolean>(isPlatformBrowser(this.platform_id));
+export class UpsertPostModel implements  OnDestroy{
+  
+  #domService = inject(DomService);
 
 
-constructor(){
-  afterNextRender(() => {
-  this.setBodyOverflow('hidden');
-  })
-}
-
-
-private setBodyOverflow(value: 'hidden' | 'auto'): void {
-  if (this.isBrowser()) {  
-  this.document.body.style.overflow = value;
+  constructor(){
+  afterNextRender(() => this.#domService.setBodyOverflow('hidden'))
   }
-}
+
 
 ngOnDestroy(): void {
-this.setBodyOverflow('auto');
+this.#domService.setBodyOverflow('auto');
 }
 
 

@@ -1,4 +1,4 @@
-import { Injectable, signal, computed } from "@angular/core";
+import { Injectable, signal, computed, linkedSignal } from "@angular/core";
 
 @Injectable({ providedIn: 'root' })
 export class UploadService {
@@ -7,10 +7,22 @@ export class UploadService {
   #files = signal<File[]>([]);
   #previews = signal<string[]>([]);
 
-  // computed signals
-  files = computed(() => this.#files());
-  previews = computed<string[]>(() => this.#previews());
 
+  public get files(): File[] {
+  return this.#files();
+  }
+
+  public get previews(): string[] {
+  return this.#previews();
+  }
+
+  public set setFiles(files: File[]) {
+  this.#files.set(files);
+  }
+  public set setPreviews(previews: string[]) {
+    this.#previews.set(previews);
+  }
+  
 
   /**
    * رفع الملفات من input
@@ -30,7 +42,6 @@ export class UploadService {
 /**
 * إرجاع ملف واحد أو مجموعة ملفات
 */
-
   getFiles(): File | File[] | undefined {
     const currentFiles = this.#files();
     if (currentFiles.length === 0) return;
@@ -41,7 +52,7 @@ export class UploadService {
    * إنشاء Previews للملفات (صور فقط)
    */
   private generatePreviews(files: File[]): void {
-    const previews: string[] = [];
+ 
 
     files.forEach(file => {
     if (file.type.startsWith('image/')) {
@@ -49,8 +60,8 @@ export class UploadService {
         reader.onload = (e: ProgressEvent<FileReader>) => {
         const result = e.target?.result;
         if (typeof result === 'string') {
-            previews.push(result);
-            this.#previews.set([...previews]);
+
+          this.#previews.set([...this.#previews(), result]);
         }
         };
         reader.readAsDataURL(file);

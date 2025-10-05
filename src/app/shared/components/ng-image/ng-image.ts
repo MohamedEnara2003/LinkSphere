@@ -1,5 +1,6 @@
-import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { afterNextRender, Component, DOCUMENT, inject, input, model, PLATFORM_ID, signal } from '@angular/core';
+import { CommonModule,  } from '@angular/common';
+import { Component, inject, input, model, signal } from '@angular/core';
+import { DomService } from '../../../core/services/dom.service';
 
 export interface ImageOption {
   src: string;
@@ -25,9 +26,10 @@ export interface ImageOption {
   imports: [CommonModule],
   template: `
     <figure class="size-full flex flex-col">
+
       <!-- Normal Image -->
       <img
-        [src]="options().src"
+        [src]="options().src || options().placeholder"
         [srcset]="options().srcset || ''"
         [sizes]="options().sizes || ''"
         [alt]="options().alt"
@@ -43,7 +45,7 @@ export interface ImageOption {
         (error)="onError()"
         [class]="isPreview() ? 'cursor-zoom-in' : '' "
       />
-
+     
       <!-- Figcaption -->
       <figcaption
         [class]="options().figcaption ? (options().figcaptionClass || 'ngText') : 'sr-only'"
@@ -54,8 +56,8 @@ export interface ImageOption {
 
     <!-- Fullscreen Preview -->
     @if (preview()) {
-      <div
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm
+      <section
+        class="fixed top-0 inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm
         transition-opacity duration-300 ease-out animate-fadeIn"
         role="dialog"
         aria-modal="true"
@@ -76,21 +78,20 @@ export interface ImageOption {
         <img
           [src]="options().src"
           [alt]="options().alt"
+          [loading]="options().loading || 'lazy'"
+          [decoding]="options().decoding || 'async'"
+          [attr.fetchpriority]="options().fetchpriority || 'auto'"
+          [attr.referrerpolicy]="options().referrerpolicy || 'no-referrer'"
           class="max-h-[90vh] max-w-[95vw] object-contain rounded shadow-lg cursor-zoom-out
-          transition-transform duration-300 ease-out animate-scaleIn"
+          transition-transform duration-300 ease-out animate-scaleIn "
           (click)="closePreview()"
         />
-      </div>
+      </section>
     }
   `,
 })
 export class NgImage {
-  
-private document = inject(DOCUMENT);
-private platform_id = inject(PLATFORM_ID);
-private isBrowser = signal<boolean>(isPlatformBrowser(this.platform_id));
-
-
+  #domService = inject(DomService);
   public options = model.required<ImageOption>();
 
   isPreview = input<boolean>(false);
@@ -100,26 +101,20 @@ private isBrowser = signal<boolean>(isPlatformBrowser(this.platform_id));
   onError(): void {
     this.options.update((prev) => ({
       ...prev,
-      src: prev.placeholder || '/placeholder-img.webp',
+      src: prev.placeholder || '/user-placeholder.jpg',
     }));
   }
 
 openPreview(): void {
   this.preview.set(true);
-  this.setBodyOverflow('hidden')
+  this.#domService.setBodyOverflow('hidden')
 }
 
 closePreview(): void {
   this.preview.set(false)
-  this.setBodyOverflow('auto')
+  this.#domService.setBodyOverflow('auto')
 }
 
-
-private setBodyOverflow(value: 'hidden' | 'auto'): void {
-  if (this.isBrowser() ) {  
-  this.document.body.style.overflow = value;
-  }
-}
 
 
 }

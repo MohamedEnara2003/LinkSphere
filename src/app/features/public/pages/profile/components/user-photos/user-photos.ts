@@ -26,6 +26,7 @@ import { NgImage } from "../../../../../../shared/components/ng-image/ng-image";
                 height : 600,
                 class : 'w-full h-40 sm:h-48 object-cover rounded-xl transition-transform duration-500 group-hover:scale-105'
               }"
+              [isPreview]="true"
             />
             <figcaption class="sr-only">
               {{ photo.alt }}

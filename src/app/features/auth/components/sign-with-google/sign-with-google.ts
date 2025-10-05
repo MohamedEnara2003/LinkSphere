@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { AuthService } from '../../service/auth.service';
 
 
 
@@ -15,10 +16,10 @@ Sign in with Google
 `,
 })
 export class signInWithGoogle {
-
-
+    #authService = inject(AuthService);
 
     signInWithGoogle() : void {
-    
+    this.#authService.signUpWithGmail('').subscribe()
     }
+
 }

@@ -54,7 +54,7 @@ template: `
     
 <ul  aria-label="Menu Product Images" role="menu" 
 class="w-full h-45 overflow-y-auto grid grid-cols-2 gap-2">
-@for (item of uploadService.previews(); let i = $index ; track item) {
+@for (item of uploadService.previews; let i = $index ; track item) {
 <li  class="w-full  ">
         <app-ng-image
         [options]="{

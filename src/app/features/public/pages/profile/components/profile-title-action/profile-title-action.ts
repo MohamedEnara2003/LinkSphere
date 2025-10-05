@@ -17,6 +17,6 @@ See all {{title()}}
 `,
 })
 export class profileTitleAction  {
-    title = input.required();
-    query = input.required<ProfileListTypes>();
+title = input.required();
+query = input.required<ProfileListTypes>();
 }

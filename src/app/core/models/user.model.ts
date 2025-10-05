@@ -36,18 +36,45 @@ export interface IUser {
 
   email: string;
   phone?: string;
-  address?: string;
 
   gender: GenderEnum;
   role: RoleEnum;
 
-  provider: ProviderEnum;
-
   picture?: string;
+  placeholder? : string ,
+  
   coverImages?: string[];
 
   friends?: IFriend[];
-
-  createdAt: Date;
-  updatedAt?: Date;
 }
+
+export interface UnfreezePayload {
+  email: string;
+  password: string;
+}
+
+
+export interface FriendRequestResponse {
+  requestId: string;
+}
+
+
+export interface IUpdateBasicInfo {
+  userName?: string;
+  gender?: string;
+  phone?: string;
+}
+
+export interface IUpdateEmail {
+  newEmail: string;
+}
+
+export interface IConfirmUpdateEmail {
+  otp: string;
+}
+export interface ChangePasswordDto {
+  oldPassword: string;
+  newPassword: string;
+  confirmNewPassword: string;
+}
+

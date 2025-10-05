@@ -64,3 +64,24 @@ export interface IFreezeUnfreezeCommentResponse {
   freezedAt?: string;
   restoredAt?: string;
 }
+
+
+export interface ICreateComment {
+  content?: string;
+  image?: File;
+  tags?: string[];
+}
+
+export interface IUpdateComment {
+  content?: string;         // نص التعليق الجديد
+  image?: File;             // صورة جديدة للتعليق (اختياري)
+  removedTags?: string[];   // التاجات اللي عايز تشيلها (اختياري)
+  tags?: string[];          // التاجات الجديدة (اختياري)
+  removeAttachment?: boolean; // لتحديد حذف الصورة القديمة قبل رفع جديدة
+}
+
+export interface IReplyComment {
+  content?: string;
+  image?: File;
+  tags?: string[];
+}

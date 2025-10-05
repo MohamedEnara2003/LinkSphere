@@ -1,21 +1,21 @@
 import { Component } from '@angular/core';
-import { NgImage } from "../../../../../../shared/components/ng-image/ng-image";
 import { BackLink } from "../../../../../../shared/components/links/back-link";
+import { RouterModule } from '@angular/router';
+import { NgImage } from "../../../../../../shared/components/ng-image/ng-image";
+
 
 @Component({
 selector: 'app-cover-image',
-imports: [NgImage, BackLink],
+imports: [BackLink, RouterModule, NgImage],
 template: `
 
-<header 
-  class="relative w-full h-[30svh] sm:h-[45svh] md:h-[50svh] overflow-hidden rounded-b-2xl shadow-md">
-
+<header class="relative w-full h-[30svh] sm:h-[45svh] md:h-[50svh] overflow-hidden rounded-b-2xl shadow-md">
 
 <nav class="w-full flex justify-between items-center absolute top-0 left-0 p-2 py-3 z-10">
 <app-back-link />
-
-  <label 
-    for="Upload-cover-image" 
+  <button 
+    [routerLink]="['/public/profile' , '68df351b8d9d2c0c94c98ef6' , 'update']"
+    [queryParams]="{edit : 'cover-images'}"
     class="cursor-pointer flex items-center gap-2
     px-3 py-2 bg-white/80 backdrop-blur-md rounded-lg shadow-md
     text-dark hover:bg-white transition-colors duration-300">
@@ -40,24 +40,25 @@ template: `
             clip-rule="evenodd" />
     </svg>
     <span class="text-sm font-medium  hidden md:inline">Add cover photo </span>
-  </label>
+  </button>
 </nav>
 
+    <app-ng-image
+        [options]="{
+        src :   'cover-image.jpg',
+        alt : 'Profile picture ' ,
+        width  : 200,
+        height : 200,
+        class : 'size-full object-cover rounded-b-2xl transition-transform duration-500 hover:scale-105',
+        loading : 'eager' ,
+        decoding : 'async' ,
+        fetchpriority : 'high', 
+        }"
+        [isPreview]="true"
 
-    <!-- Cover Image -->
-  <app-ng-image
-    [options]="{
-      src : '/cover-image.jpg',
-      alt : 'Cover image',
-      width : 1200,
-      height : 600,
-      class : 'size-full object-cover rounded-b-2xl transition-transform duration-500 hover:scale-105'
-    }"
-    [isPreview]="true"
-  />
+        />
 
 
-  <input type="file" id="Upload-cover-image" class="hidden" />
 </header>
 
 `,  

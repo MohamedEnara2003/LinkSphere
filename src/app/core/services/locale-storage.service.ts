@@ -2,16 +2,13 @@ import { inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 
 @Injectable({ providedIn: 'root' })
+
 export class StorageService {
-  #isBrowser = signal<boolean>(false);
   #platformId = inject(PLATFORM_ID);
-  
-  constructor() {
-  this.#isBrowser.set(isPlatformBrowser(this.#platformId));
-  }
+  #isBrowser = signal<boolean>(isPlatformBrowser(this.#platformId));
 
   setItem<T>(key: string, value: T): void {
-    if (!this.#isBrowser()) return ;
+    if (!this.#isBrowser()) return;
     localStorage.setItem(key, JSON.stringify(value));
   }
 

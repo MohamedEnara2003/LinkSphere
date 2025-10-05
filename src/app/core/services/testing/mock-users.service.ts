@@ -16,12 +16,12 @@ export class MockUsersService {
       email: "mohamedenara2003@example.com",
       gender: GenderEnum.male,
       role: RoleEnum.user,
-      provider: ProviderEnum.system,
       picture: "",
-      coverImages: [],
+      coverImages: [
+      '/cover-image.jpg',
+      '/cover-image.jpg',
+      ],
       friends: [],
-      createdAt: new Date(),
-      updatedAt: new Date()
     },
     {
       _id: "2",
@@ -32,22 +32,32 @@ export class MockUsersService {
       email: "sara.hassan@example.com",
       gender: GenderEnum.female,
       role: RoleEnum.admin,
-      provider: ProviderEnum.google,
       picture: "",
       coverImages: [],
       friends: [],
-      createdAt: new Date(),
-      updatedAt: new Date()
     }
   ])
 
 
-getUserById(id: string): Observable<IUser> {
-return this.users$.pipe(
-    map(users => users.find(user => user._id === id)),
-    filter((user): user is IUser => !!user) // يتأكد إن القيمة موجودة
-);
+getUserById(id: string): Observable<IUser | null> {
+  return this.users$.pipe(
+    map(users => users.find(user => user._id === id) || null),
+    map(user =>
+      user
+        ? {
+            ...user,
+            picture:
+              user.picture ||
+              (user.gender === GenderEnum.male
+                ? '/man-empty-avatar-photo.webp'
+                : '/woman-empty-avatar-photo.webp'),
+          }
+        : null
+    )
+  );
 }
+
+
 
 
 

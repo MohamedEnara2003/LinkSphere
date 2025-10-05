@@ -4,12 +4,11 @@
 ## Packages 
 - npm i tailwindcss @tailwindcss/postcss postcss --force
 - npm i -D daisyui@latest
-
-
-## Translation
 - npm i @ngx-translate/core
 - npm i @ngx-translate/http-loader
+- npm i swiper 
 
-## State Managment 
-- npm install @ngrx/signals --save
+
+
+
 

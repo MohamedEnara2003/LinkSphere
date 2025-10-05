@@ -1,25 +1,35 @@
 import { Component, inject } from '@angular/core';
-import { MockUsersService } from '../../../../../../core/services/testing/mock-users.service';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { IUser } from '../../../../../../core/models/user.model';
 import { RouterModule } from '@angular/router';
-import { UserPicture } from "../../../profile/components/user-picture/user-picture";
+import { NgImage } from "../../../../../../shared/components/ng-image/ng-image";
+import { UserProfileService } from '../../../profile/services/user-profile.service';
+
 
 
 
 @Component({
   selector: 'app-btn-open-model-upsert-post',
-  imports: [ RouterModule, UserPicture],
+  imports: [RouterModule, NgImage],
   template: `
 
 <article class="w-full  rounded-2xl ngCard p-4  flex justify-between items-center ">
 
     <div class="flex items-center gap-2 ">
-    <app-user-picture 
-    [routerLink]="['/public/profile/' , user()?._id]"
-    [user]="user()"
-    styleClass="object-cover size-10  rounded-full cursor-pointer shadow shadow-dark" />
 
+        <app-ng-image
+        [routerLink]="['/public/', 'profile', userProfileService.user?._id ]"
+        [options]="{
+        src :  userProfileService.user?.picture || ''  ,
+        placeholder : userProfileService.user?.placeholder || '' ,
+        alt : 'Profile Picture ' + userProfileService.user?.userName,
+        width  : 25,
+        height : 25,
+        loading : 'eager' ,
+        decoding : 'async' ,
+        fetchpriority : 'high', 
+        class : 'size-10 object-cover  rounded-full shadow-md hover:scale-105 transition-transform duration-300 cursor-pointer'
+        }"
+        />
+        
     <button 
     [routerLink]="['/public' ,{ outlets: { 'model': ['upsert-post'] } }]" 
     queryParamsHandling="merge"
@@ -44,6 +54,6 @@ class="size-6 text-brand-color">
 `,
 })
 export class btnOpenModelUpsertPost {
-    private readonly  mockUsersService = inject(MockUsersService)
-    user  = toSignal<IUser>(this.mockUsersService.getUserById('1'));
+userProfileService = inject(UserProfileService);
+
 }

@@ -24,12 +24,12 @@ export class MockPostsService {
       tags: [
     { id: "2", name: "Sara Hassan", picture: "https://randomuser.me/api/portraits/women/2.jpg" }
       ],
-      likes: ["2"],
+      likes: [],
       lastComment: {
         id: "comment1",
         content: "Welcome!",
         createdBy: {
-          id: "2",
+          id: "",
           userName: "sara.hassan",
           picture: "https://randomuser.me/api/portraits/women/2.jpg"
         },
@@ -51,7 +51,26 @@ export class MockPostsService {
       availability: "friends",
       allowComments: "allow",
       tags: [],
-      likes: ["1"],
+      likes: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      id: "post3",
+      createdBy: {
+        id: "3",
+        userName: "mohamed.enara",
+        picture: "/man-empty-avatar-photo.webp"
+      },
+      content: "I'm going to the beach!",
+      attachments: [
+        '/1747983819132_476165657_1152867902877267_3612919625248808281_n.webp',
+      ],
+      assetsFolderId: "folder3",
+      availability: "public",
+      allowComments: "allow",
+      tags: [],
+      likes: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }

@@ -1,3 +1,8 @@
 {
-    
+  "messages": {
+    "required": "This field is required",
+    "invalid": "This field not a valid",
+    "email": "Is not a valid email address",
+    "passwordMismatch": "Passwords do not match"
+  }
 }

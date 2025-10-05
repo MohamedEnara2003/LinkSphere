@@ -6,10 +6,10 @@
 
 @theme {
     --color-dark: #0F0F0F;
-    --color-light: #E5E7EB;
+    --color-light: #F9FAFB ;
 
     --color-card-dark: #1A1A1A;
-    --color-card-light: #F9FAFB;
+    --color-card-light: #E5E7EB;
 
     --color-text-dark: #E5E7EB;
     --color-text-light: #0F0F0F;
@@ -18,6 +18,15 @@
 }
 
 /* Anemations */
+
+
+  @keyframes iconShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  50% { transform: translateX(2px); }
+  75% { transform: translateX(-2px); }
+  }
+
 @keyframes sideLeft {
   0%,100% { transform: translateX(-500px); opacity: 0; }
   100% { transform: translateX(0px); opacity: 1;}
@@ -105,7 +114,8 @@ body {
 }
 
 .ng-input {
-@apply w-full input input-sm sm:input-md input-info bg-card-light  dark:bg-card-dark text-text-light dark:text-text-dark ;
+@apply w-full input input-sm sm:input-md input-info bg-card-light  dark:bg-card-dark 
+text-text-light dark:text-text-dark  ;
 }
 .ng-checkbox {
 @apply checkbox checkbox-info ;
@@ -137,7 +147,10 @@ body {
     animation:  sideRight 0.4s  ease-in-out;
   }
   .animate-opacity{
-    animation:  opacity 0.8s  ease-in;
+    animation:  opacity 0.8s  ease-in-out;
+  }
+  .animate-iconShake{
+    animation:  iconShake 0.3s  ease-in-out;
   }
 
 }

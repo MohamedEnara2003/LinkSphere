@@ -1,7 +1,8 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { DestroyRef, inject, Injectable } from '@angular/core';
 import { Observable, take } from 'rxjs';
 import { environment } from '../../../../environments/environment.development';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 
 @Injectable({
@@ -10,18 +11,22 @@ import { environment } from '../../../../environments/environment.development';
 export class SingleTonApi {
 
 #httpClient = inject(HttpClient);  
+#destroyRef = inject(DestroyRef);  
 #baseUrlApi : string = environment.apiUrl;
 
 
-find<G>(routeName : string ) : Observable<G> {
+public find<G>(routeName : string ) : Observable<G> {
 return this.#httpClient.get<G>(`${this.#baseUrlApi}${routeName}` , {
 withCredentials : true
-});
+}).pipe(
+takeUntilDestroyed(this.#destroyRef)
+);
 }
+
 findById<G>(routeName : string , id : string | number) : Observable<G> {
 return this.#httpClient.get<G>(`${this.#baseUrlApi}${routeName}/${id}` , {
 withCredentials : true,
-});
+}).pipe(takeUntilDestroyed(this.#destroyRef));
 }
 create<G>(routeName : string , data? : unknown) : Observable<G> {
 return this.#httpClient.post<G>(`${this.#baseUrlApi}${routeName}`, data , {
@@ -31,14 +36,29 @@ take(1),
 );
 }
 
-update<G>(routeName : string , data : unknown , id : string | number) : Observable<G> {
+public update<G>(routeName : string , data : unknown , id : string | number) : Observable<G> {
 return this.#httpClient.put<G>(`${this.#baseUrlApi}${routeName}/${id}`, data ,{
 withCredentials : true
 });
 }
     
 
-uploadImage<G>(routeName : string , files : File[]) : Observable<G> {
+public patchById<G>(routeName: string, data: unknown, id: string | number): Observable<G> {
+  return this.#httpClient.patch<G>(`${this.#baseUrlApi}${routeName}/${id}`, data, {
+    withCredentials: true,
+  });
+}
+
+
+public patch<G>(routeName: string, data?: unknown): Observable<G> {
+  return this.#httpClient.patch<G>(`${this.#baseUrlApi}${routeName}`, data, {
+    withCredentials: true,
+  });
+}
+
+    
+
+public uploadImage<G>(routeName : string , files : File[]) : Observable<G> {
 const formData = new FormData();
 files.forEach((file) => {
 formData.append('image' , file);
@@ -47,24 +67,25 @@ return this.#httpClient.post<G>(`${this.#baseUrlApi}${routeName}`, formData  , {
 withCredentials : true,
 });
 }
-deleteImage(routeName : string , id : string) : Observable<void> {
+
+public deleteImage(routeName : string , id : string) : Observable<void> {
 return this.#httpClient.delete<void>(`${this.#baseUrlApi}${routeName}` , {
 withCredentials : true,
 body : {id}
 });
 }
 
-    deleteById<G>(routeName : string , id : string |  number) : Observable<G> {
-    return this.#httpClient.delete<G>(`${this.#baseUrlApi}${routeName}/${id}` , {
-    withCredentials : true
-    });
-    }
+public deleteById<G>(routeName : string , id : string |  number) : Observable<G> {
+return this.#httpClient.delete<G>(`${this.#baseUrlApi}${routeName}/${id}` , {
+withCredentials : true
+});
+}
 
-    deleteByIdWithBody<G>(routeName : string , data? : unknown) : Observable<G> {
-    return this.#httpClient.delete<G>(`${this.#baseUrlApi}${routeName}` , {
-    withCredentials : true,
-    body : data
-    });
-    }
-    
+public deleteByIdWithBody<G>(routeName : string , data? : unknown) : Observable<G> {
+return this.#httpClient.delete<G>(`${this.#baseUrlApi}${routeName}` , {
+withCredentials : true,
+body : data
+});
+}
+
 }
