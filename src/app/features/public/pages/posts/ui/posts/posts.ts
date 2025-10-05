@@ -1,8 +1,9 @@
 import { Component, inject } from '@angular/core';
 import { PostCard } from "../../components/post-card/ui/post-card";
-import { MockPostsService } from '../../../../../../core/services/testing/mock-posts.service';
+
 import { IPost } from '../../../../../../core/models/posts.model';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { MockPostsService } from '../../../../../../core/services/testing/mock-posts.service';
 
 
 @Component({

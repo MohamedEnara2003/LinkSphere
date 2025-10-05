@@ -1,6 +1,5 @@
 import { Component, inject, input } from '@angular/core';
 import { NgImage } from "../../../../../../shared/components/ng-image/ng-image";
-import { IUser } from '../../../../../../core/models/user.model';
 import { UserProfileService } from '../../services/user-profile.service';
 
 
@@ -10,9 +9,9 @@ imports: [NgImage ],
 template: `
         <app-ng-image
         [options]="{
-        src :  userProfileService.user?.picture || '',
-        alt : 'Profile picture ' + userProfileService.user?.userName || '',
-        placeholder : userProfileService.user?.placeholder  ,
+        src :  userProfileService.user()?.picture || '',
+        alt : 'Profile picture ' + userProfileService.user()?.userName || '',
+        placeholder : userProfileService.user()?.placeholder  ,
         width  : 200,
         height : 200,
         class : styleClass() || 'size-50',

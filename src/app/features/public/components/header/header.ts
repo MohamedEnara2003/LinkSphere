@@ -51,13 +51,15 @@ md:sticky md:top-0 ">
 
 })
 export class Header {
-  userProfileService = inject(UserProfileService);
+userProfileService = inject(UserProfileService);
 
 isProfile = signal<boolean>(false);
 
 profileLink = computed(() => {
-  return !this.isProfile() 
-    ? '/public/profile/' + this.userProfileService.user()?._id 
+  const userId = this.userProfileService.user()?._id  ;
+
+  return (!this.isProfile() && userId)
+    ? '/public/profile/' + userId
     : '/public';     
 });
 

@@ -14,13 +14,13 @@ import { UserProfileService } from '../../../profile/services/user-profile.servi
 <article class="w-full  rounded-2xl ngCard p-4  flex justify-between items-center ">
 
     <div class="flex items-center gap-2 ">
-
+        @let userId = userProfileService.user()?._id || '';
         <app-ng-image
-        [routerLink]="['/public/', 'profile', userProfileService.user?._id ]"
+        [routerLink]="userId ? ['/public/', 'profile', userId] : null"
         [options]="{
-        src :  userProfileService.user?.picture || ''  ,
-        placeholder : userProfileService.user?.placeholder || '' ,
-        alt : 'Profile Picture ' + userProfileService.user?.userName,
+        src :  userProfileService.user()?.picture || ''  ,
+        placeholder : userProfileService.user()?.placeholder || '' ,
+        alt : 'Profile Picture ' + userProfileService.user()?.userName,
         width  : 25,
         height : 25,
         loading : 'eager' ,
