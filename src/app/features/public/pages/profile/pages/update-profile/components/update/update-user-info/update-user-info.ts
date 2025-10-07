@@ -1,7 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
-import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { Component, inject } from '@angular/core';
+import { FormsModule, ReactiveFormsModule, Validators, NonNullableFormBuilder } from '@angular/forms';
 import { FormControlOption, NgControl } from "../../../../../../../../../shared/components/ng-control/ng-control.";
+import { UserProfileService } from '../../../../../services/user-profile.service';
+import { GenderEnum, IUpdateBasicInfo, IUser } from '../../../../../../../../../core/models/user.model';
+import { tap } from 'rxjs';
 
 
 @Component({
@@ -32,28 +35,25 @@ import { FormControlOption, NgControl } from "../../../../../../../../../shared/
         }
 
         <!-- Submit -->
-        <button type="submit" class="ngBtn w-full" [disabled]="form.invalid">
+        <button type="submit" class="ngBtn w-full" 
+        [disabled]="form.invalid">
           Save Changes
         </button>
       </form>
 
-      <!-- Preview Data -->
-      @if (submitted()) {
-        <div class="alert alert-success mt-4">
-          <span>Profile updated successfully ✅</span>
-        </div>
-      }
+
     </section>
   `,
 })
 export class UpdateUserInfoComponent {
-  private fb = inject(FormBuilder);
+  #fb = inject(NonNullableFormBuilder);
+  #userSerivce = inject(UserProfileService);
 
   // 🔹 Reactive Form
-  form = this.fb.group({
-    userName: ['Adham Zain', Validators.required],
-    gender: ['male', Validators.required],
-    phone: ['01027809106', [Validators.required, Validators.pattern(/^[0-9]{10,15}$/)]],
+  form = this.#fb.group({
+    userName: [this.#userSerivce.user()?.userName || '', Validators.required],
+    gender: [this.#userSerivce.user()?.gender || '' , [Validators.pattern(/^(male|female)$/i) ]],
+    phone: [this.#userSerivce.user()?.phone || '', [Validators.pattern(/^[0-9]{10,15}$/)]],
   });
 
   // 🔹 Controls config
@@ -72,7 +72,6 @@ export class UpdateUserInfoComponent {
       label: 'Gender',
       isRequired: true,
       selectOptions: ['male', 'female'],
-      textForTranslate: 'forms.gender.', // Example: forms.gender.male
     },
     {
       type: 'tel',
@@ -85,13 +84,25 @@ export class UpdateUserInfoComponent {
     },
   ];
 
-  // Signal for UI feedback
-  submitted = signal(false);
+  filterUnchangedFields(newData: IUpdateBasicInfo): Partial<IUpdateBasicInfo> {
+    const currentUser = this.#userSerivce.user();
+    if (!currentUser) return {};
+  
+    return Object.entries(newData).reduce((changed, [key, value]) => {
+      const userValue = currentUser[key as keyof IUser];
+      if (value !== undefined && value !== userValue) {
+        changed[key as keyof IUpdateBasicInfo] = value;
+      }
+      return changed;
+    }, {} as Partial<IUpdateBasicInfo>);
+  }
+  
 
   onSubmit() {
-    if (this.form.valid) {
-    this.submitted.set(true);
-      // TODO: Send data to API / Supabase
-    }
+    if (!this.form.valid) return;
+    const values = this.form.getRawValue() as IUpdateBasicInfo;
+    if (Object.keys(this.filterUnchangedFields(values)).length === 0) return ;
+    this.#userSerivce.updateBasicInfo(this.filterUnchangedFields(values)).subscribe()
   }
+  
 }

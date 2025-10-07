@@ -2,13 +2,14 @@ import { Component, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { NgImage } from "../../../../../../shared/components/ng-image/ng-image";
 import { UserProfileService } from '../../../profile/services/user-profile.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 
 
 
 @Component({
   selector: 'app-btn-open-model-upsert-post',
-  imports: [RouterModule, NgImage],
+  imports: [RouterModule, TranslateModule, NgImage],
   template: `
 
 <article class="w-full  rounded-2xl ngCard p-4  flex justify-between items-center ">
@@ -16,7 +17,7 @@ import { UserProfileService } from '../../../profile/services/user-profile.servi
     <div class="flex items-center gap-2 ">
         @let userId = userProfileService.user()?._id || '';
         <app-ng-image
-        [routerLink]="userId ? ['/public/', 'profile', userId] : null"
+        [routerLink]="userId ? ['/public/profile/user', userId] : null"
         [options]="{
         src :  userProfileService.user()?.picture || ''  ,
         placeholder : userProfileService.user()?.placeholder || '' ,
@@ -34,7 +35,7 @@ import { UserProfileService } from '../../../profile/services/user-profile.servi
     [routerLink]="['/public' ,{ outlets: { 'model': ['upsert-post'] } }]" 
     queryParamsHandling="merge"
     type="button" class=" btn-ghost hover:bg-dark/40 btn font-light">
-    What's on your mind? ✍️ 
+    {{ 'home.whats_on_mind' | translate }}
     </button>
     </div>
 

@@ -8,7 +8,7 @@ export const routes: Routes = [
 path: 'public', 
 loadComponent: () => import('./features/public/public').then((c) => c.Public),
 loadChildren: () => import('./features/public/public.routes').then((r) => r.publicRoutes),
-canMatch : [isAuthGuard]
+canActivate : [isAuthGuard]
 },
 
 {
@@ -25,6 +25,6 @@ loadChildren : () => import('./features/error/error.routes').then((r) => r.error
 },
 
 { path: '', redirectTo: 'public', pathMatch: 'full' },
-{ path: '**', redirectTo: '', pathMatch: 'full' },
+{ path: '**', redirectTo: 'error', pathMatch: 'full' },
 
 ];

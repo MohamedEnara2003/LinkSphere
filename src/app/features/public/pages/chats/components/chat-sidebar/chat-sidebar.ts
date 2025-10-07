@@ -4,11 +4,12 @@ import { BackLink } from "../../../../../../shared/components/links/back-link";
 import { ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
+import { TranslateModule } from '@ngx-translate/core';
 
 
 @Component({
     selector: 'app-chat-sidebar',
-    imports: [SharedModule, BackLink] ,
+    imports: [SharedModule, BackLink, TranslateModule],
     template: `
 <aside 
   class="w-full h-svh ngCard rounded-none overflow-y-auto border-r border-brand-color/25 
@@ -20,7 +21,7 @@ import { map } from 'rxjs';
   <header class="flex items-center gap-2 mb-2">
     <app-back-link path="/public" aria-label="Go back to public page" />
     <h2 id="chat-sidebar-title" class="ngText text-xl font-bold">
-      Chats
+      {{ 'chats.title' | translate }}
     </h2>
   </header>
 
@@ -41,7 +42,7 @@ import { map } from 'rxjs';
     <input 
       type="search" 
       id="search-chats"
-      placeholder="Search chats..."
+      [placeholder]="'chats.search_chats' | translate"
       class="w-full bg-transparent focus:outline-none text-sm"
     />
   </label>
@@ -62,7 +63,7 @@ import { map } from 'rxjs';
         <!-- Avatar -->
         <img 
           [src]="chat.avatar" 
-          [alt]="'Profile picture of ' + chat.name" 
+          [alt]="('chats.profile_picture_of' | translate) + ' ' + chat.name" 
           class="w-10 h-10 rounded-full object-cover border border-gray-300 dark:border-gray-600" 
           loading="lazy"
         />

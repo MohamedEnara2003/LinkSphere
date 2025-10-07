@@ -45,7 +45,7 @@ import { BtnResendOtp } from "../../components/btn-resend-otp/btn-resend-otp";
       <span class="text-brand-color font-semibold">{{ otpValue() }}</span>
     </p>
 
-  <app-btn-resend-otp />
+  <app-btn-resend-otp (onClickResend)="resendConfirmEmailOtp()" />
   </form>
 </section>
   `,
@@ -113,4 +113,9 @@ export class confirmEmail {
     this.#authService.confirmEmail(code).subscribe()
     }
   }
+  resendConfirmEmailOtp() : void {
+  this.#authService.resendConfirmEmailOtp('mohamedabdelziz2003@gmail.com').subscribe();
+  }
+
 }
+

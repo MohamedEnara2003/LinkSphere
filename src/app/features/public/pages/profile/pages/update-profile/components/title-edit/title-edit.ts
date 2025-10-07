@@ -1,13 +1,14 @@
 import { Component, input,  } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { ProfileEditTypes } from '../../../../model/profiles.model';
+import { TranslateModule } from '@ngx-translate/core';
 
 
 
 
 @Component({
 selector: 'app-title-edit',
-imports: [RouterModule],
+imports: [RouterModule, TranslateModule],
 template: `
 
 <nav class="w-full flex justify-between items-center border-b border-brand-color/10 pb-2">
@@ -24,7 +25,7 @@ class="ngBtn btn-sm" >
 <path d="M5.25 5.25a3 3 0 0 0-3 3v10.5a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3V13.5a.75.75 0 0 0-1.5 0v5.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5V8.25a1.5 1.5 0 0 1 1.5-1.5h5.25a.75.75 0 0 0 0-1.5H5.25Z" />
 </svg>
 
-Edit
+{{ 'profile.update.edit' | translate }}
 </button>
 
 </nav>

@@ -10,10 +10,9 @@ export interface SettingLink {
 export class SettingsServices {
 
     links = signal<SettingLink[]>([
-    { id: 'account', label: 'Account', route: '/public/settings/account' },
-    { id: 'display', label: 'Display', route: '/public/settings/display'},
-    { id: 'apps', label: 'Apps', route: '/public/settings/apps' },
-    { id: 'privacy', label: 'Privacy & Security', route: '/public/settings/privacy'},
+    { id: 'account', label: 'settings.account.title', route: '/public/settings/account' },
+    { id: 'display', label: 'settings.display.title', route: '/public/settings/display'},
+    { id: 'log-out', label: 'settings.logout.title', route: '/public/settings/log-out'},
     ]
     )
 

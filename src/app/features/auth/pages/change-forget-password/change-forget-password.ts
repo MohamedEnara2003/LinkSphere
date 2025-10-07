@@ -3,7 +3,6 @@ import { FormGroup, NonNullableFormBuilder, Validators } from '@angular/forms';
 import { SharedModule } from '../../../../shared/modules/shared.module';
 import { TranslateModule } from '@ngx-translate/core';
 import { NgControl } from "../../../../shared/components/ng-control/ng-control.";
-import { NgEmail } from "../../components/ng-email/ng-email";
 import { CustomValidators } from '../../../../core/validations/custom/custom-validations';
 import { AuthService } from '../../service/auth.service';
 import { ActivatedRoute } from '@angular/router';
@@ -12,13 +11,13 @@ import { map } from 'rxjs';
 import { BtnResendOtp } from "../../components/btn-resend-otp/btn-resend-otp";
 import { ChangeForgetPassword } from '../../../../core/models/auth.model';
 
+
 @Component({
     selector: 'app-change-forget-password',
     imports: [
     SharedModule,
     TranslateModule,
     NgControl,
-    NgEmail,
     BtnResendOtp
 ],
     template: `
@@ -30,11 +29,6 @@ import { ChangeForgetPassword } from '../../../../core/models/auth.model';
 
     <fieldset class="w-full fieldset p-2 grid grid-cols-1 md:grid-cols-2 gap-5 space-y-2">
         <legend class="fieldset-legend col-span-1 md:col-span-2">Change Password</legend>
-
-        <!-- Email -->
-        <div>
-        <app-ng-email [emailForm]="changeForgetPasswordForm" />
-        </div>
 
         <!-- OTP -->
         <div>
@@ -109,15 +103,6 @@ export class changeForgetPassword implements OnInit  {
 
     ngOnInit() {
     this.changeForgetPasswordForm = this.#fb.group({
-    email: [
-    this.email() || '', 
-    [
-    Validators.required,
-    Validators.email,
-    Validators.maxLength(254),
-    Validators.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
-    ]
-    ],
     OTP :  ['' ,[
     Validators.required,
     Validators.minLength(6),
@@ -150,8 +135,8 @@ export class changeForgetPassword implements OnInit  {
 onChangeForgetPasswordSubmit() {
     if (this.changeForgetPasswordForm.valid) {
     const data : ChangeForgetPassword = this.changeForgetPasswordForm.getRawValue();
-
-    this.#authService.changeForgetPassword(data).subscribe();
+    
+    this.#authService.changeForgetPassword({...data , email : this.email() || ''}).subscribe();
     return;
     }
     this.changeForgetPasswordForm.markAllAsTouched();

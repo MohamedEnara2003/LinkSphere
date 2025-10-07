@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 
+
 export const publicRoutes: Routes = [
   {
     path: '',
@@ -8,16 +9,6 @@ export const publicRoutes: Routes = [
   },
 
   {
-    path: 'profile/:userId', data : {isProfile : true} ,
-    loadComponent: () =>import('./pages/profile/pages/user-profile/user-profile')
-    .then((c) => c.userProfile),
-  },
-  {
-  path: 'profile/:userId/update', 
-  loadComponent: () =>import('./pages/profile/pages/update-profile/ui/update-profile')
-  .then((c) => c.UpdateProfile),
-  },
-  {
     path: 'upsert-post',
     outlet: 'model',
     loadComponent: () =>
@@ -25,6 +16,13 @@ export const publicRoutes: Routes = [
         (c) => c.UpsertPostModel
       ),
   },
+
+  {
+    path: 'profile',
+    loadComponent: () =>
+    import('./pages/profile/profile').then((c) => c.Profile),
+    loadChildren : () => import('./pages/profile/profile.routes').then((r) => r.profileRoutes),
+    },
 
   {
     path: 'settings',

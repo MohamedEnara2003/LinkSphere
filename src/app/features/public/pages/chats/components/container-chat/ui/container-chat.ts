@@ -6,18 +6,19 @@ import { NgImage } from "../../../../../../../shared/components/ng-image/ng-imag
 import { SharedModule } from '../../../../../../../shared/modules/shared.module';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { map } from 'rxjs';
 
 
 @Component({
   selector: 'app-chat-container',
-  imports: [SharedModule, ChatHeaderComponent, ChatCreateMessageComponent, NgImage],
+  imports: [SharedModule, TranslateModule, ChatHeaderComponent, ChatCreateMessageComponent, NgImage],
   template: `
 
   <section 
   class="w-full h-svh ngCard rounded-none border-card-light dark:border-card-dark border"
   ngClass="{{chatId() ? 'block' : 'hidden md:block'}}"
-  aria-label="Chat container"
+  [attr.aria-label]="'chats.chat_container' | translate"
 >
 
   @if (chatId()) {
@@ -36,7 +37,7 @@ import { map } from 'rxjs';
     <section 
       class="flex-1 overflow-y-auto p-4 space-y-3 bg-light dark:bg-dark"
       aria-live="polite"
-      aria-label="Chat messages"
+      [attr.aria-label]="'chats.chat_messages' | translate"
       role="log"
       style="scrollbar-width: none;"
     >
@@ -46,14 +47,14 @@ import { map } from 'rxjs';
         <article 
           class="chat"
           [ngClass]="isMyMessage ? 'chat-end' : 'chat-start'"
-          aria-label="Chat message"
+          [attr.aria-label]="'chats.chat_message' | translate"
         >
           <!-- Avatar -->
           <div class="chat-image avatar">
             <app-ng-image
               [options]="{
                 src : chat.image,
-                alt : 'Profile picture of ' + chat.userId,
+                alt : ('chats.profile_picture_of' | translate) + ' ' + chat.userId,
                 width : 40,
                 height : 40,
                 class : 'object-cover rounded-full'
@@ -81,11 +82,11 @@ import { map } from 'rxjs';
   }@else {
  <main class="flex-1  flex-col hidden md:flex">
         <header class="p-4 border-b border-gray-200 dark:border-gray-700">
-          <h1 class="text-lg font-bold">Select a chat</h1>
+          <h1 class="text-lg font-bold">{{ 'chats.select_chat' | translate }}</h1>
         </header>
 
         <div class="flex-1 flex items-center justify-center text-gray-400">
-          <p>No chat selected</p>
+          <p>{{ 'chats.no_chat_selected' | translate }}</p>
         </div>
   </main>
   }

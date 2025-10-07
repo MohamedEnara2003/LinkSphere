@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
-import { NgImage } from "../../../../../../shared/components/ng-image/ng-image";
-import { SharedModule } from '../../../../../../shared/modules/shared.module';
-import { UserProfileService } from '../../services/user-profile.service';
+import { NgImage } from "../../../../../../../../shared/components/ng-image/ng-image";
+import { SharedModule } from '../../../../../../../../shared/modules/shared.module';
+import { UserProfileService } from '../../../../services/user-profile.service';
 import { Router } from '@angular/router';
 
 @Component({
@@ -9,11 +9,12 @@ import { Router } from '@angular/router';
   imports: [NgImage , SharedModule],
   template: `
 
-  
+
     <!-- Profile Header -->
     <header class="w-full flex flex-wrap justify-center md:justify-start items-start 
-    gap-6 bg-light dark:bg-card-dark backdrop-blur-sm rounded-xl p-4 md:p-6 shadow-lg">
+    gap-6 bg-light dark:bg-card-dark rounded-xl p-4 md:p-6 shadow-lg">
 
+    <picture class="relative  size-40 md:size-50">
     <!-- Profile Picture -->
     <app-ng-image
         [options]="{
@@ -25,10 +26,25 @@ import { Router } from '@angular/router';
         loading : 'eager' ,
         decoding : 'async' ,
         fetchpriority : 'high', 
-        class : 'object-cover size-36 md:size-44 rounded-full border-2 border-brand-color shadow-md transition-transform duration-300 hover:scale-105'
+        class : 'object-cover size-full rounded-full border border-brand-color shadow-md transition-transform duration-300 hover:scale-105'
         }"
       [isPreview]="userProfileService.userProfile()?.picture ? true : false"
     />
+ 
+      <a
+      title="Update profile image"
+      [href]="['/public/profile/user' , (userProfileService.user()?._id || '') ,'update']"     
+      [routerLink]="['/public/profile/user' , (userProfileService.user()?._id || '') ,'update']"
+      [queryParams]="{edit : 'picture'}"
+      class="absolute right-1 top-0 bg-dark/60  btn  btn-circle text-brand-color 
+      hover:bg-dark transition z-10 "
+      >
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+    <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32l8.4-8.4Z" />
+    <path d="M5.25 5.25a3 3 0 0 0-3 3v10.5a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3V13.5a.75.75 0 0 0-1.5 0v5.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5V8.25a1.5 1.5 0 0 1 1.5-1.5h5.25a.75.75 0 0 0 0-1.5H5.25Z" />
+    </svg>
+      </a>
+    </picture>
 
     <!-- User Info -->
     <section class="w-full flex flex-col items-center md:items-start gap-2">
@@ -50,8 +66,6 @@ import { Router } from '@angular/router';
     class="px-2 py-1 rounded-full bg-brand-color/10 text-brand-color text-sm font-medium">
     {{userProfileService.userProfile()?.friends?.length || 0}} Friends
     </span>
-
-
 
 <button 
 type="button" 

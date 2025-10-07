@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { DestroyRef, inject, Injectable } from '@angular/core';
-import { Observable, take } from 'rxjs';
+import { catchError, EMPTY, Observable, take } from 'rxjs';
 import { environment } from '../../../../environments/environment.development';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { UploadService } from '../upload/upload.service';
 
 
 @Injectable({
@@ -12,7 +13,9 @@ export class SingleTonApi {
 
 #httpClient = inject(HttpClient);  
 #destroyRef = inject(DestroyRef);  
+#uploadService = inject(UploadService);
 #baseUrlApi : string = environment.apiUrl;
+
 
 
 public find<G>(routeName : string ) : Observable<G> {
@@ -56,16 +59,20 @@ public patch<G>(routeName: string, data?: unknown): Observable<G> {
   });
 }
 
-    
 
-public uploadImage<G>(routeName : string , files : File[]) : Observable<G> {
+public uploadImage<G>(routeName : string ,formDataName : string , files : File[]) : Observable<G> {
 const formData = new FormData();
 files.forEach((file) => {
-formData.append('image' , file);
+formData.append(formDataName , file);
 });
-return this.#httpClient.post<G>(`${this.#baseUrlApi}${routeName}`, formData  , {
+return this.#httpClient.patch<G>(`${this.#baseUrlApi}${routeName}`, formData  , {
 withCredentials : true,
-});
+}).pipe(
+  catchError(() => {
+  this.#uploadService.clear()
+  return EMPTY;
+  })
+);
 }
 
 public deleteImage(routeName : string , id : string) : Observable<void> {

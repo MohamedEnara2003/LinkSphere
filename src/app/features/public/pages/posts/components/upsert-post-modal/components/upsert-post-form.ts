@@ -5,36 +5,39 @@ import { FormGroup, NonNullableFormBuilder, Validators } from '@angular/forms';
 import { TagPeople } from "./tag-people";
 import { NgImage } from "../../../../../../../shared/components/ng-image/ng-image";
 import { UploadService } from '../../../../../../../core/services/upload/upload.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 
 
 @Component({
 selector: 'app-upsert-post-form',
-imports: [SharedModule, NgControl, TagPeople, NgImage],
+imports: [SharedModule, TranslateModule, NgControl, TagPeople, NgImage],
 template: `
 <form class="w-full ">
     <legend class="fieldset-legend sr-only">Create post</legend>
     <fieldset class="fieldset space-y-4 ">
         
     <div class="w-full flex  gap-2">
-    <app-ng-control title="Availability"
+    <app-ng-control [title]="'posts.availability' | translate"
     [option]="{
     type : 'select',
     name : 'availability',
     formControlName : 'availability',
     id : 'availability',
     selectOptions : ['public' , 'friends' , 'only-me' , 'frozen'] ,
+    textForTranslate : 'posts.',
     inputClass : 'w-20 select select-xs select-neutral bg-dark  text-light capitalize' ,
     }"
     [form]="postForm" />
 
-    <app-ng-control title="Allow comments"
+    <app-ng-control [title]="'posts.allow_comments' | translate"
     [option]="{
     type : 'select',
     name : 'allowComments',
     formControlName : 'allowComments',
     id : 'allowComments',
     selectOptions : ['allow' , 'deny'] ,
+    textForTranslate : 'posts.',
     inputClass : 'w-20  select select-xs select-neutral bg-dark text-light capitalize' ,
     }"
     [form]="postForm" />
@@ -54,7 +57,7 @@ template: `
     
 <ul  aria-label="Menu Product Images" role="menu" 
 class="w-full h-45 overflow-y-auto grid grid-cols-2 gap-2">
-@for (item of uploadService.previews; let i = $index ; track item) {
+@for (item of uploadService.previews(); let i = $index ; track item) {
 <li  class="w-full  ">
         <app-ng-image
         [options]="{
@@ -78,7 +81,7 @@ class="w-50 flex  justify-start gap-4  btn ngText  btn-sm bg-light dark:bg-dark 
 class="size-6 text-green-600">
 <path fill-rule="evenodd" d="M1.5 6a2.25 2.25 0 0 1 2.25-2.25h16.5A2.25 2.25 0 0 1 22.5 6v12a2.25 2.25 0 0 1-2.25 2.25H3.75A2.25 2.25 0 0 1 1.5 18V6ZM3 16.06V18c0 .414.336.75.75.75h16.5A.75.75 0 0 0 21 18v-1.94l-2.69-2.689a1.5 1.5 0 0 0-2.12 0l-.88.879.97.97a.75.75 0 1 1-1.06 1.06l-5.16-5.159a1.5 1.5 0 0 0-2.12 0L3 16.061Zm10.125-7.81a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Z" clip-rule="evenodd" />
 </svg>
-Photo
+{{ 'home.photo' | translate }}
 <input (change)="uploadAttachments($event.target)"  
 type="file"  name="upload"  id="upload"  class="hidden"  accept="image/*"  multiple/>
 </label>
@@ -90,7 +93,7 @@ class="w-50 flex  justify-start gap-4  btn ngText  btn-sm bg-light dark:bg-dark 
 class="size-6 text-blue-600">
 <path fill-rule="evenodd" d="M5.25 2.25a3 3 0 0 0-3 3v4.318a3 3 0 0 0 .879 2.121l9.58 9.581c.92.92 2.39 1.186 3.548.428a18.849 18.849 0 0 0 5.441-5.44c.758-1.16.492-2.629-.428-3.548l-9.58-9.581a3 3 0 0 0-2.122-.879H5.25ZM6.375 7.5a1.125 1.125 0 1 0 0-2.25 1.125 1.125 0 0 0 0 2.25Z" clip-rule="evenodd" />
 </svg>
-Tag people
+{{ 'home.tag_people' | translate }}
 </button>
 </div>
 

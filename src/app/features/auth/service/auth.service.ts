@@ -1,10 +1,30 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
 import { SingleTonApi } from '../../../core/services/api/single-ton-api.service';
 import { EMPTY, Observable, switchMap, tap } from 'rxjs';
-import { AuthToken, ChangeForgetPassword, LoginBody, LoginType, SignUp, VerifyOtp } from '../../../core/models/auth.model';
+import { AuthToken, ChangeForgetPassword, LoginBody, LoginType, logoutFlag, SignUp, VerifyOtp } from '../../../core/models/auth.model';
 
 import { Router } from '@angular/router';
 import { StorageService } from '../../../core/services/locale-storage.service';
+import { isPlatformBrowser } from '@angular/common';
+import { UserProfileService } from '../../public/pages/profile/services/user-profile.service';
+
+declare global {
+  namespace google.accounts.id {
+    interface CredentialResponse {
+      credential: string;
+      select_by: string;
+    }
+
+    interface IdConfiguration {
+      client_id: string;
+      callback: (response: CredentialResponse) => void;
+    }
+
+    function initialize(config: IdConfiguration): void;
+    function renderButton(parent: HTMLElement, options: { theme: string; size: string }): void;
+    function prompt(): void; // ✅ أضفنا دي
+  }
+}
 
 
 interface Respons {
@@ -18,19 +38,76 @@ interface Respons {
 })
 
 export class AuthService {
-  #singleTonApi = inject(SingleTonApi);
   #router = inject(Router)
-  #storageService = inject(StorageService)
+  #singleTonApi = inject(SingleTonApi);
+
+  #storageService = inject(StorageService);
+  #userProfileService = inject(UserProfileService);
+
+  #platform_id = inject(PLATFORM_ID);
+
   #routeName: string = "auth";
+  #googleClientId : string = 
+  '527860747448-4q6fmpfmju4rfghkgvn10s5g37rjc7si.apps.googleusercontent.com.apps.googleusercontent.com';
   
+
   #loginData = signal<LoginType | null>(null);
 
+
+  // 🟢 Sign with Gmail
+  initGoogleSignIn(): Observable<string> {
+    if (!isPlatformBrowser(this.#platform_id)) {
+      return new Observable((observer) => observer.complete());
+    }
+
+    return new Observable<string>((observer) => {
+      // ✅ تحقق من تحميل SDK
+      const checkGoogleLoaded = () => typeof google !== 'undefined' && google.accounts?.id;
+
+      const initializeGoogle = () => {
+        google.accounts.id.initialize({
+          client_id: this.#googleClientId,
+          callback: (response: google.accounts.id.CredentialResponse) => {
+            observer.next(response.credential); // idToken
+            observer.complete();
+          },
+        });
+
+        // ✅ عرض نافذة اختيار الحساب
+        google.accounts.id.prompt();
+      };
+
+      if (checkGoogleLoaded()) {
+        initializeGoogle();
+      } else {
+        // ✅ انتظر حتى تحميل الـ SDK
+        const interval = setInterval(() => {
+          if (checkGoogleLoaded()) {
+            clearInterval(interval);
+            initializeGoogle();
+          }
+        }, 200);
+      }
+
+      return { unsubscribe() {} };
+    });
+  }
+
+  signUpWithGmail(idToken: string): Observable<void> {
+  return this.#singleTonApi.create(
+  `${this.#routeName}/signup-with-gmail`,
+  { idToken }
+  );
+}
+
+// ____________________________________
 
 //🟢 Create Account 🟢
 
 // 🟢 Sign Up 
 signUp(data: SignUp): Observable<Respons> {
   this.#loginData.set({email : data.email , password : data.password})
+  
   return this.#singleTonApi.create<Respons>(`${this.#routeName}/signup`, data).pipe(
   tap(() => this.#router.navigate(['/auth/confirm-email']))
   );
@@ -39,8 +116,8 @@ signUp(data: SignUp): Observable<Respons> {
 // 🟢 Confirm Email (Send OTP to Email) + Login مباشرة
 confirmEmail(OTP: string): Observable<LoginBody> {
   return this.#singleTonApi.patch(`${this.#routeName}/confirm-email`, {
-    email: this.#loginData()?.email,
-    OTP,
+  email: 'mohamedabdelziz2003@gmail.com',
+  OTP,
   }).pipe(
   switchMap(() => {
   const loginData = this.#loginData();
@@ -52,16 +129,12 @@ confirmEmail(OTP: string): Observable<LoginBody> {
   })
   );
 }
-// ______________________
 
-
-// 🟢 Sign with Gmail
-signUpWithGmail(idToken: string): Observable<void> {
-  return this.#singleTonApi.create(
-  `${this.#routeName}/signup-with-gmail`,
-  { idToken }
-  );
+resendConfirmEmailOtp(email: string): Observable<void> {
+return this.#singleTonApi.create(`${this.#routeName}/re-send-confirm-email-otp`, {email});
 }
+
+// ___________________________
 
 
 // 🟢 Login
@@ -110,15 +183,13 @@ changeForgetPassword(data: ChangeForgetPassword): Observable<void> {
 
 
 // 🟢 Verify Confirm Email (Check OTP)
-verifyConfirmEmail(OTP: string ): Observable<void> {
+  verifyConfirmEmail(OTP: string ): Observable<void> {
   return this.#singleTonApi.patch(`${this.#routeName}/verify-confirm-email`,  {data : OTP});
-}
+  }
 
 // 🟢 Enable/Disable Two-Step Verification
   changeTwoStepVerification(): Observable<void> {
-    return this.#singleTonApi.update(`${this.#routeName}/change-two-setup-verification`, {}, ""); 
-    // حطيت id فاضي "" لأن update بتطلب id، 
-    // ممكن نعمل دالة خاصة في SingleTonApi للـ PATCH بدون id (أشرحلك تحت)
+  return this.#singleTonApi.update(`${this.#routeName}/change-two-setup-verification`, {}, ""); 
   }
 
   // 🟢 Verify Enable/Disable Two-Step Verification
@@ -126,7 +197,9 @@ verifyConfirmEmail(OTP: string ): Observable<void> {
   return this.#singleTonApi.update(`${this.#routeName}/verify-enable-two-setup-verification`, data, ""); 
   }
 
+//__________________________________
 
+// 🟢 Refresh Token & Remove Tokens
 refreshToken() : Observable<LoginBody>{
 return this.#singleTonApi.find(`${this.#routeName}/refresh-token`)
 }
@@ -135,9 +208,21 @@ removeTokens() {
   this.#storageService.removeItem('auth');
   this.#router.navigate(['/auth/login']);
 }
+//__________________________________
 
 
-// loginOut() : Observable<void> {
-// return 
-// }
+logout(logoutFlag?: logoutFlag): Observable<void> {
+  const body = logoutFlag ? { logoutFlag } : {};
+  return this.#singleTonApi
+    .create<void>(`${this.#routeName}/logout`, body)
+    .pipe(
+      tap(() => {
+      this.removeTokens();  
+      this.#userProfileService.setUser(null);
+      this.#userProfileService.setUserProfile(null);
+      })
+    );
+}
+
+
 }

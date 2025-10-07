@@ -3,21 +3,23 @@ import { FormGroup, NonNullableFormBuilder, Validators } from '@angular/forms';
 import { SharedModule } from '../../../../shared/modules/shared.module';
 import { NgControl } from "../../../../shared/components/ng-control/ng-control.";
 import { NgEmail } from "../../components/ng-email/ng-email";
-import { signInWithGoogle } from "../../components/sign-with-google/sign-with-google";
 import { AuthRedirectLink } from "../../components/auth-redirect-link/auth-redirect-link";
 import { AuthService } from '../../service/auth.service';
 import { LoginType } from '../../../../core/models/auth.model';
+import { SignInWithGoogle } from "../../components/sign-with-google/sign-with-google";
+import { TranslateModule } from '@ngx-translate/core';
 
 
 @Component({
   selector: 'app-login',
   imports: [
-  SharedModule, 
-  NgControl, 
-  NgEmail, 
-  signInWithGoogle, 
-  AuthRedirectLink
-  ],
+    SharedModule,
+    TranslateModule,
+    NgControl,
+    NgEmail,
+    AuthRedirectLink,
+    SignInWithGoogle
+],
   template: `
 
 <section class="w-full min-h-svh flex items-center justify-center p-5">
@@ -26,7 +28,7 @@ import { LoginType } from '../../../../core/models/auth.model';
 class="w-full sm:w-xl md:w-2xl lg:w-3xl  ngCard  border-brand-color/10  border rounded-box p-5">
 
 <fieldset class="w-full fieldset  p-2 gap-5  space-y-2 ">
-<legend class="fieldset-legend ">Log in</legend>
+<legend class="fieldset-legend ">{{ 'auth.login.title' | translate }}</legend>
 
 <app-ng-email [emailForm]="loginForm" />
 
@@ -35,7 +37,7 @@ class="w-full sm:w-xl md:w-2xl lg:w-3xl  ngCard  border-brand-color/10  border r
 type : 'password',
 name : 'Password',
 formControlName : 'password',
-label : 'Password',
+label : 'auth.login.password',
 id : 'Password',
 autocomplete : 'new-password',
 isRequired : true
@@ -49,11 +51,11 @@ isRequired : true
 
 <button class="w-full btn btn-neutral btn-sm sm:btn-md bg-dark hover:bg-neutral 
   mt-4 ">
-  Log in
+  {{ 'auth.login.login_button' | translate }}
 </button>
 
 <a href="/auth/forget-password" routerLink="/auth/forget-password" class="link text-base font-normal ngText ">
-  Forget Password
+  {{ 'auth.login.forget_password' | translate }}
 </a>
 
 </nav>

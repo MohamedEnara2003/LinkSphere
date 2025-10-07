@@ -27,6 +27,8 @@ export interface ImageOption {
   template: `
     <figure class="size-full flex flex-col">
 
+      @defer (when options().src;) {
+        
       <!-- Normal Image -->
       <img
         [src]="options().src || options().placeholder"
@@ -45,7 +47,9 @@ export interface ImageOption {
         (error)="onError()"
         [class]="isPreview() ? 'cursor-zoom-in' : '' "
       />
-     
+    }@placeholder {
+    <div [ngClass]="options().class" class="bg-neutral-300 animate-pulse"></div>
+    }
       <!-- Figcaption -->
       <figcaption
         [class]="options().figcaption ? (options().figcaptionClass || 'ngText') : 'sr-only'"

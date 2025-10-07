@@ -1,11 +1,12 @@
 import { Component, inject, signal } from '@angular/core';
 import { SharedModule } from '../../../../../../shared/modules/shared.module';
 import { SettingsServices } from '../../service/settings.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 
 @Component({
 selector: 'app-settings-side-bar',
-imports: [SharedModule],
+imports: [SharedModule, TranslateModule],
 template: `
 
 <header class="flex  p-4 md:hidden">
@@ -32,13 +33,12 @@ stroke="currentColor" class="size-8">
 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
 </svg>
 </button>
-<h2 class="menu-title">Settings</h2>
+<h2 class="menu-title">{{ 'settings.title' | translate }}</h2>
 </header>
 
 
     <ul class="space-y-2">
     @for (link of settingsService.links(); track link.id) {
-    @if (link.id !== 'logout') {
             <li (click)="isOpenSide.set(false)">
             <a  
                 [href]="link.route"
@@ -47,10 +47,10 @@ stroke="currentColor" class="size-8">
                 class="flex items-center gap-2 rounded-lg px-3 py-2 
                 hover:bg-brand-color duration-300 transition-colors"
             >
-                <span>{{ link.label }}</span>
+                <span>{{ link.label | translate }}</span>
             </a>
             </li>
-        }
+        
         }
     </ul>
     </nav>

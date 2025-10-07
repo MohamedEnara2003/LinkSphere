@@ -1,3 +1,184 @@
 {
-    
+  "messages": {
+    "required": "هذا الحقل مطلوب",
+    "invalid": "هذا الحقل غير صحيح",
+    "email": "ليس عنوان بريد إلكتروني صحيح",
+    "passwordMismatch": "كلمات المرور غير متطابقة"
+  },
+  "forms": {
+    "optional": "اختياري"
+  },
+  "auth": {
+    "login": {
+      "title": "تسجيل الدخول",
+      "password": "كلمة المرور",
+      "login_button": "تسجيل الدخول",
+      "forget_password": "نسيت كلمة المرور",
+      "already_have_account": "هل لديك حساب بالفعل؟",
+      "dont_have_account": "ليس لديك حساب؟",
+      "create_one": "إنشاء حساب",
+      "log_in": "تسجيل الدخول"
+    },
+    "register": {
+      "title": "التسجيل",
+      "username": "اسم المستخدم",
+      "email": "البريد الإلكتروني",
+      "phone": "رقم الهاتف",
+      "gender": "الجنس",
+      "password": "كلمة المرور",
+      "confirm_password": "تأكيد كلمة المرور",
+      "register_button": "تسجيل",
+      "male": "ذكر",
+      "female": "أنثى"
+    },
+    "forget_password": {
+      "title": "تسجيل الدخول",
+      "send_otp": "إرسال رمز التحقق"
+    }
+  },
+  "navigation": {
+    "home": "الرئيسية",
+    "friends": "الأصدقاء",
+    "profile": "الملف الشخصي",
+    "chats": "المحادثات",
+    "settings": "الإعدادات",
+    "hello": "مرحباً،",
+    "my_profile" : "ملفي الشخصي"
+  },
+  "home": {
+    "whats_on_mind": "بماذا تفكر؟ ✍️",
+    "photo": "صورة",
+    "tag_people": "وضع علامة على الأشخاص"
+  },
+  "profile": {
+    "profile_card": {
+      "user_profile_card": "بطاقة الملف الشخصي للمستخدم",
+      "full_name": "الاسم الكامل",
+      "username": "اسم المستخدم",
+      "email_address": "عنوان البريد الإلكتروني",
+      "phone_number": "رقم الهاتف"
+    },
+    "links": {
+      "posts": "المنشورات",
+      "about": "حول",
+      "photos": "الصور",
+      "friends": "الأصدقاء"
+    },
+    "about": {
+      "title": "معلومات المستخدم",
+      "username": "اسم المستخدم",
+      "email": "البريد الإلكتروني",
+      "phone": "الهاتف",
+      "gender": "الجنس",
+      "not_provided": "غير متوفر",
+      "unknown": "غير معروف",
+      "n_a": "غير متاح"
+    },
+    "friends": {
+      "title": "الأصدقاء",
+      "no_friends": "لا يوجد أصدقاء",
+      "profile_picture_of": "صورة الملف الشخصي لـ"
+    },
+    "pictures": {
+      "title": "الصور",
+      "user_picture": "صورة المستخدم"
+    },
+    "update": {
+      "title": "تحديث الملف الشخصي",
+      "cover_images": "صور الغلاف",
+      "profile_picture": "صورة الملف الشخصي",
+      "user_profile_information": "معلومات الملف الشخصي",
+      "edit": "تعديل",
+      "cover_image": "صورة الغلاف"
+    },
+    "actions": {
+      "edit_profile": "تعديل الملف الشخصي",
+      "photos": "الصور",
+      "friends": "الأصدقاء",
+      "posts": "المنشورات",
+      "filters": "المرشحات"
+    }
+  },
+  "chats": {
+    "title": "المحادثات",
+    "select_chat": "اختر محادثة",
+    "no_chat_selected": "لم يتم اختيار محادثة",
+    "chat_container": "حاوية المحادثة",
+    "chat_messages": "رسائل المحادثة",
+    "chat_message": "رسالة محادثة",
+    "profile_picture_of": "صورة الملف الشخصي لـ",
+    "search_chats": "البحث في المحادثات...",
+    "write_message": "اكتب رسالة...",
+    "send_message": "إرسال الرسالة",
+    "type_message": "اكتب رسالتك"
+  },
+  "posts": {
+    "availability": "التوفر",
+    "allow_comments": "السماح بالتعليقات",
+    "public": "عام",
+    "friends": "الأصدقاء",
+    "only_me": "أنا فقط",
+    "frozen": "مجمدة",
+    "allow": "السماح",
+    "deny": "رفض"
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "account": {
+      "title": "الحساب",
+      "subtitle": "إدارة تفضيلات الأمان لحسابك.",
+      "freeze_account": {
+        "title": "تجميد الحساب",
+        "description": "إيقاف النشاط مؤقتاً وإخفاء ملفك الشخصي عن الآخرين. يمكنك إلغاء التجميد في أي وقت.",
+        "frozen": "مجمدة",
+        "active": "نشطة",
+        "unfreeze": "إلغاء التجميد",
+        "freeze": "تجميد",
+        "account_is_frozen": "الحساب مجمد",
+        "account_is_active": "الحساب نشط",
+        "unfreeze_account": "إلغاء تجميد الحساب",
+        "freeze_account": "تجميد الحساب"
+      },
+      "two_step": {
+        "title": "التحقق بخطوتين",
+        "description": "إضافة طبقة إضافية من الأمان لحسابك باستخدام خطوة التحقق عند تسجيل الدخول.",
+        "enabled": "مفعل",
+        "disabled": "معطل",
+        "enable": "تفعيل",
+        "disable": "إلغاء التفعيل",
+        "two_step_enabled": "التحقق بخطوتين مفعل",
+        "two_step_disabled": "التحقق بخطوتين معطل",
+        "verified": "تم التحقق",
+        "not_verified": "لم يتم التحقق",
+        "verify_now": "تحقق الآن",
+        "verify_description": "تحقق من طريقة التحقق بخطوتين لإكمال الإعداد.",
+        "enable_two_step": "تفعيل التحقق بخطوتين",
+        "disable_two_step": "إلغاء تفعيل التحقق بخطوتين"
+      }
+    },
+    "display": {
+      "title": "إعدادات العرض",
+      "subtitle": "إدارة تفضيلات العرض لحسابك.",
+      "languages": "اللغات",
+      "english": "الإنجليزية",
+      "arabic": "العربية",
+      "dark_mode": "الوضع المظلم",
+      "dark": "مظلم",
+      "light": "فاتح"
+    },
+    "logout": {
+      "title": "تسجيل الخروج",
+      "logout_current_device": "تسجيل الخروج من الجهاز الحالي",
+      "logout_all_devices": "تسجيل الخروج من جميع الأجهزة",
+      "please_wait": "يرجى الانتظار...",
+      "logout_current_title": "تسجيل الخروج من الجهاز الحالي",
+      "logout_all_title": "تسجيل الخروج من جميع الأجهزة"
+    }
+  },
+  "errors": {
+    "not_found": {
+      "title": "غير موجود",
+      "description": "الصفحة التي تبحث عنها غير موجودة أو تم نقلها."
+    }
+  }
 }

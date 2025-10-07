@@ -55,25 +55,6 @@ export class MockPostsService {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     },
-    {
-      id: "post3",
-      createdBy: {
-        id: "3",
-        userName: "mohamed.enara",
-        picture: "/man-empty-avatar-photo.webp"
-      },
-      content: "I'm going to the beach!",
-      attachments: [
-        '/1747983819132_476165657_1152867902877267_3612919625248808281_n.webp',
-      ],
-      assetsFolderId: "folder3",
-      availability: "public",
-      allowComments: "allow",
-      tags: [],
-      likes: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
   ]);
 
   getPosts () : Observable<IPost[]> {

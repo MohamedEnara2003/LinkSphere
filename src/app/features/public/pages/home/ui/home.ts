@@ -14,18 +14,17 @@ import { btnOpenModelUpsertPost } from "../../posts/components/btn-open-model-up
   
   <!-- ProfileCard -->
   <app-profile-card 
-    class="w-full h-[85svh] hidden md:block sticky  top-[15svh]" />
+    class="w-full h-[85svh] hidden md:block sticky  top-[12svh]" />
   
   <!-- Main Content -->
-  <main class="w-full grid grid-cols-1 gap-10 md:col-span-2 mt-5">
+  <main class="w-full grid grid-cols-1 gap-10 md:col-span-2 ">
     <app-btn-open-model-upsert-post />
     <app-posts />
   </main>
   
   <!-- Right Sidebar -->
-  <div class="hidden h-[85svh] md:block ngCard rounded sticky  top-[15svh]"></div>
+  <div class="hidden h-[85svh] md:block ngCard  sticky  top-[12svh]"></div>
 </section>
-
 
 
   `,

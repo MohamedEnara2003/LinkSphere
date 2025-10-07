@@ -48,6 +48,13 @@ export interface IUser {
   friends?: IFriend[];
 }
 
+export interface UserProfile {
+  data : {
+  user : IUser
+  }
+}
+
+
 export interface UnfreezePayload {
   email: string;
   password: string;
@@ -61,7 +68,7 @@ export interface FriendRequestResponse {
 
 export interface IUpdateBasicInfo {
   userName?: string;
-  gender?: string;
+  gender?: GenderEnum;
   phone?: string;
 }
 

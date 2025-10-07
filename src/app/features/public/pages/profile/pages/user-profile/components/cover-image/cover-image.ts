@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
-import { BackLink } from "../../../../../../shared/components/links/back-link";
+import { Component, input } from '@angular/core';
+import { BackLink } from "../../../../../../../../shared/components/links/back-link";
 import { RouterModule } from '@angular/router';
-import { NgImage } from "../../../../../../shared/components/ng-image/ng-image";
+import { NgImage } from "../../../../../../../../shared/components/ng-image/ng-image";
 
 
 @Component({
@@ -14,7 +14,7 @@ template: `
 <nav class="w-full flex justify-between items-center absolute top-0 left-0 p-2 py-3 z-10">
 <app-back-link />
   <button 
-    [routerLink]="['/public/profile' , '68df351b8d9d2c0c94c98ef6' , 'update']"
+    [routerLink]="['/public/profile/user' , userId() , 'update']"
     [queryParams]="{edit : 'cover-images'}"
     class="cursor-pointer flex items-center gap-2
     px-3 py-2 bg-white/80 backdrop-blur-md rounded-lg shadow-md
@@ -43,9 +43,10 @@ template: `
   </button>
 </nav>
 
+    @if(coverImages().length >= 1) {
     <app-ng-image
         [options]="{
-        src :   'cover-image.jpg',
+        src : coverImages()[0] ,
         alt : 'Profile picture ' ,
         width  : 200,
         height : 200,
@@ -55,14 +56,16 @@ template: `
         fetchpriority : 'high', 
         }"
         [isPreview]="true"
-
         />
-
+    }@else {
+    <div class="size-full bg-brand-color/50 rounded-b-2xl transition-transform duration-500 hover:scale-105"></div>
+    }
 
 </header>
 
 `,  
 })
 export class coverImage {
-
+  coverImages = input<string[]>([]);
+  userId = input<string>('');
 }

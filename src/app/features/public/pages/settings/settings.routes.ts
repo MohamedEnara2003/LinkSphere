@@ -11,6 +11,11 @@ export const settingsRoutes: Routes = [
     loadComponent: () =>
     import('./pages/display/display').then((c) => c.Display),
 },
-{ path: '', redirectTo: 'display', pathMatch: 'full' },
+{
+    path: 'log-out',
+    loadComponent: () =>
+    import('./pages/log-out/log-out').then((c) => c.logOut),
+},
+{ path: '', redirectTo: 'account', pathMatch: 'full' },
 { path: '**', redirectTo: '', pathMatch: 'full' },
 ]

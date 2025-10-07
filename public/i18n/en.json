@@ -4,5 +4,181 @@
     "invalid": "This field not a valid",
     "email": "Is not a valid email address",
     "passwordMismatch": "Passwords do not match"
+  },
+  "forms": {
+    "optional": "optional"
+  },
+  "auth": {
+    "login": {
+      "title": "Log in",
+      "password": "Password",
+      "login_button": "Log in",
+      "forget_password": "Forget Password",
+      "already_have_account": "Already have an account?",
+      "dont_have_account": "Dont have an account?",
+      "create_one": "Create One",
+      "log_in": "Log in"
+    },
+    "register": {
+      "title": "Register",
+      "username": "UserName",
+      "email": "Email",
+      "phone": "Phone",
+      "gender": "Gender",
+      "password": "Password",
+      "confirm_password": "Confirm Password",
+      "register_button": "Register",
+      "male": "male",
+      "female": "female"
+    },
+    "forget_password": {
+      "title": "Log in",
+      "send_otp": "Send OTP"
+    }
+  },
+  "navigation": {
+    "home": "Home",
+    "friends": "Friends",
+    "profile": "Profile",
+    "chats": "Chats",
+    "settings": "Settings",
+    "hello": "Hello," ,
+    "my_profile" : "My Profile"
+  },
+  "home": {
+    "whats_on_mind": "What's on your mind? ✍️",
+    "photo": "Photo",
+    "tag_people": "Tag people"
+  },
+  "profile": {
+    "profile_card": {
+      "user_profile_card": "User Profile Card",
+      "full_name": "Full name",
+      "username": "Username",
+      "email_address": "Email address",
+      "phone_number": "Phone number"
+    },
+    "links": {
+      "posts": "Posts",
+      "about": "About",
+      "photos": "Photos",
+      "friends": "Friends"
+    },
+    "about": {
+      "title": "User Info",
+      "username": "User Name",
+      "email": "Email",
+      "phone": "Phone",
+      "gender": "Gender",
+      "not_provided": "Not provided",
+      "unknown": "Unknown",
+      "n_a": "N/A"
+    },
+    "friends": {
+      "title": "Friends",
+      "no_friends": "No Friends",
+      "profile_picture_of": "Profile picture of"
+    },
+    "pictures": {
+      "title": "Pictures",
+      "user_picture": "User picture"
+    },
+    "update": {
+      "title": "Update Profile",
+      "cover_images": "Cover images",
+      "profile_picture": "Profile Picture",
+      "user_profile_information": "User profile information",
+      "edit": "Edit",
+      "cover_image": "Cover Image"
+    },
+    "actions": {
+      "edit_profile": "Edit Profile",
+      "photos": "Photos",
+      "friends": "Friends",
+      "posts": "Posts",
+      "filters": "Filters"
+    }
+  },
+  "chats": {
+    "title": "Chats",
+    "select_chat": "Select a chat",
+    "no_chat_selected": "No chat selected",
+    "chat_container": "Chat container",
+    "chat_messages": "Chat messages",
+    "chat_message": "Chat message",
+    "profile_picture_of": "Profile picture of",
+    "search_chats": "Search chats...",
+    "write_message": "Write a message...",
+    "send_message": "Send message",
+    "type_message": "Type your message"
+  },
+  "posts": {
+    "availability": "Availability",
+    "allow_comments": "Allow comments",
+    "public": "public",
+    "friends": "friends",
+    "only_me": "only-me",
+    "frozen": "frozen",
+    "allow": "allow",
+    "deny": "deny"
+  },
+  "settings": {
+    "title": "Settings",
+    "account": {
+      "title": "Account",
+      "subtitle": "Manage security preferences for your account.",
+      "freeze_account": {
+        "title": "Freeze account",
+        "description": "Temporarily disable activity and hide your profile from others. You can unfreeze at any time.",
+        "frozen": "Frozen",
+        "active": "Active",
+        "unfreeze": "Unfreeze",
+        "freeze": "Freeze",
+        "account_is_frozen": "Account is frozen",
+        "account_is_active": "Account is active",
+        "unfreeze_account": "Unfreeze account",
+        "freeze_account": "Freeze account"
+      },
+      "two_step": {
+        "title": "Two‑step verification",
+        "description": "Add an extra layer of security to your account using a verification step when signing in.",
+        "enabled": "Enabled",
+        "disabled": "Disabled",
+        "enable": "Enable",
+        "disable": "Disable",
+        "two_step_enabled": "Two-step is enabled",
+        "two_step_disabled": "Two-step is disabled",
+        "verified": "Verified",
+        "not_verified": "Not verified",
+        "verify_now": "Verify now",
+        "verify_description": "Verify your two-step method to complete setup.",
+        "enable_two_step": "Enable two-step verification",
+        "disable_two_step": "Disable two-step verification"
+      }
+    },
+    "display": {
+      "title": "Display Settings",
+      "subtitle": "Manage display preferences for your account.",
+      "languages": "Languages",
+      "english": "English",
+      "arabic": "Arabic",
+      "dark_mode": "Dark Mode",
+      "dark": "Dark",
+      "light": "Light"
+    },
+    "logout": {
+      "title": "Logout",
+      "logout_current_device": "Logout from Current Device",
+      "logout_all_devices": "Logout from All Devices",
+      "please_wait": "Please wait...",
+      "logout_current_title": "Logout from Current Device",
+      "logout_all_title": "Logout from All Devices"
+    }
+  },
+  "errors": {
+    "not_found": {
+      "title": "Not Found",
+      "description": "The page you're looking for doesn't exist or has been moved."
+    }
   }
 }

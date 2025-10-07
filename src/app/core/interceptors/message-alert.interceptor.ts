@@ -25,7 +25,9 @@ export const MessageAlertInterceptor: HttpInterceptorFn = (req, next) => {
   alertService.alertOption.set([...alertService.alertOption() , newAlert]);
   }
 
-  const isActionMethod = method === 'post' || method === 'put' || method === 'delete';
+  const isActionMethod = 
+  method === 'post' || method === 'put' || method === 'patch'  || method === 'delete';
+
   const isNotVisitorsApi = !req.url.includes('visitors') && !req.url.includes('delete-temp-images');
   return next(req).pipe(
   tap((event) => {

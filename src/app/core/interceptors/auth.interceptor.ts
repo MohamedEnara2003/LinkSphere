@@ -35,9 +35,6 @@ export const AuthInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: 
     const isExpired = errorName === 'tokenexpirederror' || errorMessage.includes('jwt expired');
 
 
-    console.log(errorName);
-    console.log(errorMessage);
-
     
     const tokenError = isExpired  && auth?.refresh_token;
       
@@ -45,8 +42,7 @@ export const AuthInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: 
       if (tokenError && !req.url.includes('/auth/refresh-token')) {
         return authService.refreshToken().pipe(
           switchMap(({ data: { credentials } }) => {
-            console.log('Save new tokens' , credentials);
-            
+         
             // Save new credentials
             storageService.setItem('auth', credentials);
 

@@ -120,6 +120,9 @@ text-text-light dark:text-text-dark  ;
 .ng-checkbox {
 @apply checkbox checkbox-info ;
 }
+.ng-toggle {
+@apply toggle toggle-info ;
+}
 .ng-radio {
 @apply radio radio-info ;
 }

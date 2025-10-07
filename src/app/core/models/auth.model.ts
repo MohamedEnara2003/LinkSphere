@@ -1,4 +1,5 @@
 
+export type logoutFlag =  "current" | "all" ;
 export interface AuthToken {
   access_token : string ;
   refresh_token : string ;
@@ -40,4 +41,5 @@ export interface ChangeForgetPassword {
 export interface VerifyOtp {
   OTP: string;
 }
+
 

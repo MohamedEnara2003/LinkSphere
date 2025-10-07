@@ -1,13 +1,19 @@
-import {CanMatchFn, Router } from '@angular/router';
-import { StorageService } from '../services/locale-storage.service';
+import { CanActivateFn, Router,  } from '@angular/router';
 import { inject } from '@angular/core';
-import { AuthToken } from '../models/auth.model';
+import { UserProfileService } from '../../features/public/pages/profile/services/user-profile.service';
+import { catchError, map, of } from 'rxjs';
 
-export const isAuthGuard: CanMatchFn = () => {
-  const storageService = inject(StorageService);
+export const isAuthGuard: CanActivateFn = () => {
+  const userService = inject(UserProfileService);
   const router = inject(Router);
 
-  const auth = storageService.getItem<AuthToken>('auth') ;
+  const backToLogin = () => {
+  return  router.createUrlTree(['/auth/login'])
+  }
 
-  return auth ? true : router.navigateByUrl('/auth/login');
+  return userService.getUserProfile().pipe(
+  map(({ data: user }) =>  user ? true : backToLogin()),
+  catchError(() =>  of(backToLogin()))
+  );
+
 };

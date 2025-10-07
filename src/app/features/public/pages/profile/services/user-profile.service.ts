@@ -3,20 +3,16 @@ import { SingleTonApi } from '../../../../../core/services/api/single-ton-api.se
 import { 
   ChangePasswordDto, 
   FriendRequestResponse, 
+  GenderEnum, 
   IConfirmUpdateEmail, 
   IUpdateBasicInfo, 
   IUpdateEmail, 
   IUser, 
-  UnfreezePayload 
+  UnfreezePayload, 
+  UserProfile
 } from '../../../../../core/models/user.model';
 import { EMPTY, Observable, tap } from 'rxjs';
 
-
-interface UserProfile {
-  data : {
-  user : IUser
-  }
-}
 
 
 @Injectable({
@@ -34,12 +30,31 @@ export class UserProfileService {
 
   public user = computed(() => this.#user());
   public userProfile = computed(() => this.#userProfile());
+
+  public isMyProfile = computed(() => {
+  const userId =  this.#user()?._id ;
+  const userProfileId = this.#userProfile()?._id;
+  return (!userId && !userProfileId) ? false : userId === userProfileId ;
+  });
   
-  public setUser (newData : IUser) : void {
+  
+  public pictures = computed<string[]>(() => {
+    const {coverImages , picture} = this.userProfile()!;
+    if(!coverImages || !picture) return [] ;
+    const pictures = [picture , ...coverImages];
+    return pictures ;
+  });
+
+  public about = computed<{ userName: string; email: string; phone: string; gender: string }>(() => {
+  const {userName , gender , phone , email} = this.userProfile()!;
+  return {userName , gender , phone : phone || '' , email};
+  });
+
+  public setUser (newData : IUser | null) : void {
   this.#user.set(newData);
   }
 
-  public setUserProfile(newData : IUser) : void {
+  public setUserProfile(newData : IUser | null) : void {
   this.#userProfile.set(newData);
   }
   
@@ -60,6 +75,8 @@ export class UserProfileService {
   }
 
   getUserProfileById(userId : string): Observable<UserProfile> {
+  const userProfile = this.#userProfile();
+  if(userProfile && userId === userProfile._id) return EMPTY ;
   return this.#singleTonApi.findById<UserProfile>(`${this.#routeName}`, userId).pipe(
   tap((res) => {
   const user =  res.data.user ;
@@ -95,7 +112,8 @@ export class UserProfileService {
   uploadProfilePicture(file: File): Observable<{ key: string }> {
     return this.#singleTonApi.uploadImage<{ key: string }>(
       `${this.#routeName}/profile-picture`,
-      [file]
+      'image',
+      [file] ,
     );
   }
 
@@ -110,6 +128,7 @@ export class UserProfileService {
   uploadProfileCoverImages(files: File[]): Observable<{ keys: string[] }> {
     return this.#singleTonApi.uploadImage<{ keys: string[] }>(
       `${this.#routeName}/profile-cover-images`,
+      'images',
       files
     );
   }
@@ -142,8 +161,21 @@ export class UserProfileService {
   // ==============================
 
   updateBasicInfo(data: IUpdateBasicInfo): Observable<IUser> {
-    return this.#singleTonApi.patch<IUser>(`${this.#routeName}/update-basic-info`, data);
+    console.log(data);
+    
+    return this.#singleTonApi.patch<IUser>(`${this.#routeName}/update-basic-info` , data).pipe(
+      tap(() => {
+        const currentUser = this.#user();
+        if(!currentUser) return ;
+        this.setUser({...currentUser , 
+        userName: data.userName ?? currentUser.userName,
+        phone: data.phone ?? currentUser.phone,
+        gender: data.gender ?? currentUser.gender,
+        })
+      })
+    );
   }
+
 
   updateEmail(data: IUpdateEmail): Observable<void> {
     return this.#singleTonApi.patch<void>(`${this.#routeName}/update-email`, data);

@@ -2,13 +2,14 @@ import { Component, inject} from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { AlertService } from './core/services/alert.service';
 import { messageAlert } from "./shared/components/message-alert/message-alert";
+import { LanguageService } from './core/services/translations/language.service';
 
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet, messageAlert],
   template : `
 
-  <main class="bg-light dark:bg-dark">
+  <main class="bg-light dark:bg-dark ">
     <!-- Alert And confirm Popup -->
   @if(alertService.alertOption().length > 0){
   <nav role="navigation"
@@ -25,5 +26,9 @@ import { messageAlert } from "./shared/components/message-alert/message-alert";
 })
 export class App {
   readonly alertService = inject(AlertService);
+  private readonly languageService = inject(LanguageService);
 
+  constructor(){
+  this.languageService.initSetDefaultLanguage();
+  }
 }

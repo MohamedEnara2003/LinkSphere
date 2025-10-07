@@ -1,6 +1,6 @@
 import { Component, input } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { ProfileListTypes } from '../../model/profiles.model';
+import { ProfileListTypes } from '../../../../model/profiles.model';
 
 
 @Component({

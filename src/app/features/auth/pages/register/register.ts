@@ -5,21 +5,21 @@ import { TranslateModule } from '@ngx-translate/core';
 import { NgControl } from "../../../../shared/components/ng-control/ng-control.";
 import { NgEmail } from "../../components/ng-email/ng-email";
 import { CustomValidators } from '../../../../core/validations/custom/custom-validations';
-import { signInWithGoogle } from "../../components/sign-with-google/sign-with-google";
 import { AuthRedirectLink } from "../../components/auth-redirect-link/auth-redirect-link";
 import { AuthService } from '../../service/auth.service';
 import { SignUp } from '../../../../core/models/auth.model';
+import { SignInWithGoogle } from "../../components/sign-with-google/sign-with-google";
 
 @Component({
   selector: 'app-register',
   imports: [
-    SharedModule, 
-    TranslateModule, 
-    NgControl, 
-    NgEmail, 
-    signInWithGoogle, 
-    AuthRedirectLink
-  ],
+    SharedModule,
+    TranslateModule,
+    NgControl,
+    NgEmail,
+    AuthRedirectLink,
+    SignInWithGoogle
+],
   template: `
   <section class="w-full min-h-svh flex items-center justify-center p-5">
     <form 
@@ -28,7 +28,7 @@ import { SignUp } from '../../../../core/models/auth.model';
       class="w-full sm:w-xl md:w-2xl lg:w-3xl ngCard border-brand-color/10 border rounded-box p-5">
 
       <fieldset class="w-full fieldset p-2 grid grid-cols-1 md:grid-cols-2 gap-5 space-y-2">
-        <legend class="fieldset-legend col-span-1 md:col-span-2">Register</legend>
+        <legend class="fieldset-legend col-span-1 md:col-span-2">{{ 'auth.register.title' | translate }}</legend>
 
         <!-- UserName -->
         <div>
@@ -37,7 +37,7 @@ import { SignUp } from '../../../../core/models/auth.model';
               type : 'text',
               name : 'UserName',
               formControlName : 'userName',
-              label : 'UserName',
+              label : 'auth.register.username',
               id : 'UserName',
               autocomplete : 'name',
               isRequired : true
@@ -57,7 +57,7 @@ import { SignUp } from '../../../../core/models/auth.model';
               type : 'tel',
               name : 'phone',
               formControlName : 'phone',
-              label : 'Phone',
+              label : 'auth.register.phone',
               id : 'phone',
               autocomplete : 'tel',
               inputmode : 'tel',
@@ -73,9 +73,10 @@ import { SignUp } from '../../../../core/models/auth.model';
               type : 'select',
               name : 'gender',
               formControlName : 'gender',
-              label : 'Gender',
+              label : 'auth.register.gender',
               id : 'gender',
               selectOptions : ['male' , 'female'] ,
+              textForTranslate : 'auth.register.',
               isRequired : true,
               autocomplete : 'sex'
             }"
@@ -89,7 +90,7 @@ import { SignUp } from '../../../../core/models/auth.model';
               type : 'password',
               name : 'Password',
               formControlName : 'password',
-              label : 'Password',
+              label : 'auth.register.password',
               id : 'Password',
               autocomplete : 'new-password',
               isRequired : true
@@ -104,7 +105,7 @@ import { SignUp } from '../../../../core/models/auth.model';
               type : 'password',
               name : 'confirmPassword',
               formControlName : 'confirmPassword',
-              label : 'Confirm Password',
+              label : 'auth.register.confirm_password',
               id : 'confirmPassword',
               autocomplete : 'new-password',
               isRequired : true
@@ -114,10 +115,10 @@ import { SignUp } from '../../../../core/models/auth.model';
 
         <!-- Google + Submit -->
         <div class="col-span-1 md:col-span-2">
-          <app-sign-in-with-google />
+          <app-sign-in-with-google/>
           <button type="submit"
             class="w-full btn btn-neutral btn-sm sm:btn-md bg-dark hover:bg-neutral mt-4 ">
-            Register
+            {{ 'auth.register.register_button' | translate }}
           </button>
         </div>
       </fieldset>

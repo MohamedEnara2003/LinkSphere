@@ -1,25 +1,26 @@
 import { Component, input } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 
 
 
 
 @Component({
 selector: 'app-auth-redirect-link',
-imports: [RouterModule],
+imports: [RouterModule, TranslateModule],
 template: `
     @let redirect = isAccount() ? 'login' : 'register';
     <nav class="flex justify-center items-center gap-1 mt-2" 
     aria-label="Auth-redirect-link" role="navigation">
     <p class="ngText font-normal">
-    {{ isAccount() ? 'Already have an account?' :  'Dont have an account?' }}
+    {{ isAccount() ? ('auth.login.already_have_account' | translate) : ('auth.login.dont_have_account' | translate) }}
     </p>
 
     <a [href]="['/auth/' , redirect]"  [routerLink]="['/auth/' , redirect]" 
     [aria-label]=" redirect + ' page link'" 
     role="link"
     class="link  text-brand-color "> 
-    {{ isAccount() ? 'Log in' :  ' Create One' }}
+    {{ isAccount() ? ('auth.login.log_in' | translate) : ('auth.login.create_one' | translate) }}
     </a>
 
     </nav>

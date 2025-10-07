@@ -9,9 +9,8 @@ imports: [NgImage ],
 template: `
         <app-ng-image
         [options]="{
-        src :  userProfileService.user()?.picture || '',
+        src :  userProfileService.user()?.picture || userProfileService.user()?.placeholder  || '',
         alt : 'Profile picture ' + userProfileService.user()?.userName || '',
-        placeholder : userProfileService.user()?.placeholder  ,
         width  : 200,
         height : 200,
         class : styleClass() || 'size-50',
