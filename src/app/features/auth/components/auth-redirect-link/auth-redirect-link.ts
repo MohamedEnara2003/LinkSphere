@@ -4,7 +4,6 @@ import { TranslateModule } from '@ngx-translate/core';
 
 
 
-
 @Component({
 selector: 'app-auth-redirect-link',
 imports: [RouterModule, TranslateModule],

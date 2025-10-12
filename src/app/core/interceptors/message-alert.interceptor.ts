@@ -7,10 +7,18 @@ interface ApiResponse {
   message?: string;
   [key: string]: unknown; 
 }
+interface ErrorServer {
+  error_message  : string ,
+  error_stack  : string ,
+  name  : string ,
+  statusCode : number ,
+}
 
 export const MessageAlertInterceptor: HttpInterceptorFn = (req, next) => {
   const alertService = inject(AlertService)
+
   const method = req.method.toLowerCase();
+
   const initAlert = (status : 'alert-success' | 'alert-warning' , message : string , time : number) => {
   const ids = alertService.alertOption().map(({ id }) => id ?? 0);
   const maxId = ids.length > 0 ? Math.max(...ids) : 0;
@@ -28,22 +36,31 @@ export const MessageAlertInterceptor: HttpInterceptorFn = (req, next) => {
   const isActionMethod = 
   method === 'post' || method === 'put' || method === 'patch'  || method === 'delete';
 
-  const isNotVisitorsApi = !req.url.includes('visitors') && !req.url.includes('delete-temp-images');
+
   return next(req).pipe(
   tap((event) => {
-  if(event instanceof HttpResponse &&  isActionMethod && isNotVisitorsApi){
+  if(event instanceof HttpResponse &&  isActionMethod ){
   const res = event as HttpResponse<ApiResponse>;
-  const messageDefault : string =  method === 'post' ? 'Created' : method === 'put' ?  'Updated' : 'Deleted'
+  const messageDefault : string =  method === 'post' ? 'Created' :( method === 'put' || method === 'patch'
+  ) ?  'Updated' : 'Deleted';
+
+
+  if(req.url.includes('/posts/like')) return ;
+
   initAlert(
   'alert-success' ,
   res.body?.message || `${messageDefault} successfully`,
-  1000
+  2000
   )
+
   }
   }),
   catchError(({error} : HttpErrorResponse) => {
-  if(method === 'post' || method === 'put' || method === 'delete') {
-  initAlert('alert-warning' ,  error.message || 'Something went wrong' , 2000)
+  const backendError = error as { name?: string; error_message?: string } | null;
+
+  const errorMessage = (backendError?.error_message || '').toLowerCase();
+  if(method === 'post' || method === 'put' || method === 'delete' || method === 'patch') {
+  initAlert('alert-warning' ,  (errorMessage.length <= 40 ? errorMessage : '' ) || 'Something went wrong' , 3000)
   }
   return throwError(() => error)
   })

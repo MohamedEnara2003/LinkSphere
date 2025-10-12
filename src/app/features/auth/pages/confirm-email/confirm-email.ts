@@ -2,6 +2,10 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { SharedModule } from '../../../../shared/modules/shared.module';
 import { AuthService } from '../../service/auth.service';
 import { BtnResendOtp } from "../../components/btn-resend-otp/btn-resend-otp";
+import { ActivatedRoute } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
+import { UserProfileService } from '../../../public/pages/profile/services/user-profile.service';
 
 @Component({
   selector: 'app-confirm-email',
@@ -45,7 +49,10 @@ import { BtnResendOtp } from "../../components/btn-resend-otp/btn-resend-otp";
       <span class="text-brand-color font-semibold">{{ otpValue() }}</span>
     </p>
 
-  <app-btn-resend-otp (onClickResend)="resendConfirmEmailOtp()" />
+  @if(!state()){
+    <app-btn-resend-otp (onClickResend)="resendConfirmEmailOtp()" />
+  }
+
   </form>
 </section>
   `,
@@ -53,9 +60,13 @@ import { BtnResendOtp } from "../../components/btn-resend-otp/btn-resend-otp";
 })
 export class confirmEmail {
   #authService = inject(AuthService);
+  #uerService = inject(UserProfileService);
+  #route = inject(ActivatedRoute);
+
+  state = toSignal<string | null>(this.#route.queryParamMap.pipe(map((query) => query.get('state'))))
 
   otpLength = signal<number>(6).asReadonly();
-
+  
   // Signal لتخزين القيم
   otp = signal(Array(this.otpLength()).fill(''));
 
@@ -110,11 +121,14 @@ export class confirmEmail {
     event.preventDefault();
     const code = this.otpValue();
     if (code.length === this.otpLength()) {
-    this.#authService.confirmEmail(code).subscribe()
+    !this.state() ?
+    this.#authService.confirmEmail(code).subscribe() :
+    this.#uerService.confirmUpdateEmail(code).subscribe() ;
     }
   }
+
   resendConfirmEmailOtp() : void {
-  this.#authService.resendConfirmEmailOtp('mohamedabdelziz2003@gmail.com').subscribe();
+  this.#authService.resendConfirmEmailOtp('mohamedahmedabdelziz2003@gmail.com').subscribe();
   }
 
 }

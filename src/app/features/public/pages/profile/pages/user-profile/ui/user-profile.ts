@@ -34,7 +34,7 @@ imports: [
 ],
 template: `
 
-<section class="relative w-full grid grid-cols-1 gap-4 p-2  xl:p-10 xl:px-20 animate-sideLeft " 
+<section class="relative w-full grid grid-cols-1 gap-4 p-2  xl:p-10 xl:px-20 animate-up " 
 aria-labelledby="profile-section-title">
 
 <app-cover-image  
@@ -46,7 +46,7 @@ aria-labelledby="profile-section-title">
 <article 
 class="w-full grid grid-cols-1 md:grid-cols-2  -mt-15 z-10 gap-4"
 aria-labelledby="profile-info-title">
-<app-user-profile-header [isMyProfile]="userProfileService.isMyProfile()"/>
+<app-user-profile-header />
 </article>
 
 <nav class="w-full h-10 md:sticky md:top-25  z-10">

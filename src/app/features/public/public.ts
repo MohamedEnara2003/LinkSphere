@@ -3,22 +3,21 @@ import { RouterOutlet } from '@angular/router';
 import { Header } from "./components/header/header";
 import { Footer } from "./components/footer/footer";
 import { UserProfileService } from './pages/profile/services/user-profile.service';
-import { CommonModule } from '@angular/common';
 import { Logo } from "../../shared/components/logo/logo";
 import { take } from 'rxjs';
+import { LoadingService } from '../../core/services/loading.service';
+import { CommonModule } from '@angular/common';
 
 
 @Component({
   selector: 'app-public',
-  imports: [RouterOutlet, Header, Footer, CommonModule, Logo],
+  imports: [RouterOutlet, Header, Footer, Logo , CommonModule],
   template: `
-
-
   <main>
-  @defer(on timer(1000)){
+  @defer(when !loadingService.isLoading()){
   <app-header />
-  <router-outlet name="model"/>
   <router-outlet />
+  <router-outlet name="model"/>
   <app-footer />
   }@placeholder {
   <section class="w-full h-svh flex items-center justify-center ">
@@ -33,9 +32,11 @@ import { take } from 'rxjs';
 })
 export class Public {
 #userProfileService = inject(UserProfileService);
+loadingService = inject(LoadingService);
 
 constructor(){
 this.#userProfileService.getUserProfile().pipe(take(1)).subscribe();
+this.#userProfileService.getFriendsRequests().pipe(take(1)).subscribe();
 }
 
 

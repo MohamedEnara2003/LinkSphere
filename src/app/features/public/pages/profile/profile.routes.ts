@@ -3,7 +3,7 @@ import { Routes } from '@angular/router';
 export const profileRoutes: Routes = [
 
 {
-path: 'user/:userId', data : {isProfile : true} ,
+path: 'user/:userId',
 loadComponent: () =>import('./pages/user-profile/ui/user-profile')
 .then((c) => c.userProfile),
 },

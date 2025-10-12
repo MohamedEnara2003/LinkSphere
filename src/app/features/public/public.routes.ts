@@ -16,9 +16,18 @@ export const publicRoutes: Routes = [
         (c) => c.UpsertPostModel
       ),
   },
+  {
+    path: 'comments',
+    outlet: 'model',
+    loadComponent: () =>
+      import('./pages/posts/components/post-card/components/post-comments/ui/post-comments').then(
+        (c) => c.PostComments
+      ),
+  },
 
   {
-    path: 'profile',
+    path: 'profile', 
+    data : {isProfile : true} ,
     loadComponent: () =>
     import('./pages/profile/profile').then((c) => c.Profile),
     loadChildren : () => import('./pages/profile/profile.routes').then((r) => r.profileRoutes),

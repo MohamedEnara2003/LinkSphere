@@ -1,9 +1,12 @@
-import { Component, ChangeDetectionStrategy, model, inject, afterNextRender, OnDestroy, input, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, afterNextRender, OnDestroy, signal, effect } from '@angular/core';
 import { DomService } from '../../../../../../../../../core/services/dom.service';
 import { SharedModule } from '../../../../../../../../../shared/modules/shared.module';
 import { UpsertComment } from "../components/upsert-comment/upsert-comment";
 import { CommentItem } from "../components/comment-item/comment-item";
 import { ReplyList } from "../components/reply-list/reply-list";
+import { ActivatedRoute, Router } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
 
 
 
@@ -43,24 +46,27 @@ export interface IComment2 {
 
       <!-- Comments Card -->
       <article
-        class="relative w-full sm:w-[70%] md:w-[60%] 2xl:w-1/2 h-120 2xl:h-96 
-        ngCard rounded-t-2xl shadow-xl animate-up flex flex-col"
+        class="relative w-full md:w-[80%] lg:w-1/2 2xl:w-1/2 h-[80%] p-2
+        ngCard rounded-t-2xl shadow-xl animate-up flex flex-col gap-2"
         aria-labelledby="comments-title" >
 
         <!-- Header -->
-        <header class="flex items-center justify-between px-4 py-3 border-b border-base-200">
+        <header class="flex items-center justify-between p-2 ">
           <h2 id="comments-title" class="text-lg font-semibold ngText">Comments</h2>
           <button 
-            class="btn btn-sm btn-ghost" 
+            (click)="closeComments()"
+            title="Close comments"
+            class="btn btn-sm btn-circle bg-dark hover:bg-dark/50 border-transparent" 
             type="button"
-            (click)="isOpenComments.set(false)"
             aria-label="Close comments">
-            ✕
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
           </button>
         </header>
 
         <!-- Comments List -->
-        <section class="flex-1 overflow-y-auto px-4 py-2" aria-live="polite" 
+        <section class="flex-1 overflow-y-auto p-2" aria-live="polite" 
         style="scrollbar-width: none;">
           <ul class="space-y-6">
           @for (comment of comments(); track comment._id) {
@@ -128,7 +134,7 @@ export interface IComment2 {
 
       <!-- Backdrop -->
       <div 
-        (click)="isOpenComments.set(false)"
+        (click)="closeComments()"
         class="size-full bg-dark/50 fixed inset-0 -z-10"
         aria-hidden="true"
         tabindex="-1">
@@ -138,8 +144,11 @@ export interface IComment2 {
 })
 export class PostComments implements OnDestroy{
     #domService = inject(DomService);
-    isOpenComments = model<boolean>(false);
+    #route = inject(ActivatedRoute);
+    #router = inject(Router);
 
+    postId = toSignal(this.#route.queryParamMap.pipe(map((query) => query.get('postId') || '')));
+    
     isOpenReplies = signal<string>('');
 
   comments = signal<IComment2[]>([
@@ -199,12 +208,22 @@ export class PostComments implements OnDestroy{
   ]);
 
     constructor(){
-    afterNextRender(() => this.#domService.setBodyOverflow('hidden'))
+    afterNextRender(() => this.#domService.setBodyOverflow('hidden'));
+    effect(() => {
+    if(!this.postId()) {
+    this.closeComments();
+    }
+    })
     }
     
+
+    closeComments() : void {
+    this.#router.navigate(['/public' ,{ outlets: { 'model': null } }])
+    }
     
     ngOnDestroy(): void {
     this.#domService.setBodyOverflow('auto');
+    this.comments.set([]);
     }
 
 }

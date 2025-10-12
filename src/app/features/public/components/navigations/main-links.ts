@@ -1,16 +1,16 @@
 import { Component, inject } from '@angular/core';
 import { SharedModule } from '../../../../shared/modules/shared.module';
 import { UserProfileService } from '../../pages/profile/services/user-profile.service';
-import { TranslateModule } from '@ngx-translate/core';
+
 
 @Component({
 selector: 'app-main-links',
-imports: [SharedModule, TranslateModule],
+imports: [SharedModule,],
 template: `
 
 <ul class="w-full grid grid-cols-5  text-text-dark md:text-text-light dark:md:text-text-dark">
 <li [title]="'navigation.home' | translate">
-<a href="/public" routerLink="/public" routerLinkActive="active-link"  [routerLinkActiveOptions]="{exact : true}"
+<a href="/public" routerLink="/public" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact : true}"
 class="flex flex-col justify-center items-center hover:text-brand-color duration-200 transition-colors py-1 ">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 lg:size-8">
 <path d="M11.47 3.841a.75.75 0 0 1 1.06 0l8.69 8.69a.75.75 0 1 0 1.06-1.061l-8.689-8.69a2.25 2.25 0 0 0-3.182 0l-8.69 8.69a.75.75 0 1 0 1.061 1.06l8.69-8.689Z" />
@@ -21,7 +21,11 @@ class="flex flex-col justify-center items-center hover:text-brand-color duration
 </li>
 
 <li [title]="'navigation.friends' | translate">
-<a href="/public" routerLink="/public" [queryParams]="{status : 'friends'}"  
+<a 
+[href]="['/public/profile/user' , userService.user()?._id || '']" 
+[routerLink]="['/public/profile/user' , userService.user()?._id || '']" 
+[queryParams]="{}"
+[queryParams]="{list : 'Friends'}"  
 routerLinkActive="active-link" [routerLinkActiveOptions]="{exact : true}"
 class="flex flex-col justify-center items-center  hover:text-brand-color duration-200 transition-colors py-1">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 lg:size-8">
@@ -32,7 +36,9 @@ class="flex flex-col justify-center items-center  hover:text-brand-color duratio
 </li>
 
 <li [title]="'navigation.profile' | translate">
-<a href="/public/profile" [routerLink]="['/public/profile/user' , userService.user()?._id || '']" 
+<a 
+[href]="['/public/profile/user' , userService.user()?._id || '']" 
+[routerLink]="['/public/profile/user' , userService.user()?._id || '']" 
 routerLinkActive="active-link" [routerLinkActiveOptions]="{exact : true}"
 class="flex flex-col justify-center items-center  hover:text-brand-color duration-200 transition-colors py-1">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 lg:size-8">

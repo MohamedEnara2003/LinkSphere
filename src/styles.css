@@ -6,20 +6,19 @@
 
 @theme {
     --color-dark: #0F0F0F;
-    --color-light: #F9FAFB ;
+  --color-light: #E5E5E5;        /* بديل عن F9FAFB */
 
     --color-card-dark: #1A1A1A;
-    --color-card-light: #E5E7EB;
+  --color-card-light: #D1D5DB;   /* بديل عن E5E7EB */
 
     --color-text-dark: #E5E7EB;
-    --color-text-light: #0F0F0F;
+  --color-text-light: #1F1F1F;   /* بديل عن 0F0F0F */
 
     --color-brand-color: var(--color-info);
 }
 
+
 /* Anemations */
-
-
   @keyframes iconShake {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-2px); }
@@ -91,9 +90,15 @@ body {
 .active-link {
 @apply   text-brand-color  md:border-b-2  ;
 }
-
 .ngCard {
-@apply  bg-card-light dark:bg-card-dark rounded-2xl shadow shadow-dark/30;
+  @apply 
+    bg-gradient-to-t  bg-card-light dark:bg-card-dark
+    from-card-light via-light/60 to-light 
+    dark:from-card-dark dark:via-dark/60 dark:to-dark 
+    rounded-2xl 
+    shadow shadow-dark/30 
+    border border-light/20 dark:border-dark/40 
+    transition-all duration-300 ease-in-out;
 }
 
 
@@ -138,10 +143,10 @@ text-text-light dark:text-text-dark  ;
 
   /* animation styles */
   .animate-down {
-    animation:  down 0.5s  ease-in-out;
+    animation:  down 0.4s  ease-in-out;
   }
   .animate-up {
-    animation:  up 0.5s  ease-in-out;
+    animation:  up 0.4s  ease-in-out;
   }
   .animate-sideLeft {
     animation:  sideLeft 0.4s  ease-in-out;
@@ -150,8 +155,9 @@ text-text-light dark:text-text-dark  ;
     animation:  sideRight 0.4s  ease-in-out;
   }
   .animate-opacity{
-    animation:  opacity 0.8s  ease-in-out;
+    animation:  opacity 0.7s  ease-in-out;
   }
+
   .animate-iconShake{
     animation:  iconShake 0.3s  ease-in-out;
   }

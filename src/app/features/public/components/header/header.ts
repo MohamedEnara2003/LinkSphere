@@ -13,6 +13,7 @@ import { TranslateModule } from '@ngx-translate/core';
   selector: 'app-header',
   imports: [Logo, SharedModule, TranslateModule, MainLinks, ResponsiveNavLinks, UserPicture],
   template: `
+
 @if(!isHide()){ 
 <header  
 class="relative w-full h-[10svh] ngCard rounded-none  px-4  grid grid-cols-2 md:grid-cols-3  
@@ -29,12 +30,14 @@ md:sticky md:top-0 ">
 
 <nav class="w-full flex justify-end"> 
     <a 
+        [title]=""
         [href]="profileLink()" 
         [routerLink]="profileLink()" 
-        class="flex items-center gap-2 ngText text-sm font-normal ">
+        class="flex items-center gap-2 ngText text-sm font-normal hover:bg-brand-color/20 rounded-2xl 
+        duration-300 transition-all p-1">
         <app-user-picture styleClass="size-8 object-cover rounded-full" />
-        <span class="text-xs text-brand-color">{{ 'navigation.hello' | translate }}</span> Mohamed 
-
+        <span class="text-xs text-brand-color">{{ 'navigation.hello' | translate }}</span> 
+        {{userProfileService.user()?.firstName || 'User'}} 
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" 
         class="size-4 duration-300 transition-transform"
         [ngClass]="isProfile() ? 'rotate-180' : ''">

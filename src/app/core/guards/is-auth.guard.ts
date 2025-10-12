@@ -12,7 +12,7 @@ export const isAuthGuard: CanActivateFn = () => {
   }
 
   return userService.getUserProfile().pipe(
-  map(({ data: user }) =>  user ? true : backToLogin()),
+  map((user) =>  user ? true : backToLogin()),
   catchError(() =>  of(backToLogin()))
   );
 

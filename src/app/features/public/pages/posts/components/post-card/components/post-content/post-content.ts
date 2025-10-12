@@ -7,16 +7,15 @@ import { SharedModule } from '../../../../../../../../shared/modules/shared.modu
 selector: 'app-post-content',
 imports: [NgImage , SharedModule],
 template: `
-    <main class="grid  grid-cols-1 gap-5  "
-    [ngClass]="attachments() && attachments().length === 1 ? 'md:grid-cols-1 ' : 'md:grid-cols-2'"
+    <main class="w-full flex flex-col  gap-2  "
     [id]="'post-desc-' + postId()"
     [attr.aria-labelledby]="'post-title-' + postId()" 
     [attr.aria-describedby]="'post-desc-' + postId()" 
     role="main"
     >
-
         @if(attachments() && attachments().length > 0){
-            <section class="grid grid-cols-1 gap-5">
+            <section class="w-full grid  gap-5 "
+            [ngClass]="attachments().length === 1 ? 'grid-cols-1' : 'grid-cols-2'">
                 @for (attachment of attachments(); track attachment) {
                     <app-ng-image
                         [options]="{
@@ -27,7 +26,7 @@ template: `
                             decoding : 'async',
                             fetchpriority : 'high',
                             loading : 'eager',
-                            class: 'object-cover size-full min-h-80 max-h-160 aspect-square shadow-xs shadow-card-dark/50 hover:opacity-80 duration-200 transition-opacity',
+                            class: 'object-cover w-full h-full  min-h-60 max-h-100 aspect-square shadow-xs shadow-card-dark/50 hover:opacity-80 duration-200 transition-opacity',
                         }"
                         [isPreview]="true"
                     />

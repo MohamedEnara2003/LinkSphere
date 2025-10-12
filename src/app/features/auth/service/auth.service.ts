@@ -1,30 +1,12 @@
-import { inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { SingleTonApi } from '../../../core/services/api/single-ton-api.service';
 import { EMPTY, Observable, switchMap, tap } from 'rxjs';
 import { AuthToken, ChangeForgetPassword, LoginBody, LoginType, logoutFlag, SignUp, VerifyOtp } from '../../../core/models/auth.model';
 
 import { Router } from '@angular/router';
 import { StorageService } from '../../../core/services/locale-storage.service';
-import { isPlatformBrowser } from '@angular/common';
+
 import { UserProfileService } from '../../public/pages/profile/services/user-profile.service';
-
-declare global {
-  namespace google.accounts.id {
-    interface CredentialResponse {
-      credential: string;
-      select_by: string;
-    }
-
-    interface IdConfiguration {
-      client_id: string;
-      callback: (response: CredentialResponse) => void;
-    }
-
-    function initialize(config: IdConfiguration): void;
-    function renderButton(parent: HTMLElement, options: { theme: string; size: string }): void;
-    function prompt(): void; // ✅ أضفنا دي
-  }
-}
 
 
 interface Respons {
@@ -44,65 +26,23 @@ export class AuthService {
   #storageService = inject(StorageService);
   #userProfileService = inject(UserProfileService);
 
-  #platform_id = inject(PLATFORM_ID);
 
   #routeName: string = "auth";
-  #googleClientId : string = 
-  '527860747448-4q6fmpfmju4rfghkgvn10s5g37rjc7si.apps.googleusercontent.com.apps.googleusercontent.com';
-  
 
   #loginData = signal<LoginType | null>(null);
 
+// ____________________________________
 
-  // 🟢 Sign with Gmail
-  initGoogleSignIn(): Observable<string> {
-    if (!isPlatformBrowser(this.#platform_id)) {
-      return new Observable((observer) => observer.complete());
-    }
 
-    return new Observable<string>((observer) => {
-      // ✅ تحقق من تحميل SDK
-      const checkGoogleLoaded = () => typeof google !== 'undefined' && google.accounts?.id;
 
-      const initializeGoogle = () => {
-        google.accounts.id.initialize({
-          client_id: this.#googleClientId,
-          callback: (response: google.accounts.id.CredentialResponse) => {
-            observer.next(response.credential); // idToken
-            observer.complete();
-          },
-        });
+//🟢 Create Account 🟢
 
-        // ✅ عرض نافذة اختيار الحساب
-        google.accounts.id.prompt();
-      };
-
-      if (checkGoogleLoaded()) {
-        initializeGoogle();
-      } else {
-        // ✅ انتظر حتى تحميل الـ SDK
-        const interval = setInterval(() => {
-          if (checkGoogleLoaded()) {
-            clearInterval(interval);
-            initializeGoogle();
-          }
-        }, 200);
-      }
-
-      return { unsubscribe() {} };
-    });
-  }
-
-  signUpWithGmail(idToken: string): Observable<void> {
+signWithGoggle(idToken: string): Observable<void> {
   return this.#singleTonApi.create(
   `${this.#routeName}/signup-with-gmail`,
   { idToken }
   );
-}
-
-// ____________________________________
-
-//🟢 Create Account 🟢
+  }
 
 // 🟢 Sign Up 
 signUp(data: SignUp): Observable<Respons> {
@@ -116,7 +56,7 @@ signUp(data: SignUp): Observable<Respons> {
 // 🟢 Confirm Email (Send OTP to Email) + Login مباشرة
 confirmEmail(OTP: string): Observable<LoginBody> {
   return this.#singleTonApi.patch(`${this.#routeName}/confirm-email`, {
-  email: 'mohamedabdelziz2003@gmail.com',
+  email: 'mohamedahmedabdelziz2003@gmail.com',
   OTP,
   }).pipe(
   switchMap(() => {

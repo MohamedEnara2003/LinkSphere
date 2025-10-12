@@ -1,6 +1,8 @@
+import { IUser } from "./user.model";
+
 // ---- Shared Enums ----
-export type AllowComments = 'allow' | 'deny';
-export type Availability = 'public' | 'friends' | 'only-me' | 'frozen';
+export type AllowComments = 'allow' | 'disable';
+export type Availability = 'public' | 'friends' | 'only-me';
 
 
 // ---- User Tag (للتاج في البوست) ----
@@ -10,13 +12,13 @@ export interface IUserTag {
   picture?: string;
 }
 
-
 export interface ICreatedBy{
   id: string;
   userName: string;
   picture?: string;
   createdAt?: string; // ISO string من السيرفر
 }
+
 // ---- Comment ----
 export interface IComment {
 id: string;
@@ -25,37 +27,33 @@ createdBy: ICreatedBy;
 createdAt?: string; // ISO string من السيرفر
 }
 
-// ---- Post ----
-export interface IPost {
-  id: string;
-  createdBy: ICreatedBy;
-  content?: string;
-  attachments?: string[];
-  assetsFolderId: string;
+  // ---- Post ----
+  export interface IPost {
+    _id: string; // MongoDB ID
+    id: string;  // duplicate key for frontend use
+    content?: string;
+    attachments: string[]; // URLs or filenames of uploaded media
+    imageUrls?: string[]; // URLs or filenames of uploaded media
+    availability: Availability;
+    allowComments: AllowComments;
+    tags: string[];
+    likes: string[];
+    createdBy: string ; // userId
+    author: IUser ; // user data
+    assetsFolderId?: string;
+    only: string[]; // visible only to these users
+    except: string[]; // hidden from these users
+    lastComment: string | null;
+    createdAt: string; // ISO date
+    updatedAt: string; // ISO date
+    __v?: number;
+  }
 
-  availability: Availability;
-  except?: string[];
-  only?: string[];
-  allowComments: AllowComments;
-
-  tags?: IUserTag[];
-  likes: string[]; // IDs of users who liked
-  lastComment?: IComment;
-
-  freezedAt?: string;
-  freezedBy?: string;
-
-  restoredAt?: string;
-  restoredBy?: string;
-
-  createdAt: string;
-  updatedAt?: string;
-}
 
 // ---- Paginated Response ----
 export interface IPaginatedPostsResponse {
-  statusCode: number;
-  message: string;
+  statusCode?: number;
+  message?: string;
   posts: IPost[];
   pagination: {
     page: number;
@@ -83,7 +81,7 @@ export interface IFreezeUnfreezeResponse {
 
 
 export interface ICreatePost {
-  availability?: 'public' | 'private' | 'friends';
+  availability?: Availability;
   content?: string;
   attachments?: File[];
   tags?: string[];

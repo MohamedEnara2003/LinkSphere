@@ -100,7 +100,7 @@ export class UpdateUserPictureComponent {
 
 
   onFileSelected(input: HTMLInputElement) {
-  this.uploadService.uploadAttachments(input , 0.75 , 900 , 900);  
+  this.uploadService.uploadAttachments(input , 1 , 0.75 , 900 , 900);  
   }
 
   savePicture() {

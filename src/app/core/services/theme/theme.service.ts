@@ -1,33 +1,46 @@
-import { Injectable, signal, effect } from '@angular/core';
+import { Injectable, inject, signal, effect, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser, DOCUMENT } from '@angular/common';
+import { StorageService } from '../locale-storage.service';
+
+export enum DarkMode {
+  Dark = 'dark',
+  Light = 'light',
+}
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ThemeService {
-   #html!: HTMLElement;
+  #html!: HTMLElement;
+  #storageService = inject(StorageService);
+  #platformId = inject(PLATFORM_ID);
+  #document = inject(DOCUMENT);
+
   isDarkMode = signal(true);
 
   constructor() {
-    this.initializeTheme();
-    this.setupThemeEffect();
+    // فقط شغّل التهيئة في المتصفح
+    if (isPlatformBrowser(this.#platformId)) {
+      this.initializeTheme();
+      this.setupThemeEffect();
+    }
   }
 
   private initializeTheme(): void {
-    this.#html  = document.documentElement;
-    
-    const savedTheme = localStorage.getItem('theme');
-    
+    this.#html = this.#document.documentElement;
+
+    const savedTheme: DarkMode | null = this.#storageService.getItem('theme');
+
     if (savedTheme) {
-      this.isDarkMode.set(savedTheme === 'dark');
+      this.isDarkMode.set(savedTheme === DarkMode.Dark);
     } else {
       this.isDarkMode.set(true);
     }
-    
+
     this.applyTheme();
   }
 
   private setupThemeEffect(): void {
-    // Effect to automatically apply theme changes
     effect(() => {
       this.applyTheme();
     });
@@ -35,7 +48,7 @@ export class ThemeService {
 
   private applyTheme(): void {
     const isDark = this.isDarkMode();
-    
+
     if (isDark) {
       this.#html.setAttribute('data-theme', 'dark');
       this.#html.classList.add('dark');
@@ -43,20 +56,25 @@ export class ThemeService {
       this.#html.setAttribute('data-theme', 'light');
       this.#html.classList.remove('dark');
     }
-    
-    // Save to localStorage
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+
+    // نحفظ القيمة في localStorage
+    this.#storageService.setItem(
+      'theme',
+      isDark ? DarkMode.Dark : DarkMode.Light
+    );
   }
 
+  /** ✅ دالة لتبديل الوضع */
   toggleTheme(): void {
-    this.isDarkMode.update(current => !current);
+    this.isDarkMode.update((current) => !current);
   }
 
+  /** ✅ الدالة اللي كانت ناقصة عندك */
   setTheme(isDark: boolean): void {
     this.isDarkMode.set(isDark);
   }
 
   getCurrentTheme(): string {
-    return this.isDarkMode() ? 'dark' : 'light';
+    return this.isDarkMode() ? DarkMode.Dark : DarkMode.Light;
   }
 }

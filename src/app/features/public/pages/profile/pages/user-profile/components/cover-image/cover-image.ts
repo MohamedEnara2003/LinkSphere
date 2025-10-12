@@ -11,7 +11,7 @@ template: `
 
 <header class="relative w-full h-[30svh] sm:h-[45svh] md:h-[50svh] overflow-hidden rounded-b-2xl shadow-md">
 
-<nav class="w-full flex justify-between items-center absolute top-0 left-0 p-2 py-3 z-10">
+<nav class="w-full flex justify-between items-center absolute top-0 left-0  p-4 ">
 <app-back-link />
   <button 
     [routerLink]="['/public/profile/user' , userId() , 'update']"
@@ -58,7 +58,12 @@ template: `
         [isPreview]="true"
         />
     }@else {
-    <div class="size-full bg-brand-color/50 rounded-b-2xl transition-transform duration-500 hover:scale-105"></div>
+    <div
+    class="w-full h-full bg-gradient-to-r  from-light via-light/50 to-card-light 
+    dark:from-dark dark:via-dark/50 dark:to-card-dark
+    flex items-center justify-center rounded-b-2xl text-gray-700 dark:text-gray-500 text-sm">
+    <span>No cover image</span>
+    </div>
     }
 
 </header>

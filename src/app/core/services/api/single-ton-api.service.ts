@@ -20,7 +20,7 @@ export class SingleTonApi {
 
 public find<G>(routeName : string ) : Observable<G> {
 return this.#httpClient.get<G>(`${this.#baseUrlApi}${routeName}` , {
-withCredentials : true
+withCredentials : true ,
 }).pipe(
 takeUntilDestroyed(this.#destroyRef)
 );
@@ -31,6 +31,7 @@ return this.#httpClient.get<G>(`${this.#baseUrlApi}${routeName}/${id}` , {
 withCredentials : true,
 }).pipe(takeUntilDestroyed(this.#destroyRef));
 }
+
 create<G>(routeName : string , data? : unknown) : Observable<G> {
 return this.#httpClient.post<G>(`${this.#baseUrlApi}${routeName}`, data , {
 withCredentials : true
@@ -84,7 +85,7 @@ body : {id}
 
 public deleteById<G>(routeName : string , id : string |  number) : Observable<G> {
 return this.#httpClient.delete<G>(`${this.#baseUrlApi}${routeName}/${id}` , {
-withCredentials : true
+withCredentials : true ,
 });
 }
 

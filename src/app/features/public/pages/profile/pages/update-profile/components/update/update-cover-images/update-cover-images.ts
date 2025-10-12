@@ -114,7 +114,7 @@ export class UpdateCoverImagesComponent {
 
 
   onFileSelected(input: HTMLInputElement) : void {
-    this.uploadService.uploadAttachments(input);
+    this.uploadService.uploadAttachments(input , 3 , 0.75 , 1280 , 720);
   }
 
   removePreview(preview: string) : void {

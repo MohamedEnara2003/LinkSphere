@@ -25,13 +25,10 @@ export interface ImageOption {
   selector: 'app-ng-image',
   imports: [CommonModule],
   template: `
-    <figure class="size-full flex flex-col">
 
-      @defer (when options().src;) {
-        
       <!-- Normal Image -->
       <img
-        [src]="options().src || options().placeholder"
+        [src]="options().src"
         [srcset]="options().srcset || ''"
         [sizes]="options().sizes || ''"
         [alt]="options().alt"
@@ -47,17 +44,7 @@ export interface ImageOption {
         (error)="onError()"
         [class]="isPreview() ? 'cursor-zoom-in' : '' "
       />
-    }@placeholder {
-    <div [ngClass]="options().class" class="bg-neutral-300 animate-pulse"></div>
-    }
-      <!-- Figcaption -->
-      <figcaption
-        [class]="options().figcaption ? (options().figcaptionClass || 'ngText') : 'sr-only'"
-      >
-        {{ options().figcaption }}
-      </figcaption>
-    </figure>
-
+    
     <!-- Fullscreen Preview -->
     @if (preview()) {
       <section
@@ -89,6 +76,7 @@ export interface ImageOption {
           class="max-h-[90vh] max-w-[95vw] object-contain rounded shadow-lg cursor-zoom-out
           transition-transform duration-300 ease-out animate-scaleIn "
           (click)="closePreview()"
+          (error)="onError()"
         />
       </section>
     }
@@ -105,7 +93,7 @@ export class NgImage {
   onError(): void {
     this.options.update((prev) => ({
       ...prev,
-      src: prev.placeholder || '/user-placeholder.jpg',
+      src: prev.placeholder || '/17316704336156_Event-Image-Not-Found.jpg',
     }));
   }
 

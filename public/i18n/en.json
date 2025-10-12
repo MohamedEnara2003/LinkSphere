@@ -50,6 +50,8 @@
     "photo": "Photo",
     "tag_people": "Tag people"
   },
+
+
   "profile": {
     "profile_card": {
       "user_profile_card": "User Profile Card",
@@ -99,6 +101,8 @@
       "filters": "Filters"
     }
   },
+
+
   "chats": {
     "title": "Chats",
     "select_chat": "Select a chat",
@@ -112,6 +116,8 @@
     "send_message": "Send message",
     "type_message": "Type your message"
   },
+
+
   "posts": {
     "availability": "Availability",
     "allow_comments": "Allow comments",
@@ -122,8 +128,11 @@
     "allow": "allow",
     "deny": "deny"
   },
+
   "settings": {
+
     "title": "Settings",
+
     "account": {
       "title": "Account",
       "subtitle": "Manage security preferences for your account.",
@@ -139,6 +148,7 @@
         "unfreeze_account": "Unfreeze account",
         "freeze_account": "Freeze account"
       },
+
       "two_step": {
         "title": "Two‑step verification",
         "description": "Add an extra layer of security to your account using a verification step when signing in.",
@@ -156,16 +166,43 @@
         "disable_two_step": "Disable two-step verification"
       }
     },
-    "display": {
-      "title": "Display Settings",
-      "subtitle": "Manage display preferences for your account.",
+    "update_email" : {
+    "title" : "Update Email" ,
+    "old_password" : "Old Password" ,
+    "new_password" : "New Password" ,
+    "confirm_new_password" : "Confirm New Password" ,
+    "save_button" : "Save" 
+    },
+    "change_password" : {
+    "title" : "Change password" ,
+    "old_password" : "Old Password" ,
+    "new_password" : "New Password" ,
+    "confirm_new_password" : "Confirm New Password" ,
+    "save_button" : "Save" 
+    },
+    "darkMode": {
+      "title": "Dark Mode Settings",
+      "dark_mode": "Dark Mode",
+      "dark": "Dark",
+      "light": "Light" ,
+      "subtitle": "Switch between light and dark themes for a comfortable viewing experience."
+    },
+
+    "language": {
+      "title": "Languages Settings",
       "languages": "Languages",
       "english": "English",
       "arabic": "Arabic",
-      "dark_mode": "Dark Mode",
-      "dark": "Dark",
-      "light": "Light"
+      "subtitle": "Choose your preferred language for the app interface."
     },
+
+    "friend": {
+    "title": "Sent Friend Requests",
+    "no_sent_requests": "No sent friend requests",
+    "you_have_not_sent_any_requests": "You haven't sent any friend requests yet",
+    "subtitle": "These are the friend requests you have sent to other users."
+    },
+
     "logout": {
       "title": "Logout",
       "logout_current_device": "Logout from Current Device",

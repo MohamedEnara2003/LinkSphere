@@ -1,6 +1,5 @@
 import { Component, input } from '@angular/core';
 import { NgImage } from "../../../../../../../../shared/components/ng-image/ng-image";
-import { IFriend } from '../../../../../../../../core/models/user.model';
 import { TranslateModule } from '@ngx-translate/core';
 
 
@@ -64,6 +63,6 @@ import { TranslateModule } from '@ngx-translate/core';
   `,
 })
 export class UserFriends {
-  friends = input<IFriend[]>([])
+  friends = input<any[]>([])
 
 }

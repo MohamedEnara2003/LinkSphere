@@ -15,23 +15,24 @@ export enum ProviderEnum {
   google = "google",
 }
 
-// نسخة مبسطة من بيانات الصديق
+
 export interface IFriend {
   _id: string;
+  id?: string;
+  picture?: string;
   firstName: string;
-  lastName: string;
+  lastName : string;
   userName: string;
   email: string;
-  picture?: string;
-  gender: GenderEnum;
 }
+
 
 // نسخة الـ User اللي الـ frontend بيستخدمها
 export interface IUser {
   _id: string;
   firstName: string;
   lastName: string;
-  userName: string; // virtual من الـ backend
+  userName: string; 
   slug: string;
 
   email: string;
@@ -46,6 +47,9 @@ export interface IUser {
   coverImages?: string[];
 
   friends?: IFriend[];
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
 }
 
 export interface UserProfile {
@@ -61,9 +65,7 @@ export interface UnfreezePayload {
 }
 
 
-export interface FriendRequestResponse {
-  requestId: string;
-}
+
 
 
 export interface IUpdateBasicInfo {
@@ -73,11 +75,11 @@ export interface IUpdateBasicInfo {
 }
 
 export interface IUpdateEmail {
-  newEmail: string;
+  email: string;
 }
 
 export interface IConfirmUpdateEmail {
-  otp: string;
+  OTP: string;
 }
 export interface ChangePasswordDto {
   oldPassword: string;

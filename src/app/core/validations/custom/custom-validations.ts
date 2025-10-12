@@ -24,6 +24,23 @@ export class CustomValidators {
   }
   }
 
+  static post(contentKey: string, attachmentsKey: string): ValidatorFn {
+    return (formGroup: AbstractControl): ValidationErrors | null => {
+      const contentControl = formGroup.get(contentKey);
+      const attachmentsControl = formGroup.get(attachmentsKey);
+
+      if (!contentControl || !attachmentsControl) return null;
+
+      const content = contentControl.value?.trim();
+      const attachments = attachmentsControl.value;
+
+      // ✅ الشرط الأساسي: لازم واحد على الأقل يكون موجود
+      const isValid = !!content || (attachments && attachments.length > 0);
+
+      return isValid ? null : { requiredPostData: true };
+    };
+  }
+
 
 
 }

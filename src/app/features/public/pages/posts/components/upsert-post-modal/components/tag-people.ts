@@ -1,7 +1,7 @@
 import { Component, inject, input, model, signal } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { NgImage } from "../../../../../../../shared/components/ng-image/ng-image";
-import { FormArray, FormGroup, NonNullableFormBuilder, Validators } from '@angular/forms';
+import { FormArray, FormGroup, NonNullableFormBuilder} from '@angular/forms';
 
 
 
@@ -25,7 +25,8 @@ template: `
     <h2 class="ngText text-xl ">Tag people</h2>
 
     <button (click)="isOpenTagModel.set(!isOpenTagModel())"
-    type="submit" class="ngBtn btn-sm">
+    type="submit" class="ngBtn btn-sm"
+    [disabled]="ArrayTags.controls.length === 0">
     Add
     </button>
     </header>
@@ -63,6 +64,7 @@ template: `
     {{friend.name}}
     </label>
     <input type="checkbox" [name]="'Tag-' + friend.name" [id]="'Tag-' + friend.name"
+    (change)="onTagChange(friend.id, $event.target)"
     class="ng-checkbox ">
     </li>
     }
@@ -93,15 +95,21 @@ return this.postForm().controls['tags'] as FormArray
 }
 
 
-createTag() : void {
-    const tags = this.#fb.group({
-    id : ['' , [Validators.required]],
-    name : ['' , [Validators.required]],
-    picture : [''],
-    });
-    
-this.ArrayTags.push(tags)
-}
+onTagChange(friendId: string | number, input: HTMLInputElement): void {
+    const tagsArray = this.ArrayTags;
 
+    if (input.checked) {
+      // ✅ أضف id المستخدم في الـ FormArray
+    if (!tagsArray.value.includes(friendId)) {
+    tagsArray.push(this.#fb.control(String(friendId)));
+    }
+    } else {
+      // ❌ لو اتشال الـ check، شيله من الـ FormArray
+    const index = tagsArray.controls.findIndex(c => c.value === String(friendId));
+    if (index !== -1) {
+    tagsArray.removeAt(index);
+    }
+    }
+}
 
 }

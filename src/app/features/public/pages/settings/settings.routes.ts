@@ -7,9 +7,30 @@ export const settingsRoutes: Routes = [
     import('./pages/account-setting/account-setting').then((c) => c.AccountSetting),
 },
 {
-    path: 'display',
+    path: 'update-email',
     loadComponent: () =>
-    import('./pages/display/display').then((c) => c.Display),
+    import('./pages/update-email/update-email').then((c) => c.updateEmail),
+},
+{
+    path: 'change-password',
+    loadComponent: () =>
+    import('./pages/change-password/change-password').then((c) => c.ChangePasswordComponent),
+},
+
+{
+    path: 'dark-mode',
+    loadComponent: () =>
+    import('./pages//dark-mode/dark-mode').then((c) => c.DarkMode),
+},
+{
+    path: 'language',
+    loadComponent: () =>
+    import('./pages/language/language').then((c) => c.Language),
+},
+{
+    path: 'sent-friend-requests',
+    loadComponent: () =>
+    import('./pages/sent-friend-requests/sent-friend-requests').then((c) => c.SentFriendRequests),
 },
 {
     path: 'log-out',

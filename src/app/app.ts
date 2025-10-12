@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { AlertService } from './core/services/alert.service';
 import { messageAlert } from "./shared/components/message-alert/message-alert";
 import { LanguageService } from './core/services/translations/language.service';
+import { ThemeService } from './core/services/theme/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -27,8 +28,10 @@ import { LanguageService } from './core/services/translations/language.service';
 export class App {
   readonly alertService = inject(AlertService);
   private readonly languageService = inject(LanguageService);
+  private readonly themeService= inject(ThemeService);
 
   constructor(){
   this.languageService.initSetDefaultLanguage();
+
   }
 }

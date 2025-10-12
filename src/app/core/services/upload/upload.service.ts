@@ -1,38 +1,53 @@
 import { computed, Injectable, signal, inject } from "@angular/core";
 import { DomService } from "../dom.service";
+import { AlertService } from "../alert.service";
 
 @Injectable({ providedIn: 'root' })
 export class UploadService {
+
+  #domService = inject(DomService);
+  #alertService = inject(AlertService);
 
   #files = signal<File[]>([]);
   #previews = signal<string[]>([]);
   isLoading = signal<boolean>(false);
 
-  private domService = inject(DomService);
 
   files = computed<File[]>(() => this.#files());
   previews = computed<string[]>(() => this.#previews());
 
   set setFiles(files: File[]) {
-    this.#files.set(files);
+  this.#files.set(files);
   }
 
   set setPreviews(previews: string[]) {
-    this.#previews.set(previews);
+  this.#previews.set(previews);
   }
 
   async uploadAttachments(
-  input: HTMLInputElement ,
+  input: HTMLInputElement,
+  maxFiles : number = 2 ,
   quality : number = 0.75 ,
   maxWidth : number =  1280,
   maxHeight : number = 1280,
   ): Promise<void> {
-    if (!this.domService.isBrowser()) return; // ✅ تجاهل أثناء SSR
+    if (!this.#domService.isBrowser()) return; // ✅ تجاهل أثناء SSR
 
     const files = input.files;
     if (!files || files.length === 0) return;
+    
+    if ((this.#files().length + files.length) > maxFiles) {
+      this.#alertService.alertOption.set([{
+      id : 1 ,
+      isLoad : true ,
+      isLoadTime : 3000,
+      alertMessage : `You can upload maximum ${maxFiles} files`,
+      alertType : 'alert-warning',
+      }])
+    return
+    };
 
-    const filesArray = Array.from(files);
+    const filesArray = [...Array.from(files) , ...this.#files()]
 
     const convertedFiles: File[] = [];
     for (const file of filesArray) {
@@ -57,7 +72,7 @@ export class UploadService {
     maxWidth = 1280,
     maxHeight = 1280
   ): Promise<File> {
-    if (!this.domService.isBrowser()) {
+    if (!this.#domService.isBrowser()) {
       return Promise.resolve(file);
     }
 
@@ -104,7 +119,7 @@ export class UploadService {
    * إنشاء Previews
    */
   private generatePreviews(files: File[]): void {
-    if (!this.domService.isBrowser()) return; // ✅ تجاهل في SSR
+    if (!this.#domService.isBrowser()) return; // ✅ تجاهل في SSR
 
     this.#previews.set([]);
     files.forEach(file => {

@@ -6,9 +6,18 @@
 - npm i -D daisyui@latest
 - npm i @ngx-translate/core
 - npm i @ngx-translate/http-loader
-- npm i swiper 
+- npm i angular-oauth2-oidc --save
 
 
 
 
 
+Messages => my Profile
+
+Add Friend => not Friend 
+
+Friend => unFriend
+
+Cancel Request => if Add Request
+
+Confirm => if send my Request
