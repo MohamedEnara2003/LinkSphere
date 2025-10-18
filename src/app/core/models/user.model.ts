@@ -15,6 +15,13 @@ export enum ProviderEnum {
   google = "google",
 }
 
+export type RelationshipState =
+  | 'myProfile'
+  | 'notFriend'
+  | 'requestSent'
+  | 'requestReceived'
+  | 'friend';
+
 
 export interface IFriend {
   _id: string;

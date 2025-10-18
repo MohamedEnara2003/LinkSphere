@@ -1,3 +1,5 @@
+import { Pagination } from "./pagination";
+
 // ---- Comment Flag ----
 export type CommentFlag = 'comment' | 'reply';
 
@@ -9,44 +11,51 @@ export interface IUserRef {
 }
 
 // ---- Comment ----
+
 export interface IComment {
-  id: string;
-  flag: CommentFlag;
-
-  createdBy: IUserRef;
-  postId: string;
-  commentId?: string; // parent comment ID لو كان reply
-
-  content?: string;
-  attachment?: string;
-
-  tags?: IUserRef[];
-  likes: string[];
-
-  lastReply?: IComment;
-
-  freezedAt?: string;
-  freezedBy?: string;
-
-  restoredAt?: string;
-  restoredBy?: string;
-
-  createdAt: string;
-  updatedAt?: string;
+  _id: string;               // معرف التعليق
+  id: string;      
+            // نفس المعرف غالبًا، يمكن توحيده
+  commentId?: string;    // if replay
+              // نفس المعرف غالبًا، يمكن توحيده
+  content: string;           // نص التعليق
+  createdAt: string;         // تاريخ الإنشاء (ISO string)
+  updatedAt: string;         // آخر تحديث (ISO string)
+  createdBy: string;         // معرف المستخدم اللي كتب التعليق
+  postId: string;            // معرف المنشور المرتبط
+  flag: CommentFlag;  // نوع التعليق (غالبًا ثابت 'comment')
+  lastReply?: string | null;  // آخر رد على التعليق (إن وجد)
+  likes: string[];           // قائمة بمعرفات المستخدمين اللي عملوا إعجاب
+  tags: string[];            // الوسوم (إن وجدت)
+  author: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    userName: string;
+    _id: string;
+    picture? : string;
+  };
+  attachment?: string;       // مرفق (اختياري)
+  __v?: number; 
 }
 
+
 // ---- Paginated Response ----
-export interface IPaginatedCommentsResponse {
-  statusCode: number;
-  message: string;
-  comments: IComment[];
-  pagination: {
-    page: number;
-    limit: number;
-    count: number;
-    totalComments: number;
-    totalPages: number;
-  };
+export interface IPaginatedCommentsRes{
+  data : {
+    statusCode: number;
+    message: string;
+    comments: IComment[];
+    pagination: Pagination
+  }
+}
+export interface IPaginatedCommentsRepliesRes{
+  data : {
+    statusCode: number;
+    message: string;
+    replies: IComment[];
+    pagination: Pagination
+  }
 }
 
 // ---- Action Responses ----
@@ -80,8 +89,6 @@ export interface IUpdateComment {
   removeAttachment?: boolean; // لتحديد حذف الصورة القديمة قبل رفع جديدة
 }
 
-export interface IReplyComment {
-  content?: string;
-  image?: File;
-  tags?: string[];
+export interface IReplyComment extends ICreateComment {
+
 }

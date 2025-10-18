@@ -1,10 +1,10 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
-import { SingleTonApi } from '../../../../../core/services/api/single-ton-api.service';
-import {  catchError, forkJoin, map, Observable ,of,switchMap,take, tap } from 'rxjs';
-import { Availability, ICreatePost, IPaginatedPostsResponse, IPost, IUpdatePost } from '../../../../../core/models/posts.model';
-import { UserProfileService } from '../../profile/services/user-profile.service';
-import { Router } from '@angular/router';
-import { ImagesService } from '../../../../../core/services/api/images.service';
+import {computed, inject, Injectable, signal } from '@angular/core';
+import {SingleTonApi } from '../../../../../core/services/api/single-ton-api.service';
+import {catchError, EMPTY, forkJoin, map, Observable , of,switchMap, tap } from 'rxjs';
+import {Availability, ICreatePost, IPaginatedPostsResponse, IPost, IUpdatePost } from '../../../../../core/models/posts.model';
+import {UserProfileService } from '../../profile/services/user-profile.service';
+import {Router } from '@angular/router';
+import {ImagesService } from '../../../../../core/services/api/images.service';
 
 @Injectable({
   providedIn: 'root'
@@ -22,9 +22,13 @@ export class PostService {
   // Post Management
 
   #posts = signal<IPost[]>([]);
+  #userProfilePosts = signal<IPost[]>([]);
+  #userFreezedPosts = signal<IPost[]>([]);
   #post = signal<IPost | null>(null);
   
   posts = computed(() => this.#posts());
+  userProfilePosts = computed(() => this.#userProfilePosts());
+  userFreezedPosts = computed(() => this.#userFreezedPosts());
   post = computed(() => this.#post());
 
 
@@ -36,7 +40,8 @@ export class PostService {
  //_____________________________________________________
 
   // 🟢 Create Post
-  createPost(data: ICreatePost , prevViewImages : string[] = []): Observable<{data : {postId : string} }> {
+  createPost(data: ICreatePost , prevViewImages : string[] = [])
+  : Observable<{data : {postId : string , attachments : string[]} }> {
     const formData = new FormData();
   
     // 🟢 Attachments (optional, max 2)
@@ -59,10 +64,11 @@ export class PostService {
         formData.append(`tags[${index}]`, tagId);
       });
     }
-  
+
     // 🚀 إرسال الطلب
-    return this.#singleTonApi.create<{data : {postId : string} }>(`${this.#routeName}/create-post`, formData).pipe(
-    tap(({data : {postId}}) => {
+    return this.#singleTonApi.create<{data : {postId : string , attachments : string[]} }>
+    (`${this.#routeName}/create-post`, formData).pipe(
+    tap(({data : {postId , attachments}}) => {
     this.#router.navigate(['/public' ,{ outlets: { 'model' :null} }]);
     
     this.#posts.update((posts) => [
@@ -70,7 +76,8 @@ export class PostService {
         _id: postId,
         content: data.content || '',
         availability: data.availability || 'public',
-        attachments: prevViewImages,
+        attachments: attachments,
+        imageUrls : prevViewImages ,
         tags: data.tags || [],
         createdBy: this.#userService.user()?._id ?? '', // لو عندك المستخدم 
         author : this.#userService.user(), 
@@ -87,7 +94,7 @@ export class PostService {
   }
   
   // 🟢 Update Post
-  updatePost(postId: string, data: IUpdatePost): Observable<{ data: { postId: string } }> {
+  updatePost(postId: string, data: IUpdatePost , prevViewImages : string[] = []): Observable<{ data: { postId: string } }> {
     const formData = new FormData();
   
     // 🟢 Attachments (optional)
@@ -126,16 +133,18 @@ export class PostService {
       .patch<{ data: { postId: string } }>(`${this.#routeName}/update-post/${postId}`, formData)
       .pipe(
         tap(() => {
+          this.#router.navigate(['/public' ,{ outlets: { 'model' :null} }]);
+  
+  
           // 🟢 تحديث الكاش المحلي بعد التعديل
           this.#posts.update(posts =>
             posts.map(p =>
               p._id === postId
                 ? {
                     ...p,
-                    content: data.content ?? p.content,
-                    attachments: data.attachments
-                      ? data.attachments.map(f => URL.createObjectURL(f))
-                      : p.attachments,
+                    content: data.content ?? p.content ?? '',
+                    attachments: [],
+                    imageUrls : prevViewImages ,
                     tags: data.tags ?? p.tags,
                     updatedAt: new Date().toISOString(),
                   }
@@ -152,19 +161,129 @@ export class PostService {
     return this.#singleTonApi.deleteById<void>(`${this.#routeName}`, postId).pipe(
     tap(() => {
     this.#posts.update((posts) => posts.filter((post) => post._id !== postId));
+    this.#userProfilePosts.update((posts) => posts.filter((post) => post._id !== postId));
+    this.#userFreezedPosts.update((posts) => posts.filter((post) => post._id !== postId));
     })
     );
   }
+
+
+  #preparePosts(
+  routeName : string,
+  page: number = 1,
+  limit: number = 10
+  ) : Observable<{ data: IPaginatedPostsResponse }> {
+    return this.#singleTonApi
+    .find<{ data: IPaginatedPostsResponse }>(
+      `${this.#routeName}/${routeName}?page=${page}&limit=${limit}`
+    )
+    .pipe(
+      switchMap(({ data: { posts, pagination } }) => {
+        if (!posts.length) {
+          this.#posts.set([]);
+          return of({ data: { posts, pagination } });
+        }
+
+        // ✅ تجهيز كل بوست مع الصور والـ author picture
+        const postsWithAssets$ = posts.map((post) => {
+
+          const attachmentUrls$ = post.attachments?.length
+            ? forkJoin(
+                post.attachments.map((key) =>
+                  this.#imagesService
+                    .getImages(key, 'post')
+                    .pipe(map(({ url }) => url))
+                )
+              )
+            : of<string[]>([]);
+
+          const authorPicture$ = post.author?.picture
+            ? this.#imagesService
+                .getImages(post.author.picture, 'user')
+                .pipe(
+                  map(({ url }) => url || ''),
+                  catchError(() => of(''))
+                )
+            : of('');
+
+          // 🧩 دمج نتائج الصور كلها
+          return forkJoin({
+            attachments: attachmentUrls$,
+            authorPicture: authorPicture$,
+          }).pipe(
+            map(({ attachments, authorPicture }) => ({
+              ...post,
+              imageUrls : attachments ,
+              author: {
+                ...post.author,
+                picture: authorPicture,
+              },
+            }))
+          );
+        });
+
+        // 🧠 بعد ما كل البوستات تجهز
+        return forkJoin(postsWithAssets$).pipe(
+          map((finalPosts) => ({
+            data: {   
+            posts: finalPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+            ) , pagination },
+          }))
+        );
+      })
+    );
+  }
+
 
   // 🟢 Get Posts (paginated)
   getPosts(
     availability: Availability,
     page: number = 1,
-    limit: number = 10
+    limit: number = 2
   ): Observable<{ data: IPaginatedPostsResponse }> {
-    const posts = this.#posts();
-    const cachedPosts = posts.filter((p) => p.availability === availability);
+    
+    // const posts = this.#posts();
+    // const cachedPosts = posts.filter((p) => p.availability === availability);
   
+    // // ✅ كاش جاهز
+    // if (cachedPosts.length > 0) {
+    //   return EMPTY
+    // }
+  
+    // 🌐 استدعاء الـ API
+  return this.#preparePosts('', page , limit).pipe(
+    tap(({data : {posts}}) => {
+      this.#posts.set(
+        posts.filter((p) => p.availability === availability)
+      );
+    }),
+  )
+  }
+
+
+  getUserPosts(
+  userId : string ,
+  page: number = 1,
+  limit: number = 10
+  ) : Observable<{data: IPaginatedPostsResponse }>{
+
+  const posts = this.#userProfilePosts();
+  const cachedPosts = posts.filter((p) => p.createdBy === userId);
+  if (cachedPosts.length > 0)  return EMPTY
+  
+  return this.#preparePosts(`user/${userId}` , page , limit).pipe(
+  tap(({data : {posts}}) => {
+  this.#userProfilePosts.set(posts);
+  })
+  )
+  }
+
+  getFreezedPosts(
+    page: number = 1,
+    limit: number = 10
+  ) : Observable<{data: IPaginatedPostsResponse }>{
+    const cachedPosts = this.#userFreezedPosts();
+
     // ✅ كاش جاهز
     if (cachedPosts.length > 0) {
       return of({
@@ -180,87 +299,36 @@ export class PostService {
         },
       });
     }
-  
-    // 🌐 استدعاء الـ API
-    return this.#singleTonApi
-      .find<{ data: IPaginatedPostsResponse }>(
-        `${this.#routeName}/?page=${page}&limit=${limit}`
-      )
-      .pipe(
-        switchMap(({ data: { posts, pagination } }) => {
-          if (!posts.length) {
-            this.#posts.set([]);
-            return of({ data: { posts, pagination } });
-          }
-  
-          // ✅ تجهيز كل بوست مع الصور والـ author picture
-          const postsWithAssets$ = posts.map((post) => {
-            const attachmentUrls$ = post.attachments?.length
-              ? forkJoin(
-                  post.attachments.map((key) =>
-                    this.#imagesService
-                      .getImages(key, 'post')
-                      .pipe(map(({ url }) => url))
-                  )
-                )
-              : of<string[]>([]);
-  
-            const authorPicture$ = post.author?.picture
-              ? this.#imagesService
-                  .getImages(post.author.picture, 'user')
-                  .pipe(
-                    map(({ url }) => url || '/user-placeholder.jpg'),
-                    catchError(() => of('/user-placeholder.jpg'))
-                  )
-              : of('/user-placeholder.jpg');
-  
-            // 🧩 دمج نتائج الصور كلها
-            return forkJoin({
-              attachments: attachmentUrls$,
-              authorPicture: authorPicture$,
-            }).pipe(
-              map(({ attachments, authorPicture }) => ({
-                ...post,
-                attachments,
-                author: {
-                  ...post.author,
-                  picture: authorPicture,
-                },
-              }))
-            );
-          });
-  
-          // 🧠 بعد ما كل البوستات تجهز
-          return forkJoin(postsWithAssets$).pipe(
-            tap((finalPosts) => {
-              this.#posts.set(
-                finalPosts.filter((p) => p.availability === availability)
-              );
-            }),
-            map((finalPosts) => ({
-              data: { posts: finalPosts, pagination },
-            }))
-          );
-        })
-      );
-  }
-  
-  
+
+    return this.#preparePosts('freezed').pipe(
+    tap(({data : {posts}}) => {
+    this.#userFreezedPosts.set(posts.map((p) => ({...p , isFreezed : true})))
+    })
+    )
+    }
 
   // 🟢 Like / Unlike Post
   toggleLike(postId: string): Observable<void> {
-    return this.#singleTonApi.create<void>(`${this.#routeName}/like/${postId}`, {}).pipe(
-
-    );
+  return this.#singleTonApi.create<void>(`${this.#routeName}/like/${postId}`);
   }
 
   // 🟢 Freeze Post
-  freezePost(postId: string): Observable<void> {
-    return this.#singleTonApi.deleteById<void>(`${this.#routeName}/freeze`, postId);
+  freezePost(postId: string , post : IPost): Observable<void> {
+    return this.#singleTonApi.deleteById<void>(`${this.#routeName}/freeze`, postId).pipe(
+    tap(() => {
+    this.#posts.update((posts) => posts.filter((post) => post._id !== postId));
+    this.#userFreezedPosts.update((posts) => [{...post , isFreezed : true}, ...posts]);
+    })
+    );
   }
 
   // 🟢 Unfreeze Post
-  unfreezePost(postId: string): Observable<void> {
-    return this.#singleTonApi.patchById<void>(`${this.#routeName}/unfreeze`, {}, postId);
+  unfreezePost(postId: string , post : IPost): Observable<void> {
+  return this.#singleTonApi.patch<void>(`${this.#routeName}/unfreeze/${postId}`).pipe(
+  tap(() => {
+  this.#userFreezedPosts.update((posts) => posts.filter((post) => post._id !== postId));
+  this.#posts.update((posts) => [{...post , isFreezed : false} , ...posts]);
+  })
+  );
   }
 }

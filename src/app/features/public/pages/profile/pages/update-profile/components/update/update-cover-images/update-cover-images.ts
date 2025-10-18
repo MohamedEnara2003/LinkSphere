@@ -71,12 +71,13 @@ import { IUser } from '../../../../../../../../../core/models/user.model';
       @if (uploadService.previews().length > 0) {
         <article class="flex flex-col gap-4 items-center w-full">
           <span class="text-sm text-gray-500">Preview:</span>
-          <div class="grid gap-4 w-full" [ngClass]="uploadService.previews().length <= 1 ? 'grid-cols-1' : 'grid-cols-2'">
+          <div class="grid gap-4 w-full" 
+          [ngClass]="uploadService.previews().length <= 1 ? 'grid-cols-1' : 'grid-cols-2'">
             @for (preview of uploadService.previews(); track preview) {
               <figure class="relative group">
                 <app-ng-image
                   [options]="{
-                    src: preview,
+                    src: preview.url ,
                     alt: 'Cover preview',
                     width: 200,
                     height: 200,
@@ -88,7 +89,7 @@ import { IUser } from '../../../../../../../../../core/models/user.model';
                 <button
                   type="button"
                   class="absolute top-2 right-2 bg-black/60 text-white btn btn-xs btn-circle opacity-0 group-hover:opacity-100 transition"
-                  (click)="removePreview(preview)"
+                  (click)="removePreview(preview.url)"
                   aria-label="Remove cover image">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -121,7 +122,7 @@ export class UpdateCoverImagesComponent {
     const files = this.uploadService.files();
     const previews = this.uploadService.previews();
 
-    const index = previews.indexOf(preview);
+    const index = previews.findIndex((p) => p.url === preview);
     if (index > -1) {
       const newPreviews = previews.filter((_, i) => i !== index);
       const newFiles = files.filter((_, i) => i !== index);
@@ -133,7 +134,7 @@ export class UpdateCoverImagesComponent {
 
   saveCovers(): void {
     const files = this.uploadService.files();
-    const previews = this.uploadService.previews();
+    const previews = this.uploadService.previews().map((c) => c.url);
 
     if (!Array.isArray(files) || ( files.length > 3 && files.length === 0 )) return;
 

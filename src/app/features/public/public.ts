@@ -4,7 +4,6 @@ import { Header } from "./components/header/header";
 import { Footer } from "./components/footer/footer";
 import { UserProfileService } from './pages/profile/services/user-profile.service';
 import { Logo } from "../../shared/components/logo/logo";
-import { take } from 'rxjs';
 import { LoadingService } from '../../core/services/loading.service';
 import { CommonModule } from '@angular/common';
 
@@ -35,8 +34,8 @@ export class Public {
 loadingService = inject(LoadingService);
 
 constructor(){
-this.#userProfileService.getUserProfile().pipe(take(1)).subscribe();
-this.#userProfileService.getFriendsRequests().pipe(take(1)).subscribe();
+this.#userProfileService.getUserProfile().subscribe();
+this.#userProfileService.getFriendsRequests().subscribe();
 }
 
 

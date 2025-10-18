@@ -9,7 +9,7 @@ import { BackLink } from "../../../../shared/components/links/back-link";
   selector: 'app-settings',
   imports: [SettingsSideBarComponent, RouterOutlet, BackLink],
   template: `
-  <section class="relative flex flex-col md:flex-row gap-4 overflow-x-hidden">
+  <section class="relative flex flex-col md:flex-row gap-4 ">
 
   <app-settings-side-bar />
   

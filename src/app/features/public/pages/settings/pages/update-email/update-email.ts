@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { NonNullableFormBuilder, Validators } from '@angular/forms';
 import { SharedModule } from '../../../../../../shared/modules/shared.module';
 import { UserProfileService } from '../../../profile/services/user-profile.service';
@@ -16,16 +16,16 @@ import { IUpdateEmail } from '../../../../../../core/models/user.model';
 
 <section class="w-full flex items-center justify-center p-5">
 
-<form [formGroup]="forgetPasswordForm" (ngSubmit)="onChangeEmailSubmit()"
+<form [formGroup]="emailForm" (ngSubmit)="onChangeEmailSubmit()"
 class="w-full sm:w-xl md:w-2xl lg:w-3xl  ngCard  border-brand-color/10  border rounded-box p-5">
 
 <fieldset class="w-full fieldset  p-2 gap-5  space-y-2 ">
 <legend class="fieldset-legend ">{{ 'settings.update_email.title' | translate }}</legend>
 
-<app-ng-email [emailForm]="forgetPasswordForm" />
+<app-ng-email [emailForm]="emailForm" />
 
 <button class="w-full btn btn-neutral btn-sm sm:btn-md bg-dark hover:bg-neutral 
-mt-4 ">
+mt-4 " [disabled]="isExistingEmail()">
 {{ 'auth.forget_password.send_otp' | translate }}
 </button>
 
@@ -39,7 +39,8 @@ export class updateEmail  {
     #userService = inject(UserProfileService);
     #fb = inject(NonNullableFormBuilder); 
 
-    public forgetPasswordForm = this.#fb.group({
+
+    public emailForm = this.#fb.group({
     email: [this.#userService.user()?.email || '' , {
     validators: [
     Validators.required,
@@ -50,13 +51,18 @@ export class updateEmail  {
     }]
 });
 
+isExistingEmail =
+computed(() => (this.#userService.user()?.email || '') ===  this.emailForm.controls['email'].value);
+
+
 onChangeEmailSubmit() {
-    if(this.forgetPasswordForm.valid){
-    const email  : IUpdateEmail = this.forgetPasswordForm.getRawValue() ;
+    if(this.emailForm.valid){
+    const email  : IUpdateEmail = this.emailForm.getRawValue() ;
+    if(this.isExistingEmail() ) return ;
     this.#userService.updateEmail(email).subscribe()
     return
     }
-    this.forgetPasswordForm.markAllAsTouched()
+    this.emailForm.markAllAsTouched()
 }
 
 }

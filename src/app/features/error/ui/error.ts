@@ -6,7 +6,9 @@ import { RouterOutlet } from '@angular/router';
   imports: [RouterOutlet],
   template: `
   <section class="w-full h-svh flex flex-col justify-center items-center">
+  <main class="ngCard">
   <router-outlet />
+  </main>
   </section>
   `,
 })

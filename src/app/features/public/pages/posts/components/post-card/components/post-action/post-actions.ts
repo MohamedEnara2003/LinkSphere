@@ -1,6 +1,6 @@
 import { Component, computed, inject, linkedSignal, input } from '@angular/core';
 import { IPost } from '../../../../../../../../core/models/posts.model';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { PostService } from '../../../../services/post.service';
 import { UserProfileService } from '../../../../../profile/services/user-profile.service';
 import { catchError, debounceTime, of, Subject, switchMap } from 'rxjs';
@@ -44,10 +44,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
         {{ likes().size }}
         </button>
 
-      <!-- Comments -->
-      <button 
-        [routerLink]="['/public', { outlets: { model: 'comments' } }]"
-        [queryParams]="{ postId: post()?.id }"
+    <!-- Comments -->
+    <button 
+        (click)="openPostComments()"
         title="comments"
         type="button"
         class="flex items-center gap-1 ngBtnIcon">
@@ -61,7 +60,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
         5.969 0 0 0 6 21c1.282 0 2.47-.402
         3.445-1.087.81.22 1.668.337 2.555.337Z" />
         </svg>
-        0
+        0 
     </button>
 
     </nav>
@@ -70,8 +69,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 export class PostActions {
     #postService = inject(PostService);
     #userService = inject(UserProfileService);
+    #router = inject(Router);
 
-    post = input<IPost>();
+    post = input<IPost | null>(null);
 
     likes = linkedSignal<Set<string>>(() => new Set(this.post()?.likes || []));
 
@@ -88,6 +88,17 @@ export class PostActions {
     this.#initLikeClick();
     }
     
+    openPostComments() : void {
+    const post = this.post();
+    if(post){
+    this.#router.navigate(['/public',{outlets : { model : ['comments']}}] , {
+    queryParams : {postId : post._id || ''}
+    })
+    this.#postService.setPost(post);
+    }
+    }
+    
+
     #initLikeClick() : void {
         this.#likeClick$
         .pipe(

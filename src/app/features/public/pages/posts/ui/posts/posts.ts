@@ -1,9 +1,9 @@
-import { Component , effect, inject } from '@angular/core';
+import { Component , effect, inject, signal } from '@angular/core';
 import { PostCard } from "../../components/post-card/ui/post-card";
 import { PostService } from '../../services/post.service';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'rxjs';
+import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { map, switchMap } from 'rxjs';
 import { Availability} from '../../../../../../core/models/posts.model';
 
 
@@ -14,7 +14,7 @@ import { Availability} from '../../../../../../core/models/posts.model';
   
 
 <main class="size-full grid grid-cols-1 gap-5">
-@for (post of postService.posts(); track post.id) {
+@for (post of postService.posts(); track post._id) {
 <article class="w-full min-h-60">
 @defer (on viewport) {
 <app-post-card [post]="post" class="size-full"/>
@@ -52,6 +52,7 @@ import { Availability} from '../../../../../../core/models/posts.model';
       </button>
     </section>
 }
+
 </main>
 `,
 })
@@ -66,13 +67,30 @@ export class Posts {
     ) 
     , {initialValue : 'public'});
 
+    page = signal(1);
+    limit = signal(3);
+    totalPages = signal(1);
+
     constructor(){
-    effect(() => this.getPosts())
+      toObservable(this.postsState)
+      .pipe(
+        switchMap((state) =>
+          this.postService.getPosts(state || 'public')
+        ),
+        takeUntilDestroyed()
+      )
+      .subscribe();
     }
     
-    private getPosts() : void {
-    const state = this.postsState();
-    this.postService.getPosts(state || 'public').subscribe()
-    }
 
+    loadMore() {
+      this.page.update((p) => p + 1);
+
+      this.postService
+        .getPosts(this.postsState(), this.page() , this.limit())
+        .subscribe(({ data }) => {
+          this.totalPages.set(data.pagination.totalPages);
+        });
+    }
+    
 }

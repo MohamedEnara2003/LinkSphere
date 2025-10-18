@@ -1,11 +1,13 @@
-import { Component, input } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { NgImage } from "../../../../../../../../shared/components/ng-image/ng-image";
-import { TranslateModule } from '@ngx-translate/core';
+import { UserProfileService } from '../../../../services/user-profile.service';
+import { SharedModule } from '../../../../../../../../shared/modules/shared.module';
+
 
 
 @Component({
   selector: 'app-user-friends',
-  imports: [NgImage, TranslateModule],
+  imports: [NgImage, SharedModule],
   template: `
     <section 
       class="w-full pb-10" 
@@ -35,6 +37,7 @@ import { TranslateModule } from '@ngx-translate/core';
     >
   <!-- Avatar -->
   <app-ng-image
+    [routerLink]="[ '/public/profile/user' , friend._id]"
     [options]="{
       src : friend.picture || '',
       alt :('profile.friends.profile_picture_of' | translate) + ' ' + friend.firstName,
@@ -63,6 +66,7 @@ import { TranslateModule } from '@ngx-translate/core';
   `,
 })
 export class UserFriends {
-  friends = input<any[]>([])
+  #userService = inject(UserProfileService);
+  friends = computed(() =>  this.#userService.userProfile()?.friends || []);
 
 }

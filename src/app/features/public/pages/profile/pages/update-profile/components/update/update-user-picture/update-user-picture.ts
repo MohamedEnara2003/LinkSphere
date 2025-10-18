@@ -75,7 +75,7 @@ import { tap } from 'rxjs';
       @else if (uploadService.previews().length > 0) {
           <app-ng-image
             [options]="{
-              src: uploadService.previews()[0],
+              src: uploadService.previews()[0].url || '',
               alt: 'New profile picture preview',
               width: 150,
               height: 150,
@@ -114,7 +114,7 @@ export class UpdateUserPictureComponent {
     this.userProfileService.uploadProfilePicture(file).pipe(
     tap(() => {
     this.userProfileService.setUser(
-    {...this.userProfileService.user()! , picture : preview }
+    {...this.userProfileService.user()! , picture : preview.url }
     )
     this.uploadService.isLoading.set(false);
     this.uploadService.clear();
@@ -122,6 +122,7 @@ export class UpdateUserPictureComponent {
     ).subscribe()
     }
   }
+
   removeProfileImage() : void {
   this.userProfileService.deleteProfilePicture().pipe(
   tap(() => {
@@ -129,7 +130,7 @@ export class UpdateUserPictureComponent {
     const userProfile = this.userProfileService.userProfile() ;
     if(!user || !userProfile) return;
 
-    this.userProfileService.setUser({...user , picture : ''});
+    this.userProfileService.setUser({...user , picture : 'user-placeholder.jpg'});
 
     if(this.userProfileService.isMyProfile()){
     this.userProfileService.setUserProfile({...userProfile , picture :''});

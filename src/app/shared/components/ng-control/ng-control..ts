@@ -1,4 +1,4 @@
-import { Component, inject, input, output, signal } from '@angular/core';
+import { Component, ElementRef, inject, input, output, signal, viewChild } from '@angular/core';
 import { SharedModule } from '../../modules/shared.module';
 import { FormGroup } from '@angular/forms';
 import { TranslationService } from '../../../core/services/translations/translation.service';
@@ -82,13 +82,14 @@ export interface FormControlOption {
         [ngClass]="(shouldShowValidation() && isShowValidationsError()) ? 'input-error': ''">
         
         <input 
+        #inputRef
         [type]="option().type === 'password' ? isShowPass() ? 'text' : 'password' : option().type"
         [id]="option().id" 
         [formControlName]="option().formControlName" 
         [placeholder]="option().placeHolder || ''"
         [name]="option().name"
         [inputMode]="option().inputmode"
-        class="placeholder:text-brand-color/50"
+        class="placeholder:text-gray-500"
         [attr.aria-required]="option().isRequired"
         [attr.aria-describedby]="option().formControlName + 'Help'"
         [autocomplete]="option().autocomplete || 'on'"
@@ -135,13 +136,22 @@ export interface FormControlOption {
   `,
 })
 export class NgControl{
-  translationService = inject(TranslationService)
-  isShowValidationsError = input<boolean>(true)
-  form = input.required<FormGroup>()
-  option = input.required<FormControlOption>();
+  translationService = inject(TranslationService);
+  
+  inputRef = viewChild<ElementRef<HTMLElement>>('inputRef');
 
+  form = input.required<FormGroup>();
+  option = input.required<FormControlOption>();
+  isShowValidationsError = input<boolean>(true);
+  
   isShowPass = signal<boolean>(false);
 
+  focusInput(): void {
+  const inputRef =this.inputRef()?.nativeElement;
+  if(inputRef){
+  inputRef.focus();
+  }
+  }
 
 shouldShowValidation(): boolean {
 const control = this.form().controls[this.option().formControlName];

@@ -4,7 +4,6 @@ import { TranslateModule } from '@ngx-translate/core';
 @Component({
   selector: 'app-user-about',
   imports: [TranslateModule],
-  standalone: true,
   template: `
     <article class="w-full pb-10" aria-labelledby="about-title">
 

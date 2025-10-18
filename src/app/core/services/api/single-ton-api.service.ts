@@ -22,6 +22,7 @@ public find<G>(routeName : string ) : Observable<G> {
 return this.#httpClient.get<G>(`${this.#baseUrlApi}${routeName}` , {
 withCredentials : true ,
 }).pipe(
+take(1),
 takeUntilDestroyed(this.#destroyRef)
 );
 }
@@ -29,7 +30,10 @@ takeUntilDestroyed(this.#destroyRef)
 findById<G>(routeName : string , id : string | number) : Observable<G> {
 return this.#httpClient.get<G>(`${this.#baseUrlApi}${routeName}/${id}` , {
 withCredentials : true,
-}).pipe(takeUntilDestroyed(this.#destroyRef));
+}).pipe(
+  take(1),
+  takeUntilDestroyed(this.#destroyRef
+  ));
 }
 
 create<G>(routeName : string , data? : unknown) : Observable<G> {
@@ -37,27 +41,37 @@ return this.#httpClient.post<G>(`${this.#baseUrlApi}${routeName}`, data , {
 withCredentials : true
 }).pipe(
 take(1),
+takeUntilDestroyed(this.#destroyRef)
 );
 }
 
 public update<G>(routeName : string , data : unknown , id : string | number) : Observable<G> {
 return this.#httpClient.put<G>(`${this.#baseUrlApi}${routeName}/${id}`, data ,{
 withCredentials : true
-});
+}).pipe(
+  take(1),
+  takeUntilDestroyed(this.#destroyRef)
+);
 }
     
 
 public patchById<G>(routeName: string, data: unknown, id: string | number): Observable<G> {
   return this.#httpClient.patch<G>(`${this.#baseUrlApi}${routeName}/${id}`, data, {
     withCredentials: true,
-  });
+  }).pipe(
+    take(1),
+    takeUntilDestroyed(this.#destroyRef)
+  );
 }
 
 
 public patch<G>(routeName: string, data?: unknown): Observable<G> {
   return this.#httpClient.patch<G>(`${this.#baseUrlApi}${routeName}`, data, {
     withCredentials: true,
-  });
+  }).pipe(
+    take(1),
+    takeUntilDestroyed(this.#destroyRef)
+  );;
 }
 
 
@@ -68,7 +82,9 @@ formData.append(formDataName , file);
 });
 return this.#httpClient.patch<G>(`${this.#baseUrlApi}${routeName}`, formData  , {
 withCredentials : true,
-}).pipe(
+}).pipe(   
+  take(1),
+  takeUntilDestroyed(this.#destroyRef),
   catchError(() => {
   this.#uploadService.clear()
   return EMPTY;

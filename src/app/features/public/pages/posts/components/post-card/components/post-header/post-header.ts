@@ -1,24 +1,24 @@
-import { Component, HostListener, inject, input, signal } from '@angular/core';
+import { Component, computed, HostListener, inject, input, signal } from '@angular/core';
 import { NgImage } from "../../../../../../../../shared/components/ng-image/ng-image";
 import { Router, RouterModule } from '@angular/router';
-import { IUser } from '../../../../../../../../core/models/user.model';
 import { DomService } from '../../../../../../../../core/services/dom.service';
 import { PostService } from '../../../../services/post.service';
 import { IPost } from '../../../../../../../../core/models/posts.model';
+import { UserProfileService } from '../../../../../profile/services/user-profile.service';
 
 
 @Component({
 selector: 'app-post-header',
 imports: [NgImage , RouterModule],
 template: `
-   <header class="flex justify-between items-center border-b border-brand-color/10 pb-1">
+  <header class="flex justify-between items-center border-b border-brand-color/10 pb-1">
     <address class="not-italic flex items-center gap-2">
 
       <!-- Profile Image -->
       <app-ng-image  
-        [routerLink]="['/public/profile/user', post()?.author?._id || '']"
+        [routerLink]="userId() ? ['/public/profile/user', userId()] : []"
         [options]="{
-          src: post()?.author?.picture ?? 'user-placeholder.jpg',
+          src: userPicture(),
           placeholder: post()?.author?.placeholder ?? '',
           alt: 'Profile picture of ' + post()?.author?.userName || '',
           width: 60,
@@ -30,7 +30,7 @@ template: `
       <!-- Author Info -->
       <div class="flex flex-col">
         <h2  class="card-title ngText capitalize">
-          {{ post()?.author?.userName || ''}}
+          {{ post()?.author?.userName || userService.userProfile()?.userName || ''}}
         </h2>
         <time 
           class="text-brand-color badge badge-xs p-1 bg-brand-color/20"
@@ -40,29 +40,32 @@ template: `
       </div>
     </address>
 
-    <!-- Options Button -->
-    <section class="relative flex flex-col gap-2 select-none">
+  @if(isMyPost()){
+
+  <section class="relative flex flex-col gap-2 select-none">
+
   <!-- Menu Button -->
   <button
-    (click)="toggleMenu($event)"
-    title="Post Menu"
-    type="button"
-    class="ngBtnIcon btn-circle flex items-center justify-center hover:bg-info/20 transition"
-  >
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+  (click)="toggleMenu($event)"
+  title="Post Menu"
+  type="button"
+  class="btn btn-sm btn-circle flex items-center justify-center bg-card-light dark:bg-card-dark hover:opacity-80
+  transition duration-300 ">
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
+  class="size-6">
   <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
   </svg>
   </button>
 
   <!-- Dropdown Menu -->
   @if (isOpenPostMenu()) {
+
     <nav
-      class="absolute right-0 top-10 w-48 z-50 
-      bg-card-light dark:bg-card-dark 
-      shadow-lg rounded-xl border border-base-200 dark:border-base-content/20
-      flex flex-col gap-1 py-2 animate-sideLeft"
+      class="absolute right-0 top-10 w-48 z-50 bg-card-light dark:bg-card-dark  shadow-lg rounded-xl 
+      border border-base-200 dark:border-base-content/20 flex flex-col gap-1 py-2 animate-opacity"
       (click)="$event.stopPropagation()"
     >
+    @if(!post()?.isFreezed){ 
       <button
         type="button"
         class="w-full flex items-center gap-2 px-4 py-2 text-left
@@ -82,27 +85,6 @@ template: `
         Edit Post
       </button>
 
-      <button
-        type="button"
-        class="w-full flex items-center gap-2 px-4 py-2 text-left
-        hover:bg-warning/10 rounded-md transition"
-        (click)="freezPost()"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-          viewBox="0 0 24 24" stroke-width="1.5"
-          stroke="currentColor" class="size-5">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M14.857 17.082a23.848 23.848 0 0 0 
-            5.454-1.31A8.967 8.967 0 0 1 
-            18 9.75V9A6 6 0 0 0 6 9v.75a8.967 
-            8.967 0 0 1-2.312 6.022c1.733.64 
-            3.56 1.085 5.455 1.31m5.714 
-            0a24.255 24.255 0 0 1-5.714 
-            0m5.714 0a3 3 0 1 1-5.714 
-            0M10.5 8.25h3l-3 4.5h3" />
-        </svg>
-        Freeze Post
-      </button>
 
       <button
         type="button"
@@ -130,21 +112,57 @@ template: `
         </svg>
         Delete Post
       </button>
+    }
+
+      <button
+        type="button"
+        class="w-full flex items-center gap-2 px-4 py-2 text-left
+        hover:bg-warning/10 rounded-md transition"
+        (click)="post()?.isFreezed ? unFreezPost() :  freezPost() "
+      > 
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+          viewBox="0 0 24 24" stroke-width="1.5"
+          stroke="currentColor" class="size-5">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M14.857 17.082a23.848 23.848 0 0 0 
+            5.454-1.31A8.967 8.967 0 0 1 
+            18 9.75V9A6 6 0 0 0 6 9v.75a8.967 
+            8.967 0 0 1-2.312 6.022c1.733.64 
+            3.56 1.085 5.455 1.31m5.714 
+            0a24.255 24.255 0 0 1-5.714 
+            0m5.714 0a3 3 0 1 1-5.714 
+            0M10.5 8.25h3l-3 4.5h3" />
+        </svg>
+        {{ post()?.isFreezed ? 'UnFreeze Post' : 'Freeze Post'}}
+      </button>
     </nav>
   }
 </section>
-
+}
 
   </header>
     
 `,
 })
 export class PostHeader {
+  userService = inject(UserProfileService);
+
   #domService = inject(DomService);
   #postService = inject(PostService);
   #router = inject(Router);
 
   post = input<IPost>();
+
+  isMyPost = computed<boolean>(() => (this.userService.user()?._id || '') === (this.post()?.createdBy || ''))
+  userId = computed<string>(() => this.post()?.author?._id || '');
+  
+  userPicture = computed<string>(() => {
+  const author = this.post()?.author.picture  || '';
+  const userProfilePicture = this.userService.userProfile()?.picture || '';
+  if(author) return author;
+  else if(userProfilePicture) return userProfilePicture;
+  return "/user-placeholder.jpg";
+  })
 
   isOpenPostMenu = signal<boolean>(false);
 
@@ -182,15 +200,23 @@ export class PostHeader {
   }
 
   freezPost() : void {
-  const postId = this.post()?._id;
-  if(postId){
-  this.#postService.freezePost(postId).subscribe();
+  const post = this.post();
+  if(post){
+  this.#postService.freezePost(post._id , post).subscribe();
+  this.closeMenu();
+  }
+  }
+
+  unFreezPost() : void {
+  const post = this.post();
+  if(post){
+  this.#postService.unfreezePost(post._id , post).subscribe();
   this.closeMenu();
   }
   }
 
   deletePost() : void {
-    const postId = this.post()?._id;
+  const postId = this.post()?._id;
   if(postId){
   this.#postService.deletePost(postId).subscribe();
   this.closeMenu();

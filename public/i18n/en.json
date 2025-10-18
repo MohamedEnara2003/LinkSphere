@@ -173,6 +173,7 @@
     "confirm_new_password" : "Confirm New Password" ,
     "save_button" : "Save" 
     },
+
     "change_password" : {
     "title" : "Change password" ,
     "old_password" : "Old Password" ,
@@ -180,6 +181,14 @@
     "confirm_new_password" : "Confirm New Password" ,
     "save_button" : "Save" 
     },
+
+    "posts": {
+      "title": "Frozen Posts",
+      "no_frozen_posts": "No frozen posts",
+      "you_have_not_frozen_any_posts": "You haven't frozen any posts yet",
+      "subtitle": "These are the posts you have chosen to freeze and make temporarily inactive."
+    },
+
     "darkMode": {
       "title": "Dark Mode Settings",
       "dark_mode": "Dark Mode",

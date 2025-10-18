@@ -63,7 +63,8 @@ export class confirmEmail {
   #uerService = inject(UserProfileService);
   #route = inject(ActivatedRoute);
 
-  state = toSignal<string | null>(this.#route.queryParamMap.pipe(map((query) => query.get('state'))))
+  email = toSignal<string | null>(this.#route.queryParamMap.pipe(map((query) => query.get('email'))));
+  state = toSignal<string | null>(this.#route.queryParamMap.pipe(map((query) => query.get('state'))));
 
   otpLength = signal<number>(6).asReadonly();
   
@@ -121,14 +122,23 @@ export class confirmEmail {
     event.preventDefault();
     const code = this.otpValue();
     if (code.length === this.otpLength()) {
-    !this.state() ?
-    this.#authService.confirmEmail(code).subscribe() :
-    this.#uerService.confirmUpdateEmail(code).subscribe() ;
+    
+    if(!this.state()){
+
+    const email = this.email();
+    if(!email) return ;
+    this.#authService.confirmEmail(code , email).subscribe();
+    return
+    }
+
+    this.#uerService.confirmUpdateEmail(code).subscribe() 
     }
   }
 
   resendConfirmEmailOtp() : void {
-  this.#authService.resendConfirmEmailOtp('mohamedahmedabdelziz2003@gmail.com').subscribe();
+  const email = this.email();
+  if(!email) return ;
+  this.#authService.resendConfirmEmailOtp(email).subscribe();
   }
 
 }

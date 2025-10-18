@@ -6,6 +6,7 @@ import {
   IUpdateBasicInfo, 
   IUpdateEmail, 
   IUser, 
+  RelationshipState, 
   UnfreezePayload, 
   UserProfile
 } from '../../../../../core/models/user.model';
@@ -18,8 +19,9 @@ import { ImagesService, ImageType } from '../../../../../core/services/api/image
 @Injectable({
   providedIn: 'root'
 })
-export class UserProfileService {
 
+export class UserProfileService {
+  
   #singleTonApi = inject(SingleTonApi);
   #imagesService = inject(ImagesService);
   #routeName: string = "users";
@@ -45,6 +47,45 @@ export class UserProfileService {
   const userId =  this.#user()?._id ;
   const userProfileId = this.#userProfile()?._id;
   return (!userId && !userProfileId) ? false : userId === userProfileId ;
+  });
+
+  
+  
+  public relationshipState = computed<RelationshipState>(() => {
+  
+  const user =  this.#user();
+  const userProfile =  this.#userProfile();
+  
+  if(!user || !userProfile) return 'myProfile'
+
+  const {_id : userId , friends} = user;
+  const {_id : userProfileId ,} = userProfile;
+
+
+  const isRequestReceived = this.#receivedRequests().some((r) => {
+    return r.sender._id === userProfileId;
+    })
+
+  const isSentRequests= this.#sentRequests().some((r) => {
+  return r.receiver._id == userProfileId;
+  })
+  
+  // My Profile
+  if(userId === userProfileId ) return 'myProfile';
+
+  // My Firend
+  const isFriend =  (friends || []).some((f) => f._id === userProfileId );
+
+  if(isFriend) return 'friend';
+
+  // Not Friend
+  if(userId !== userProfileId && !isFriend && (!isRequestReceived && !isSentRequests)) return 'notFriend';
+  
+  if(isSentRequests) return 'requestSent';
+  if(isRequestReceived) return 'requestReceived';
+
+
+  return 'myProfile';
   });
   
   
@@ -76,39 +117,59 @@ export class UserProfileService {
   // ==============================
 
   // 🟢 Get user profile
-  #prepareUser(user: IUser ,imageType : ImageType): Observable<IUser> {
-    const { picture, coverImages = [] } = user;
+    #prepareUser(user: IUser ,imageType : ImageType): Observable<IUser> {
+      const { picture, coverImages = [] , friends = [] } = user;
 
-    // 🟢 تحميل الصورة الشخصية
-    const picture$ = picture
-      ? this.#imagesService.getImages(picture, imageType).pipe(
-          map(({ url }) => url || '/user-placeholder.jpg'),
-          catchError(() => of('/user-placeholder.jpg'))
-        )
-      : of('/user-placeholder.jpg');
+      // 🟢 تحميل الصورة الشخصية
+      const picture$ = picture
+        ? this.#imagesService.getImages(picture, imageType).pipe(
+            map(({ url }) => url || ''),
+            catchError(() => of(''))
+          )
+        : of('');
 
-    // 🟢 تحميل صور الغلاف
-    const coverImages$ = coverImages.length
-      ? forkJoin(
-          coverImages.map((key) =>
-            this.#imagesService.getImages(key, imageType).pipe(
-              map(({ url }) => url),
-              catchError(() => of(null))
+      // 🟢 تحميل صور الغلاف
+      const coverImages$ = coverImages.length
+        ? forkJoin(
+            coverImages.map((key) =>
+              this.#imagesService.getImages(key, imageType).pipe(
+                map(({ url }) => url),
+                catchError(() => of(null))
+              )
+            )
+          ).pipe(map((urls) => urls.filter(Boolean) as string[]))
+        : of<string[]>([]);
+
+    const friendImages$ = friends.length
+    ? forkJoin(
+        friends.map((friend) =>
+          this.#imagesService.getImages(friend.picture || '', imageType).pipe(
+            map((res) => ({
+              ...friend,
+              picture: res?.url || '/user-placeholder.jpg',
+            })),
+            catchError(() =>
+              of({
+                ...friend,
+                picture: '',
+              })
             )
           )
-        ).pipe(map((urls) => urls.filter(Boolean) as string[]))
-      : of<string[]>([]);
+        )
+      )
+    : of<IFriend[]>([]);
 
-    // ✅ دمج النتائج في object واحد
-    return forkJoin({ picture: picture$, coverImages: coverImages$ }).pipe(
-      map(({ picture, coverImages }) => ({
-        ...user,
-        picture,
-        coverImages,
-        placeholder: '/user-placeholder.jpg',
-      }))
-    );
-  }
+      // ✅ دمج النتائج في object واحد
+      return forkJoin({ picture: picture$, coverImages: coverImages$ , friends : friendImages$ }).pipe(
+        map(({ picture, coverImages , friends }) => ({
+          ...user,
+          picture,
+          coverImages,
+          friends ,
+          placeholder: '/user-placeholder.jpg',
+        }))
+      );
+    }
 
   // 🟢 جلب المستخدم من الـ API
   getUser(routeName: string , imageType : ImageType): Observable<IUser> {
@@ -129,11 +190,13 @@ export class UserProfileService {
   }
 
   getUserProfileById(userId : string):  Observable<IUser> {
-  const userProfile = this.#userProfile();
-  if(userProfile && userId === userProfile._id) return EMPTY ;
   return this.getUser('user/' + userId  , 'user').pipe(
   tap((user) => {
   this.#userProfile.set(user); 
+  }),
+  catchError(() => {
+  this.#router.navigateByUrl('/public/profile/not-founed');
+  return EMPTY
   })
   )
   }
@@ -301,6 +364,10 @@ export class UserProfileService {
   this.#receivedRequests.update((r) => r.filter((r) => r.requestId !== RequestId));
   this.#user.update((user) => ({...user! , friends : [newFriend , ...user?.friends || []]}));
 
+  if(this.#userProfile()?._id === sender._id){
+  this.#userProfile.update((user) => ({...user! , friends : [newFriend , ...user?.friends || []]}));
+  }
+
   })
   );
   }
@@ -308,11 +375,10 @@ export class UserProfileService {
   cancelFriendRequest(RequestId: string): Observable<void> {
   return this.#singleTonApi.deleteById<void>(`${this.#routeName}/cancel-friend-request`, RequestId).pipe(
   tap(() => {
-  this.#receivedRequests.update((r) => r.filter((r) => r.requestId !== RequestId))
+  this.#receivedRequests.update((r) => r.filter((r) => r.requestId !== RequestId));
   })
   );
   }
-
 
   unFriend(friendId: string): Observable<void> {
     return this.#singleTonApi.deleteById<void>(`${this.#routeName}/remove-friend`, friendId).pipe(

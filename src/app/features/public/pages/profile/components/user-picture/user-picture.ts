@@ -9,13 +9,13 @@ imports: [NgImage  , SharedModule],
 template: `
 
         <figure class="size-full"
-        [ngClass]="styleClassFigure() || 'flex items-center gap-2'">
+        [ngClass]="styleClassFigure() || 'flex justify-center items-center gap-2'">
         
         <!-- Figcaption -->
         <app-ng-image
         [routerLink]="path() || null"
         [options]="{
-        src :  userProfileService.user()?.picture ?? '/user-placeholder.jpg',
+        src :  userProfileService.user()?.picture || 'user-placeholder.jpg',
         alt : 'Profile picture ' + userProfileService.user()?.userName || '',
         width  : 200,
         height : 200,

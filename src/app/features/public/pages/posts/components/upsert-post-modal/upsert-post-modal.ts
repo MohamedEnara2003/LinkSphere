@@ -6,17 +6,14 @@ import { DomService } from '../../../../../../core/services/dom.service';
 import { NonNullableFormBuilder, Validators, FormsModule, ReactiveFormsModule, FormGroup, FormArray, FormControl } from '@angular/forms';
 import { PostModelHeader } from "./components/post-model-header";
 import { CreateByPostInfo } from "./components/create-by-post-info";
-import { Availability, ICreatePost, IPost, IUpdatePost } from '../../../../../../core/models/posts.model';
+import { ICreatePost, IPost, IUpdatePost } from '../../../../../../core/models/posts.model';
 import { PostService } from '../../services/post.service';
 import { CustomValidators } from '../../../../../../core/validations/custom/custom-validations';
 import { PostAttachments } from "./components/post-attachments";
 import { NgControl } from "../../../../../../shared/components/ng-control/ng-control.";
 import { SharedModule } from '../../../../../../shared/modules/shared.module';
 import { TagPeople } from "./components/tag-people";
-import { ActivatedRoute } from '@angular/router';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { map, tap } from 'rxjs';
-import { UploadService } from '../../../../../../core/services/upload/upload.service';
+import { PreviewImage, UploadService } from '../../../../../../core/services/upload/upload.service';
 
 
 
@@ -140,7 +137,7 @@ export class UpsertPostModel implements  OnDestroy{
   #postService = inject(PostService);
   #uploadService = inject(UploadService);
   #domService = inject(DomService);
-  #route = inject(ActivatedRoute);
+
   #fb = inject(NonNullableFormBuilder);
 
 
@@ -156,6 +153,7 @@ export class UpsertPostModel implements  OnDestroy{
   }> = this.#fb.group(
     {
       content: this.#fb.control('', [
+        Validators.min(1),
         Validators.maxLength(50000),
       ]),
   
@@ -191,10 +189,15 @@ export class UpsertPostModel implements  OnDestroy{
       tags: post.tags ,
     });
 
-    if(post.attachments.length > 0){
-    this.#uploadService.setPreviews = post.attachments
+    if (post.imageUrls && post.imageUrls.length > 0) {
+      const existingPostImage: PreviewImage[] = post.imageUrls.map((url, index) => ({
+        url,
+        key: post.attachments?.[index] ?? '' 
+      }));
+      this.#uploadService.setPreviews = existingPostImage;
     }
     
+
 
     // لو عندك tags موجودة في البوست
     this.postForm.setControl(
@@ -206,38 +209,53 @@ export class UpsertPostModel implements  OnDestroy{
 
   getPostPayload(isUpdate = false): ICreatePost | IUpdatePost {
     const form = this.postForm.value;
+    const existingPost = this.existingPost();
   
-    const basePayload: ICreatePost = {
-      content: form.content?.trim() || undefined,
-      attachments: form.attachments?.length ? form.attachments : [],
-      tags: form.tags?.length ? form.tags : [],
-    };
+    const basePayload: Partial<ICreatePost & IUpdatePost> = {};
   
-    if (isUpdate) {
-      return {
-        ...basePayload,
-        removedAttachments: form.removedAttachments?.length ? form.removedAttachments : [],
-        removedTags: form.removedTags?.length ? form.removedTags : [],
-      } as IUpdatePost;
+    // ✅ فقط أضف content لو اختلف عن القديم
+    if (!isUpdate || form.content?.trim() !== existingPost?.content?.trim()) {
+      basePayload.content = form.content?.trim() || undefined;
     }
   
-    return {
-      ...basePayload,
-      availability: form.availability,
-    } as ICreatePost;
+    // ✅ المرفقات الجديدة فقط
+    if (form.attachments?.length) {
+      basePayload.attachments = form.attachments;
+    }
+  
+    // ✅ التاجز الجديدة فقط
+    if (form.tags?.length) {
+      basePayload.tags = form.tags;
+    }
+  
+    if (isUpdate) {
+      if (form.removedAttachments?.length) {
+        basePayload.removedAttachments = form.removedAttachments;
+      }
+      if (form.removedTags?.length) {
+        basePayload.removedTags = form.removedTags;
+      }
+      return basePayload as IUpdatePost;
+    }
+  
+    // ✅ متغير خاص بالإنشاء فقط
+    basePayload.availability = form.availability;
+    return basePayload as ICreatePost;
   }
+  
 
   
   createPost() : void {
   if(this.postForm.valid){
-
+  const previews = this.#uploadService.previews().map(({url}) => url);
 
   const existingPost = this.existingPost();
-  (!existingPost) ?
-  this.#postService.createPost(this.getPostPayload() , this.#uploadService.previews()).subscribe() :  
-  this.#postService.updatePost(existingPost._id , this.getPostPayload(true)).subscribe();
+  
+  (existingPost && existingPost._id) ?
+  this.#postService.updatePost(existingPost._id , this.getPostPayload(true) , previews).subscribe() :
+  this.#postService.createPost(this.getPostPayload() ,previews).subscribe() ;
 
-
+  
   this.postForm.controls.content.setValue('');
   this.postForm.controls.attachments.clear();
   this.postForm.controls.tags.clear();

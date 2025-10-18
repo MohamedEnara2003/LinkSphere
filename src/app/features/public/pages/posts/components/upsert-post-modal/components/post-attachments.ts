@@ -34,7 +34,7 @@ template: `
         <li class="relative w-full animate-opacity">
             <app-ng-image
             [options]="{
-                src: item,
+                src: item.url ,
                 alt: 'image ' + i,
                 width: 100,
                 height: 100,
@@ -77,11 +77,12 @@ export class PostAttachments implements OnDestroy {
   }
 
   /**
-   * Handles file upload
+   * Handle file upload
    */
 
 async uploadAttachments(input: HTMLInputElement): Promise<void> {
-    await this.uploadService.uploadAttachments(input, 2, 0.75, 600, 600);
+
+    await this.uploadService.uploadAttachments(input, 2 , 0.75, 600, 600);
     const filesArray = this.uploadService.files();
 
     this.attachments.clear();
@@ -99,9 +100,9 @@ removeAttachment(index: number): void {
   const files = this.uploadService.files();
   const post = this.#postService.post();
 
-    if (post && previews[index]) {
-    this.removedAttachments.push(this.#fb.control(previews[index]));
-    }
+  if (post && previews[index]) {
+  this.removedAttachments.push(this.#fb.control(previews[index].key));
+  }
 
 const filterPreviews = previews.filter((_ , i) => i !== index);
 const filterFiles =  files .filter((_ , i) => i !== index);

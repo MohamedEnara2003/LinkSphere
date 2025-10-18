@@ -11,8 +11,8 @@ import { PostHeader } from "../components/post-header/post-header";
   template: `
 <section 
   class="size-full relative  ngCard p-4 grid grid-cols-1  gap-4 "
-  [attr.aria-labelledby]="'post-title-' + post()?._id || ''"
-  [attr.aria-describedby]="'post-desc-' + post()?._id || ''">
+  [attr.aria-labelledby]="'post-title-' + post()._id || ''"
+  [attr.aria-describedby]="'post-desc-' + post()._id || ''">
 
   <!-- Post Header -->
 
@@ -22,16 +22,18 @@ import { PostHeader } from "../components/post-header/post-header";
 
   <!-- Post Main Content -->
   <app-post-content
-    [postId]="post()?._id || ''"
-    [content]="post()?.content || ''"
-    [attachments]=" post()?.attachments || []"
+    [postId]="post()._id || ''"
+    [content]="post().content || ''"
+    [attachments]=" post().imageUrls || []"
   />
   
   <!-- Post Actions (Like/Unlike - BtnComments)-->
   <footer class="w-full flex flex-col justify-start gap-1" aria-label="Post interactions">
+  @if(!post().isFreezed){
   <app-post-actions 
   [post]="post()"
   />
+  }
   </footer>
   
 </section>
@@ -39,7 +41,7 @@ import { PostHeader } from "../components/post-header/post-header";
   `,
 })
 export class PostCard {
-  post = input<IPost>();
+  post = input.required<IPost>();
 
 
 }

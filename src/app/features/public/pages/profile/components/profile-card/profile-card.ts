@@ -17,8 +17,8 @@ template: `
         [path]="'/public/profile/user/' +  userProfileService.user()?._id "
         styleClass="size-50 object-cover  rounded-full shadow-md hover:scale-105 
         transition-transform duration-300 cursor-pointer"
-        styleClassFigure="flex flex-col gap-5"
-        styleClassFigcaption="ngText capitalize text-2xl"
+        styleClassFigure="w-full flex flex-col  gap-4 "
+        styleClassFigcaption="ngText capitalize text-2xl text-center"
         />
   
         <button 

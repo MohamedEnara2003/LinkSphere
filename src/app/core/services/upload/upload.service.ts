@@ -2,6 +2,10 @@ import { computed, Injectable, signal, inject } from "@angular/core";
 import { DomService } from "../dom.service";
 import { AlertService } from "../alert.service";
 
+export interface PreviewImage {
+  key : string , 
+  url : string
+}
 @Injectable({ providedIn: 'root' })
 export class UploadService {
 
@@ -9,18 +13,18 @@ export class UploadService {
   #alertService = inject(AlertService);
 
   #files = signal<File[]>([]);
-  #previews = signal<string[]>([]);
+  #previews = signal<PreviewImage[]>([]);
   isLoading = signal<boolean>(false);
 
 
   files = computed<File[]>(() => this.#files());
-  previews = computed<string[]>(() => this.#previews());
+  previews = computed<PreviewImage[]>(() => this.#previews());
 
   set setFiles(files: File[]) {
   this.#files.set(files);
   }
 
-  set setPreviews(previews: string[]) {
+  set setPreviews(previews:  PreviewImage[]) {
   this.#previews.set(previews);
   }
 
@@ -120,6 +124,8 @@ export class UploadService {
    */
   private generatePreviews(files: File[]): void {
     if (!this.#domService.isBrowser()) return; // ✅ تجاهل في SSR
+    
+    const currentPreviews = [...this.#previews()]
 
     this.#previews.set([]);
     files.forEach(file => {
@@ -128,7 +134,14 @@ export class UploadService {
         reader.onload = (e: ProgressEvent<FileReader>) => {
           const result = e.target?.result;
           if (typeof result === 'string') {
-            this.#previews.set([...this.#previews(), result]);
+
+            const newPreview: PreviewImage = {
+              key: crypto.randomUUID(), // 🔑 مفتاح فريد
+              url: result
+            };
+
+            this.#previews.set([...currentPreviews, newPreview]);
+  
           }
         };
         reader.readAsDataURL(file);

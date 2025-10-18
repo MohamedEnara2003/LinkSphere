@@ -1,5 +1,6 @@
 import { IUser } from "./user.model";
 
+
 export interface FriendRequestResponse {
   data : {RequestId: string}
 }

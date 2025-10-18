@@ -1,8 +1,8 @@
-import { Component, effect, inject } from '@angular/core';
+import { Component, effect, inject, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
 import { UserProfileService } from './services/user-profile.service';
-import { combineLatest, map, startWith, take } from 'rxjs';
+import { combineLatest, map, startWith } from 'rxjs';
 
 
 
@@ -10,7 +10,8 @@ import { combineLatest, map, startWith, take } from 'rxjs';
 selector: 'app-profile',
 imports: [ RouterOutlet],
 template: `
-<main >
+
+<main>
 <router-outlet />
 </main>
 
@@ -39,16 +40,20 @@ userId = toSignal<string | null>(
 );
 
 constructor(){
-effect(() => this.getUserProfileById())
+effect(() => {
+this.#getUserProfileById();
+})
 }
 
-private getUserProfileById() : void {
+#getUserProfileById() : void {
 const userId = this.userId();
 if(userId) {
-this.#userProfileService.getUserProfileById(userId).pipe(take(1)).subscribe();
+this.#userProfileService.getUserProfileById(userId).subscribe();
 return
 }
-this.#router.navigateByUrl('/public/profile/not-founed')
+this.#router.navigateByUrl('/public/profile/not-founed');
 }
+
+
 
 }

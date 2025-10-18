@@ -9,15 +9,3 @@
 - npm i angular-oauth2-oidc --save
 
 
-
-
-
-Messages => my Profile
-
-Add Friend => not Friend 
-
-Friend => unFriend
-
-Cancel Request => if Add Request
-
-Confirm => if send my Request

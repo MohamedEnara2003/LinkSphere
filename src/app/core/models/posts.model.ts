@@ -1,3 +1,5 @@
+import { IComment } from "./comments.model";
+import { Pagination } from "./pagination";
 import { IUser } from "./user.model";
 
 // ---- Shared Enums ----
@@ -19,13 +21,6 @@ export interface ICreatedBy{
   createdAt?: string; // ISO string من السيرفر
 }
 
-// ---- Comment ----
-export interface IComment {
-id: string;
-content: string;
-createdBy: ICreatedBy;
-createdAt?: string; // ISO string من السيرفر
-}
 
   // ---- Post ----
   export interface IPost {
@@ -43,7 +38,8 @@ createdAt?: string; // ISO string من السيرفر
     assetsFolderId?: string;
     only: string[]; // visible only to these users
     except: string[]; // hidden from these users
-    lastComment: string | null;
+    lastComment: IComment, 
+    isFreezed? : boolean ,
     createdAt: string; // ISO date
     updatedAt: string; // ISO date
     __v?: number;
@@ -55,13 +51,7 @@ export interface IPaginatedPostsResponse {
   statusCode?: number;
   message?: string;
   posts: IPost[];
-  pagination: {
-    page: number;
-    limit: number;
-    count: number;
-    totalPosts: number;
-    totalPages: number;
-  };
+  pagination: Pagination
 }
 
 // ---- Action Responses ----

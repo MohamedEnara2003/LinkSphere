@@ -12,7 +12,7 @@ aria-labelledby="account-settings-heading">
 
     <header class="mb-6 border-b border-brand-color/10 pb-3">
     <h1 id="account-settings-heading" class="text-2xl md:text-3xl font-bold">
-        {{ 'settings.language.title' | translate }}
+      {{ 'settings.language.title' | translate }}
     </h1>
     <p class="text-sm text-gray-400">{{ 'settings.language.subtitle' | translate }}</p>
     </header>

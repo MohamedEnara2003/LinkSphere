@@ -46,39 +46,67 @@ export interface ImageOption {
       />
     
     <!-- Fullscreen Preview -->
-    @if (preview()) {
-      <section
-        class="fixed top-0 inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm
-        transition-opacity duration-300 ease-out animate-fadeIn"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Image preview"
-        (click)="closePreview()"
-      >
-        <!-- Close Button -->
-        <button
-          type="button"
-          (click)="closePreview()"
-          class="absolute top-4 right-4 btn btn-circle btn-sm bg-white text-black hover:bg-gray-200"
-          aria-label="Close preview"
-        >
-          ✕
-        </button>
+  @if (preview()) {
+    <section
+  class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm
+         transition-opacity duration-300 ease-out animate-fadeIn"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="image-preview-title"
+  (click)="closePreview()"
+>
+  <!-- الخلفية الداكنة -->
+  <div
+    class="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-300 ease-out"
+    aria-hidden="true"
+  ></div>
 
-        <!-- Preview Image -->
-        <img
-          [src]="options().src"
-          [alt]="options().alt"
-          [loading]="options().loading || 'lazy'"
-          [decoding]="options().decoding || 'async'"
-          [attr.fetchpriority]="options().fetchpriority || 'auto'"
-          [attr.referrerpolicy]="options().referrerpolicy || 'no-referrer'"
-          class="max-h-[90vh] max-w-[95vw] object-contain rounded shadow-lg cursor-zoom-out
-          transition-transform duration-300 ease-out animate-scaleIn "
-          (click)="closePreview()"
-          (error)="onError()"
-        />
-      </section>
+  <!-- المحتوى -->
+  <div
+    class="relative z-50 p-4 flex items-center justify-center max-h-[95vh] max-w-[95vw]"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- عنوان للـ screen readers -->
+    <h2 id="image-preview-title" class="sr-only">Image preview</h2>
+
+    <!-- زر الإغلاق -->
+    <button
+      type="button"
+      (click)="closePreview()"
+      class="absolute top-4 right-5 btn btn-sm btn-circle ngBtn"
+      aria-label="Close image preview"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg"
+           viewBox="0 0 24 24"
+           fill="currentColor"
+           class="size-6">
+        <path fill-rule="evenodd"
+              d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 
+                 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 
+                 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 
+                 5.47 6.53a.75.75 0 0 1 0-1.06Z"
+              clip-rule="evenodd" />
+      </svg>
+    </button>
+
+    <!-- الصورة -->
+    <img
+      [src]="options().src"
+      [alt]="options().alt || 'Preview image'"
+      [loading]="options().loading || 'lazy'"
+      [decoding]="options().decoding || 'async'"
+      [attr.fetchpriority]="options().fetchpriority || 'auto'"
+      [attr.referrerpolicy]="options().referrerpolicy || 'no-referrer'"
+      class="max-h-[95vh] max-w-[95vw] w-auto h-auto object-contain
+             rounded-lg shadow-2xl transition-transform duration-300
+             ease-out animate-scaleIn cursor-zoom-out"
+      (click)="closePreview()"
+      (error)="onError()"
+    />
+  </div>
+</section>
+
+
     }
   `,
 })

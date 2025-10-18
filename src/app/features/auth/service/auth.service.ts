@@ -47,16 +47,17 @@ signWithGoggle(idToken: string): Observable<void> {
 // 🟢 Sign Up 
 signUp(data: SignUp): Observable<Respons> {
   this.#loginData.set({email : data.email , password : data.password})
-  
   return this.#singleTonApi.create<Respons>(`${this.#routeName}/signup`, data).pipe(
-  tap(() => this.#router.navigate(['/auth/confirm-email']))
+  tap(() => this.#router.navigate(['/auth/confirm-email'] , {
+  queryParams : {email : data.email}
+  }))
   );
 }
 
 // 🟢 Confirm Email (Send OTP to Email) + Login مباشرة
-confirmEmail(OTP: string): Observable<LoginBody> {
+confirmEmail(OTP: string , email : string): Observable<LoginBody> {
   return this.#singleTonApi.patch(`${this.#routeName}/confirm-email`, {
-  email: 'mohamedahmedabdelziz2003@gmail.com',
+  email,
   OTP,
   }).pipe(
   switchMap(() => {
