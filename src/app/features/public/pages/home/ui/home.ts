@@ -13,7 +13,7 @@ import { PostsFilterNavComponent } from "../../posts/components/posts-filter-nav
   imports: [ProfileCard, Posts, btnOpenModelUpsertPost, FriendRequests, RouterModule, PostsFilterNavComponent],
   template: `
   
-<section class="relative w-full grid grid-cols-1 md:grid-cols-4 gap-5 p-2 py-4 ">
+<section class="relative w-full grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-5 p-2 py-4 ">
   
   <!-- ProfileCard -->
   <aside class="w-full h-[85svh] hidden md:block sticky  top-[12svh]">
@@ -32,7 +32,7 @@ import { PostsFilterNavComponent } from "../../posts/components/posts-filter-nav
   </main>
   
   <!-- Right Sidebar -->
-  <aside class="hidden h-[85svh]  ngCard  sticky  top-[12svh] md:flex flex-col gap-2 p-2">
+  <aside class="hidden h-[85svh]  ngCard  sticky  top-[12svh] lg:flex flex-col gap-2 p-2">
   <header class="w-full flex p-2">
     <h2 class="ngText text-xl font-semibold flex items-center gap-2">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">

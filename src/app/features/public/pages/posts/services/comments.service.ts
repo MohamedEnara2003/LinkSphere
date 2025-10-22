@@ -1,14 +1,16 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { SingleTonApi } from '../../../../../core/services/api/single-ton-api.service';
-import { EMPTY, Observable, tap } from 'rxjs';
+import { catchError, EMPTY, forkJoin, map, Observable, of, switchMap, tap } from 'rxjs';
 import { IComment, ICreateComment, IPaginatedCommentsRes , IPaginatedCommentsRepliesRes, IReplyComment, IUpdateComment, CommentFlag } from '../../../../../core/models/comments.model';
 import { UserProfileService } from '../../profile/services/user-profile.service';
+import { ImagesService } from '../../../../../core/services/api/images.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CommentService {
   #singleTonApi = inject(SingleTonApi);
+  #imagesService = inject(ImagesService);
   #userService = inject(UserProfileService);
   #routeName: string = "posts";
 
@@ -151,32 +153,90 @@ tap(() => {
 );
 }
 
-    // 🟢 Get Comment By Id
-    getPostComment(
-    postId: string ,
-    page : number = 1, 
-    limit : number = 5 ,
-    ): Observable<IPaginatedCommentsRes > {
-    return this.#singleTonApi.find<IPaginatedCommentsRes>
-    (`${this.#routeName}/${postId}/comments?page=${page}&limit=${limit}`).pipe(
-    tap(({data : {comments}}) => {
-    this.#comments.set(comments);
-    }) 
-    );
-    }
 
+    // 🟢 Get Comment By Id
+    #enrichCommentsWithAssets(
+      comments: IComment[],
+      type: 'comment' | 'reply'
+    ): Observable<IComment[]> {
+      if (!comments.length) return of([]);
+  
+      const enriched$ = comments.map((c) => {
+        // جلب صورة الكاتب
+        const authorPicture$ = c.author?.picture
+          ? this.#imagesService
+              .getImages(c.author.picture, 'comment')
+              .pipe(
+                map(({ url }) => url || ''),
+                catchError(() => of(''))
+              )
+          : of('');
+  
+        // جلب المرفق (لو موجود)
+        const attachment$ = c.attachment
+          ? this.#imagesService
+              .getImages(c.attachment, type === 'comment' ? 'comment' : 'post')
+              .pipe(
+                map(({ url }) => url || ''),
+                catchError(() => of(''))
+              )
+          : of('');
+              
+        return forkJoin({ authorPicture$, attachment$ }).pipe(
+          map(({ authorPicture$, attachment$ }) => ({
+            ...c,
+            author: { ...c.author, picture: authorPicture$ },
+            attachment: attachment$,
+          }))
+        );
+      });
+  
+      return forkJoin(enriched$);
+    }
+  
+    // 🔹 جلب تعليقات المنشور
+    getPostComment(
+      postId: string,
+      page: number = 1,
+      limit: number = 5
+    ): Observable<IPaginatedCommentsRes> {
+      return this.#singleTonApi
+        .find<IPaginatedCommentsRes>(
+          `${this.#routeName}/${postId}/comments?page=${page}&limit=${limit}`
+        )
+        .pipe(
+          switchMap(({ data: { comments, pagination } }) =>
+            this.#enrichCommentsWithAssets(comments, 'comment').pipe(
+              map((enrichedComments) => ({
+                data: { comments: enrichedComments, pagination },
+              }))
+            )
+          ),
+          tap(({ data: { comments } }) => this.#comments.set(comments))
+        );
+    }
+  
+    // 🔹 جلب ردود التعليق
     getCommentReplies(
-    postId: string ,
-    commentId : string ,
-    page : number = 1, 
-    limit : number = 2 ,
+      postId: string,
+      commentId: string,
+      page: number = 1,
+      limit: number = 2
     ): Observable<IPaginatedCommentsRepliesRes> {
-    return this.#singleTonApi.find<IPaginatedCommentsRepliesRes>
-    (`${this.#routeName}/${postId}/${commentId}/replies?page=${page}&limit=${limit}`).pipe(
-    tap(({data : {replies}}) => {
-    this.#replies.set(replies);
-    }) 
-    );
+      return this.#singleTonApi
+        .find<IPaginatedCommentsRepliesRes>(
+          `${this.#routeName}/${postId}/${commentId}/replies?page=${page}&limit=${limit}`
+        )
+        .pipe(
+          switchMap(({ data: { replies, pagination } }) =>
+            this.#enrichCommentsWithAssets(replies, 'reply').pipe(
+              map((enrichedReplies) => ({
+                data: { replies: enrichedReplies, pagination },
+              }))
+            )
+          ),
+          tap(({ data: { replies } }) => this.#replies.set(replies))
+        );
     }
     
     getCommentById(postId: string, commentId: string): Observable<{data : {comment : IComment}}> {

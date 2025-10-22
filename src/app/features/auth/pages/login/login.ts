@@ -8,6 +8,7 @@ import { AuthService } from '../../service/auth.service';
 import { LoginType } from '../../../../core/models/auth.model';
 import { SignInWithGoogle } from "../../components/sign-with-google/sign-with-google";
 import { TranslateModule } from '@ngx-translate/core';
+import { tap } from 'rxjs';
 
 
 @Component({
@@ -101,7 +102,9 @@ export class Login implements OnInit  {
   onLoginSubmit() {
   if(this.loginForm.valid){
   const user : LoginType = this.loginForm.getRawValue() ;
-  this.#authService.login(user).subscribe()
+  this.#authService.login(user).pipe(
+  tap(() =>  this.loginForm.reset())
+  ).subscribe()
   return
   }
   this.loginForm.markAllAsTouched()

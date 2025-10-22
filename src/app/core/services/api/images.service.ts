@@ -2,7 +2,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { SingleTonApi } from './single-ton-api.service';
 import {  catchError, of, tap } from 'rxjs';
 
-export type ImageType = 'user' | 'post' | 'profile';
+export type ImageType = 'user' | 'post' | 'comment' | 'profile';
 
 @Injectable({
   providedIn: 'root',
@@ -14,6 +14,7 @@ export class ImagesService {
 #cache = {
     user: signal<Record<string, string>>({}),
     post: signal<Record<string, string>>({}),
+    comment: signal<Record<string, string>>({}),
     profile: signal<Record<string, string>>({}),
 };
 

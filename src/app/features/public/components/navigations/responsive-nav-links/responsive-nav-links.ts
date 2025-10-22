@@ -1,7 +1,7 @@
 import { afterRenderEffect, Component, DestroyRef, inject, signal } from '@angular/core';
 import { fromEvent, map, pairwise, tap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { MainLinks } from "../navigations/main-links";
+import { MainLinks } from "../main-links";
 
 @Component({
   selector: 'app-responsive-nav-links',

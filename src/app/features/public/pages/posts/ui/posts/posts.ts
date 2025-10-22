@@ -1,4 +1,4 @@
-import { Component , effect, inject, signal } from '@angular/core';
+import { Component , inject, signal } from '@angular/core';
 import { PostCard } from "../../components/post-card/ui/post-card";
 import { PostService } from '../../services/post.service';
 import { ActivatedRoute, RouterModule } from '@angular/router';
@@ -75,7 +75,7 @@ export class Posts {
       toObservable(this.postsState)
       .pipe(
         switchMap((state) =>
-          this.postService.getPosts(state || 'public')
+          this.postService.getPosts(state || 'public' , 1 ,10)
         ),
         takeUntilDestroyed()
       )
@@ -85,7 +85,6 @@ export class Posts {
 
     loadMore() {
       this.page.update((p) => p + 1);
-
       this.postService
         .getPosts(this.postsState(), this.page() , this.limit())
         .subscribe(({ data }) => {

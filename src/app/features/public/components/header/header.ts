@@ -2,7 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Logo } from "../../../../shared/components/logo/logo";
 import { SharedModule } from '../../../../shared/modules/shared.module';
 import { MainLinks } from "../navigations/main-links";
-import { ResponsiveNavLinks } from "../responsive-nav-links/responsive-nav-links";
+import { ResponsiveNavLinks } from "../navigations/responsive-nav-links/responsive-nav-links";
 import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { UserPicture } from "../../pages/profile/components/user-picture/user-picture";

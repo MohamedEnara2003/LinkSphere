@@ -1,17 +1,16 @@
 {
-    "version": 2,
-    "builds": [
-      { "src": "dist/LinkSphere/server/server.mjs", "use": "@vercel/node" },
-      { "src": "dist/LinkSphere/browser/**", "use": "@vercel/static" }
-    ],
-    "routes": [
-      {
-        "src": "/(.*\\.(?:js|css|png|jpg|jpeg|gif|ico|svg|webp|woff2?|ttf|map))",
-        "dest": "dist/LinkSphere/browser/$1"
-      },
-      {
-        "src": "/(.*)",
-        "dest": "dist/LinkSphere/server/main.js"
-      }
-    ]
+  "version": 2,
+  "public": true,
+  "name": "linkSphere",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api"
+    }
+  ],
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "dist/linkSphere/**"
+    }
   }
+}

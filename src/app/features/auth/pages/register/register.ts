@@ -9,6 +9,7 @@ import { AuthRedirectLink } from "../../components/auth-redirect-link/auth-redir
 import { AuthService } from '../../service/auth.service';
 import { SignUp } from '../../../../core/models/auth.model';
 import { SignInWithGoogle } from "../../components/sign-with-google/sign-with-google";
+import { tap } from 'rxjs';
 
 @Component({
   selector: 'app-register',
@@ -193,7 +194,9 @@ export class Register implements OnInit  {
   onRegisterSubmit() {
     if (this.registerForm.valid) {
       const user: SignUp = this.registerForm.getRawValue();
-      this.#authService.signUp(user).subscribe();
+      this.#authService.signUp(user).pipe(
+      tap(() =>  this.registerForm.reset())
+      ).subscribe();
       return;
     }
     this.registerForm.markAllAsTouched();

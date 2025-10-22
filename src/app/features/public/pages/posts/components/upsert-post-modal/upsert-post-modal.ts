@@ -255,7 +255,6 @@ export class UpsertPostModel implements  OnDestroy{
   this.#postService.updatePost(existingPost._id , this.getPostPayload(true) , previews).subscribe() :
   this.#postService.createPost(this.getPostPayload() ,previews).subscribe() ;
 
-  
   this.postForm.controls.content.setValue('');
   this.postForm.controls.attachments.clear();
   this.postForm.controls.tags.clear();

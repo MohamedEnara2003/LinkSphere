@@ -1,13 +1,14 @@
-import { Component, inject, input, model, signal } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Component, inject, input, model } from '@angular/core';
 import { NgImage } from "../../../../../../../shared/components/ng-image/ng-image";
 import { FormArray, FormGroup, NonNullableFormBuilder} from '@angular/forms';
+import { UserProfileService } from '../../../../profile/services/user-profile.service';
+import { SharedModule } from '../../../../../../../shared/modules/shared.module';
 
 
 
 @Component({
 selector: 'app-tag-people',
-imports: [RouterModule, NgImage],
+imports: [SharedModule, NgImage],
 template: `
 
     <section class="size-full ngCard  rounded-none md:rounded-2xl border border-brand-color/10 
@@ -45,27 +46,34 @@ template: `
 
     <h2 class="badge bage-sm bg-brand-color/20 text-brand-color">Suggestions</h2>
 
-    <ul class="w-full h-full overflow-y-auto grid grid-cols-1 gap-1 p-1" 
+    <ul class="w-full h-full overflow-y-auto  p-1" 
     style="scrollbar-width: none;">
-    @for (friend of friends(); track friend.id) {
-    <li class="w-full flex justify-between gap-2">
-    <label [for]="'Tag-' + friend.name" 
-    class="w-full  flex items-center gap-4 hover:bg-dark/50 hover:text-brand-color 
-    p-1 px-2 ">
+    @for (friend of userService.user()?.friends; track friend._id) {
+
+    <li class="w-full flex items-center justify-between gap-4">
+
+    <label [for]="'Tag-' + friend.userName" 
+    class="w-full  flex  gap-4   hover:text-brand-color ngCard cursor-pointer
+    p-1 px-2 "
+    [ngClass]="isUserTagged(friend._id) ? 'text-brand-color' : 'ngText'"
+    >
     <app-ng-image
     [options]="{
-    src : friend.avatar,
-    alt :'Profile picture of ' + friend.name,
+    src : friend.picture || '/user-placeholder.jpg',
+    alt :'Profile picture of ' + friend.userName,
     width :  32,
     height : 32,
     class : 'size-8 rounded-full object-cover  mb-2'
     }"
     />
-    {{friend.name}}
+    {{friend.userName}}
     </label>
-    <input type="checkbox" [name]="'Tag-' + friend.name" [id]="'Tag-' + friend.name"
-    (change)="onTagChange(friend.id, $event.target)"
+
+    <input type="checkbox" [name]="'Tag-' + friend.userName" [id]="'Tag-' + friend.userName"
+    (change)="onTagChange(friend._id || '', $event.target)"
+    [checked]="isUserTagged(friend._id)"
     class="ng-checkbox ">
+
     </li>
     }
     </ul>
@@ -74,26 +82,22 @@ template: `
 `,
 })
 export class TagPeople {
+userService = inject(UserProfileService)
 isOpenTagModel = model<boolean>(false);
 
 postForm = input.required<FormGroup>();
 #fb = inject(NonNullableFormBuilder);
 
 
-friends = signal(
-    Array.from({ length: 11 }).map((_, i) => ({
-    id: i + 1,
-    name: `Friend ${i + 1}`,
-    username: `friend${i + 1}`,
-    avatar: `https://randomuser.me/api/portraits/men/${i + 10}.jpg`
-    }))
-);
 
 
 public get ArrayTags() : FormArray {
 return this.postForm().controls['tags'] as FormArray
 }
 
+isUserTagged(friendId: string): boolean {
+    return this.ArrayTags.value.includes(friendId);
+}
 
 onTagChange(friendId: string | number, input: HTMLInputElement): void {
     const tagsArray = this.ArrayTags;

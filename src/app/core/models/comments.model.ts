@@ -25,6 +25,7 @@ export interface IComment {
   postId: string;            // معرف المنشور المرتبط
   flag: CommentFlag;  // نوع التعليق (غالبًا ثابت 'comment')
   lastReply?: string | null;  // آخر رد على التعليق (إن وجد)
+  replies?: IComment[],
   likes: string[];           // قائمة بمعرفات المستخدمين اللي عملوا إعجاب
   tags: string[];            // الوسوم (إن وجدت)
   author: {
@@ -43,16 +44,16 @@ export interface IComment {
 // ---- Paginated Response ----
 export interface IPaginatedCommentsRes{
   data : {
-    statusCode: number;
-    message: string;
+    statusCode?: number;
+    message?: string;
     comments: IComment[];
     pagination: Pagination
   }
 }
 export interface IPaginatedCommentsRepliesRes{
   data : {
-    statusCode: number;
-    message: string;
+    statusCode?: number;
+    message?: string;
     replies: IComment[];
     pagination: Pagination
   }

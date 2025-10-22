@@ -107,7 +107,7 @@ body {
 }
 
 .ngBtnIcon {
-@apply cursor-pointer bg-card-light dark:bg-card-dark hover:text-info duration-200 transition-colors;
+@apply cursor-pointer  hover:text-brand-color duration-200 transition-colors;
 }
 
 .ngBtn {

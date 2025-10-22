@@ -123,7 +123,7 @@
     "allow_comments": "Allow comments",
     "public": "public",
     "friends": "friends",
-    "only_me": "only-me",
+    "only-me": "only-me",
     "frozen": "frozen",
     "allow": "allow",
     "deny": "deny"

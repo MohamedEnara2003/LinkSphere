@@ -69,8 +69,9 @@ export class PostService {
     return this.#singleTonApi.create<{data : {postId : string , attachments : string[]} }>
     (`${this.#routeName}/create-post`, formData).pipe(
     tap(({data : {postId , attachments}}) => {
-    this.#router.navigate(['/public' ,{ outlets: { 'model' :null} }]);
-    
+
+    this.#router.navigate(['/public'] , {queryParams : {state : data.availability || 'public'}})
+
     this.#posts.update((posts) => [
       {
         _id: postId,
@@ -86,7 +87,7 @@ export class PostService {
         updatedAt: new Date().toISOString(),
       } as IPost,
       ...posts,
-    ]);
+    ].filter((p) => p.availability === data.availability));
     
     
     })
@@ -133,9 +134,9 @@ export class PostService {
       .patch<{ data: { postId: string } }>(`${this.#routeName}/update-post/${postId}`, formData)
       .pipe(
         tap(() => {
+
           this.#router.navigate(['/public' ,{ outlets: { 'model' :null} }]);
-  
-  
+
           // 🟢 تحديث الكاش المحلي بعد التعديل
           this.#posts.update(posts =>
             posts.map(p =>
@@ -242,13 +243,13 @@ export class PostService {
     limit: number = 2
   ): Observable<{ data: IPaginatedPostsResponse }> {
     
-    // const posts = this.#posts();
-    // const cachedPosts = posts.filter((p) => p.availability === availability);
+    const posts = this.#posts();
+    const cachedPosts = posts.filter((p) => p.availability === availability);
   
-    // // ✅ كاش جاهز
-    // if (cachedPosts.length > 0) {
-    //   return EMPTY
-    // }
+    // ✅ كاش جاهز
+    if (cachedPosts.length > 0) {
+      return EMPTY
+    }
   
     // 🌐 استدعاء الـ API
   return this.#preparePosts('', page , limit).pipe(
@@ -308,9 +309,42 @@ export class PostService {
     }
 
   // 🟢 Like / Unlike Post
-  toggleLike(postId: string): Observable<void> {
-  return this.#singleTonApi.create<void>(`${this.#routeName}/like/${postId}`);
-  }
+// 🟢 Like / Unlike Post with cache update
+toggleLikeSignal(postId: string, userId: string): void {
+  if (!postId || !userId) return;
+
+  const prevPosts = this.#posts();
+  const prevUserProfilePosts = this.#userProfilePosts();
+  const prevFreezedPosts = this.#userFreezedPosts();
+
+  const updateLikes = (posts: IPost[]) =>
+    posts.map((p) => {
+      if (p._id !== postId) return p;
+      const updatedLikes = new Set(p.likes ?? []);
+      if (updatedLikes.has(userId)) updatedLikes.delete(userId);
+      else updatedLikes.add(userId);
+      return { ...p, likes: Array.from(updatedLikes) };
+    });
+
+  // ✅ تحديث الكاش فورًا (Optimistic)
+  this.#posts.update(updateLikes);
+  this.#userProfilePosts.update(updateLikes);
+  this.#userFreezedPosts.update(updateLikes);
+
+  // 🚀 إرسال الطلب للـ backend
+  this.#singleTonApi
+    .create<void>(`${this.#routeName}/like/${postId}`)
+    .pipe(
+      catchError(() => {
+        // ❌ في حالة الخطأ نرجع الكاش القديم
+        this.#posts.set(prevPosts);
+        this.#userProfilePosts.set(prevUserProfilePosts);
+        this.#userFreezedPosts.set(prevFreezedPosts);
+        return of(null);
+      })
+    )
+    .subscribe();
+}
 
   // 🟢 Freeze Post
   freezePost(postId: string , post : IPost): Observable<void> {

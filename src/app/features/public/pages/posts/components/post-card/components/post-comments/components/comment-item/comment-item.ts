@@ -4,7 +4,7 @@ import { NgImage } from "../../../../../../../../../../shared/components/ng-imag
 import { UserProfileService } from '../../../../../../../profile/services/user-profile.service';
 import { CommentService } from '../../../../../../services/comments.service';
 import { SharedModule } from '../../../../../../../../../../shared/modules/shared.module';
-import { tap } from 'rxjs';
+
 
 @Component({
   selector: 'app-comment-item',
@@ -12,7 +12,7 @@ import { tap } from 'rxjs';
 
   // ✅ HTML inline template
   template: `
-  <article class="flex gap-3 items-start animate-opacity">
+  <article class="flex gap-2 items-start animate-opacity">
   
   <!-- Profile Image -->
   <app-ng-image
@@ -38,6 +38,7 @@ import { tap } from 'rxjs';
     
     <!-- Header (Username + Time) -->
     <div class="flex items-center justify-between">
+
       <div class="flex items-center gap-2">
         <span class="font-semibold text-sm">{{ comment().author.userName }}</span>
         <time class="badge-xs badge bg-brand-color/20  border-transparent text-brand-color">
@@ -66,8 +67,10 @@ import { tap } from 'rxjs';
     </div>
 
     <!-- Comment Text -->
-    <p class="text-sm mt-1 leading-snug">
-      {{ comment().content }}
+
+    <p class="text-sm mt-1 leading-snug flex flex-col gap-2">
+    <span class="text-sm  text-brand-color font-semibold">{{isReplyTagName()}}</span>
+    {{ comment().content }}
     </p>
 
     <!-- Actions (Like / Reply) -->
@@ -84,6 +87,7 @@ import { tap } from 'rxjs';
         <span>{{ comment().likes.length || 0 }}</span>
       </button>
 
+      @if(comment().flag === 'comment'){
       <button 
       [routerLink]="[]"
       [queryParams]="{
@@ -94,6 +98,7 @@ import { tap } from 'rxjs';
       class="btn btn-link link-hover text-xs text-brand-color">
         Reply
       </button>
+    }
     </div>
 
     <!-- Dropdown Menu -->
@@ -159,8 +164,11 @@ import { tap } from 'rxjs';
       </button>
     </li>
   </ul>
+
 </nav>
     }
+
+
 </div>
 
 
@@ -178,12 +186,12 @@ export class CommentItem {
 
   isOpenMenu = signal<boolean>(false);
   isMyComment = computed<boolean>(() => (this.#userService.user()?._id || '') === this.comment().createdBy)
-
-
- ngOnInit(): void {
-  this.getCommentReplies()
- }
-
+  
+  isReplyTagName = computed(() => 
+  this.comment().flag === 'reply' ?
+  this.#commentService.comments().find((c) => c._id ===  this.comment().commentId)?.author.userName || ''
+  : ''
+)
 
   toggleMenu(event: MouseEvent) {
     event.stopPropagation();
@@ -216,23 +224,6 @@ export class CommentItem {
   }
 
 
-  replies = signal<IComment[]>([])
 
-getCommentReplies() : void {
-const {_id : commentId} = this.comment()
-const postId = this.postId()
-if(postId && commentId && this.replies().length === 0){
-this.#commentService.getCommentReplies(postId , commentId).pipe(
-  tap(({data : {replies}}) => {
-    this.replies.set(replies);
-    }) 
-).subscribe();
-}
-
-else if(this.replies().length > 0){
-this.replies.set([]);
-}
-
-}
 
 }

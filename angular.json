@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "LinkSphere": {
+    "linkSphere": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -58,10 +58,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "LinkSphere:build:production"
+              "buildTarget": "linkSphere:build:production"
             },
             "development": {
-              "buildTarget": "LinkSphere:build:development"
+              "buildTarget": "linkSphere:build:development"
             }
           },
           "defaultConfiguration": "development"
