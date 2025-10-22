@@ -11,15 +11,15 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { LoadingService } from '../../../../../../../../../core/services/loading.service';
 import { map } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { CommentList } from "../components/comment-list/comment-list";
 import { ReplyList } from "../components/reply-list/reply-list";
+import { CommentItem } from "../components/comment-item/comment-item";
 
 
 
 
 @Component({
   selector: 'app-post-comments',
-  imports: [SharedModule, UpsertComment, CommentList, ReplyList],
+  imports: [SharedModule, UpsertComment, ReplyList, CommentItem],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
 
@@ -76,7 +76,7 @@ import { ReplyList } from "../components/reply-list/reply-list";
         @defer (when !loadingService.isLoading()) {
   
         <li class="p-2 ngCard border-b border-base-200 dark:border-base-content/10  flex flex-col gap-2">
-        <app-comment-list
+        <app-comment-item
         [comment]="comment!" 
         [postId]="postId() || ''"
         />

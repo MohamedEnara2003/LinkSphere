@@ -31,13 +31,13 @@ import { TranslateModule } from '@ngx-translate/core';
         viewBox="0 0 24 24" fill="currentColor" 
         class="size-5 text-gray-400">
       <path fill-rule="evenodd" 
-            d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 
-               6.75 6.75 0 0 0 0-13.5ZM2.25 
-               10.5a8.25 8.25 0 1 1 14.59 
-               5.28l4.69 4.69a.75.75 0 1 1-1.06 
-               1.06l-4.69-4.69A8.25 8.25 0 0 1 
-               2.25 10.5Z" 
-            clip-rule="evenodd" />
+      d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 
+      6.75 6.75 0 0 0 0-13.5ZM2.25 
+      10.5a8.25 8.25 0 1 1 14.59 
+      5.28l4.69 4.69a.75.75 0 1 1-1.06 
+      1.06l-4.69-4.69A8.25 8.25 0 0 1 
+      2.25 10.5Z" 
+      clip-rule="evenodd" />
     </svg>
     <input 
       type="search" 
@@ -94,12 +94,5 @@ export class ChatSidebarComponent {
   { initialValue: null }
   );
 
-  chats = signal(
-    Array.from({ length: 10 }).map((_, i) => ({
-      id: i + 1,
-      name: `Friend ${i + 1}`,
-      avatar: `https://randomuser.me/api/portraits/men/${i + 10}.jpg`,
-      lastMessage: i % 2 === 0 ? 'Hey, how are you?' : 'Let’s catch up later!'
-    }))
-  );
+  chats = signal<any[]>([]);
 }

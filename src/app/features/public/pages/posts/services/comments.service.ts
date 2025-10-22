@@ -63,79 +63,82 @@ getCommentItems (
     likes : [],
     }
 }
-createComment(postId: string, data: ICreateComment): Observable<{data : {commentId : string }}> {
-    const formData = new FormData();
-    if (data.content) formData.append('content', data.content);
-    if (data.image) formData.append('image', data.image);
-    if (data.tags) {
-    data.tags.forEach((tag, index) => formData.append(`tags[${index}]`, tag));
-    }
-    return this.#singleTonApi.create<{data : {commentId : string }}> (`${this.#routeName}/${postId}/create-comment`
-    , formData).pipe(
-    tap(({data : {commentId}}) => {
 
-    const newComment : IComment = this.getCommentItems(postId , commentId , 'comment' , data)! ;
-    this.#comments.update((c) => [newComment , ...c]);
-    })
-    );
-}
-
-// 🟢 Reply on Comment
-replyComment(postId: string, commentId: string, data: IReplyComment): Observable<{data : {replyId : string}}> {
+private buildCommentFormData(data: ICreateComment | IReplyComment | IUpdateComment): FormData {
   const formData = new FormData();
-  if (data.content) formData.append('content', data.content);
-  if (data.image) formData.append('image', data.image);
-  if (data.tags) {
-  data.tags.forEach((tag, index) => formData.append(`tags[${index}]`, tag));
+
+  if ('content' in data && data.content) formData.append('content', data.content);
+  if ('image' in data && data.image) formData.append('image', data.image);
+  if ('tags' in data && data.tags?.length) {
+    data.tags.forEach((tag, index) => formData.append(`tags[${index}]`, tag));
   }
 
-  return this.#singleTonApi.create<any>(
-  `${this.#routeName}/${postId}/${commentId}/create-reply`, 
-  formData
+  // خاص بالتحديث فقط
+  if ('removedTags' in data && data.removedTags?.length) {
+    data.removedTags.forEach((tag, index) => formData.append(`removedTags[${index}]`, tag));
+  }
+
+  if ('removeAttachment' in data && data.removeAttachment) {
+    formData.append('removeAttachment', 'true');
+  }
+
+  return formData;
+}
+
+createComment(postId: string, data: ICreateComment): Observable<{ data: { commentId: string } }> {
+  const formData = this.buildCommentFormData(data);
+
+  return this.#singleTonApi.create<{ data: { commentId: string } }>(
+    `${this.#routeName}/${postId}/create-comment`,
+    formData
   ).pipe(
-  tap(({data : {replyId}}) => {
-  const newReplyComment : IComment = this.getCommentItems(postId , replyId , 'reply' , data , commentId)! ;
-  this.#replies.update((r) => [newReplyComment , ...r]);
-  })
+    tap(({ data: { commentId } }) => {
+      const newComment: IComment = this.getCommentItems(postId, commentId, 'comment', data)!;
+      this.#comments.update((c) => [newComment, ...c]);
+    })
   );
 }
 
 
-// 🟢 Update Comment
-updateComment(postId: string, commentId: string, data: IUpdateComment): Observable<any> {
-    const formData = new FormData();
-    if (data.content) formData.append('content', data.content);
-    if (data.image) formData.append('image', data.image);
-    if (data.tags) {
-      data.tags.forEach((tag, index) => formData.append(`tags[${index}]`, tag));
-    }
-    if (data.removedTags) {
-      data.removedTags.forEach((tag, index) => formData.append(`removedTags[${index}]`, tag));
-    }
-    if (data.removeAttachment) {
-      formData.append('removeAttachment', 'true');
-    }
-  
-    return this.#singleTonApi.patch<any>(
-      `${this.#routeName}/${postId}/update/${commentId}`,
-      formData
-    ).pipe(
-    tap(() => {
- 
-    this.#comments.update((comments) => comments.map((c) =>  {
-    if (c._id === commentId) {
-      return {
-        ...c,
-        content: data.content ?? c.content,
-        tags: data.tags ?? c.tags ?? [],
-      };
-    }
-    return c
-    }))
+// 🟢 Reply on Comment
+replyComment(postId: string, commentId: string, data: IReplyComment): Observable<{ data: { replyId: string } }> {
+  const formData = this.buildCommentFormData(data);
 
+  return this.#singleTonApi.create<{ data: { replyId: string } }>(
+    `${this.#routeName}/${postId}/${commentId}/create-reply`,
+    formData
+  ).pipe(
+    tap(({ data: { replyId } }) => {
+      const newReplyComment: IComment = this.getCommentItems(postId, replyId, 'reply', data, commentId)!;
+      this.#replies.update((r) => [newReplyComment, ...r]);
     })
-    );
-  }
+  );
+}
+
+// 🟢 Update Comment
+updateComment(postId: string, commentId: string, data: IUpdateComment): Observable<void> {
+  const formData = this.buildCommentFormData(data);
+
+  return this.#singleTonApi.patch<void>(
+    `${this.#routeName}/${postId}/update/${commentId}`,
+    formData
+  ).pipe(
+    tap(() => {
+      this.#comments.update((comments) =>
+        comments.map((c) =>
+          c._id === commentId
+            ? {
+                ...c,
+                content: data.content ?? c.content,
+                tags: data.tags ?? c.tags ?? [],
+              }
+            : c
+        )
+      );
+    })
+  );
+}
+
   
 // 🟢 Delete Comment
 deleteComment(postId: string, commentId: string): Observable<void> {
@@ -152,7 +155,6 @@ tap(() => {
 
 );
 }
-
 
     // 🟢 Get Comment By Id
     #enrichCommentsWithAssets(

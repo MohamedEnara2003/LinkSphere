@@ -42,8 +42,6 @@ import { PostHeader } from "../components/post-header/post-header";
 })
 export class PostCard {
   post = input.required<IPost>();
-
-
 }
 
 

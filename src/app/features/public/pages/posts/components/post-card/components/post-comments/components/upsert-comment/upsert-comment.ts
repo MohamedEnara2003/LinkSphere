@@ -1,10 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, viewChild} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, viewChild} from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { SharedModule } from '../../../../../../../../../../shared/modules/shared.module';
 import { NgControl } from '../../../../../../../../../../shared/components/ng-control/ng-control.';
 import { CommentTagPeople } from "../comment-tag-people/comment-tag-people";
 import { toSignal } from '@angular/core/rxjs-interop';
-import { finalize, map, startWith } from 'rxjs';
+import { finalize, map, Observable, startWith } from 'rxjs';
 import { CommentService } from '../../../../../../services/comments.service';
 import { ICreateComment } from '../../../../../../../../../../core/models/comments.model';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -199,7 +199,7 @@ export class UpsertComment {
   
   
     if (!postId) return;
-    let action$;
+    let action$ : Observable<unknown>;
   
     if (type === 'edit' && commentId) {
       action$ = this.#commentService.updateComment(postId, commentId, createdComment);
@@ -209,9 +209,8 @@ export class UpsertComment {
       action$ = this.#commentService.createComment(postId, createdComment);
     }
   
-    action$
-    .pipe(finalize(() => this.removeQueries()))
-    .subscribe();
+    action$.subscribe()
+
   
   }
   
