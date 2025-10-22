@@ -1,11 +1,16 @@
-import('../dist/linkSphere/server/server.mjs')
-  .then(module => module.app)
-  .catch(error => {
-    console.error('Failed to load server module;', error);
-    throw error;
-  });
+export default async function handler(req, res) {
+  try {
+    const serverModule = await import('../dist/linkSphere/server/server.mjs');
+    const app = serverModule.app || serverModule.default?.app || serverModule.default;
 
-export default async (req, res) => {
-  const { app } = await import('../dist/linkSphere/server/server.mjs');
-  return app(req, res);
-};
+    if (!app) {
+      throw new Error('SSR app not found in server.mjs');
+    }
+
+    return app(req, res);
+  } catch (error) {
+    console.error('❌ Angular SSR failed to load:', error);
+    res.statusCode = 500;
+    res.end('Internal Server Error');
+  }
+}
