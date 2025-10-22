@@ -33,8 +33,6 @@ export class CustomValidators {
 
       if (!contentControl || !attachmentsControl ) return null;
 
- 
-      
       const content = contentControl.value?.trim();
       const attachments = attachmentsControl.value;
 

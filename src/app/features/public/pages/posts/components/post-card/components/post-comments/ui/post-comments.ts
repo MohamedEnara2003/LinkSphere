@@ -34,8 +34,8 @@ import { CommentItem } from "../components/comment-item/comment-item";
       <article
     class="relative w-full sm:w-[85%] md:w-[70%] lg:w-1/2  h-[85%] flex flex-col  gap-5
       rounded-t-3xl rounded-b-none ngCard shadow-2xl animate-up overflow-hidden"
-    aria-labelledby="comments-title"
-  >
+    aria-labelledby="comments-title" >
+
     <!-- Header -->
     <header
       class="sticky top-0 z-10 flex items-center justify-between p-3 bg-base-100/90 dark:bg-card-dark/90 backdrop-blur-md border-b border-base-200"
@@ -70,7 +70,8 @@ import { CommentItem } from "../components/comment-item/comment-item";
     </header>
 
     <!-- Comments List -->
-    <section class="w-full h-full flex-1 overflow-y-auto p-2   grid grid-cols-1 ">
+    <section class="w-full h-full flex-1 overflow-y-auto p-2   grid grid-cols-1 "
+    >
       <ul class="list flex flex-col gap-4">
         @for (comment of commentService.comments(); track comment._id) {
         @defer (when !loadingService.isLoading()) {

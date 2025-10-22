@@ -85,7 +85,7 @@ private buildCommentFormData(data: ICreateComment | IReplyComment | IUpdateComme
   return formData;
 }
 
-createComment(postId: string, data: ICreateComment): Observable<{ data: { commentId: string } }> {
+createComment(postId: string, data: ICreateComment , preveiwImage? : string): Observable<{ data: { commentId: string } }> {
   const formData = this.buildCommentFormData(data);
 
   return this.#singleTonApi.create<{ data: { commentId: string } }>(
@@ -94,14 +94,16 @@ createComment(postId: string, data: ICreateComment): Observable<{ data: { commen
   ).pipe(
     tap(({ data: { commentId } }) => {
       const newComment: IComment = this.getCommentItems(postId, commentId, 'comment', data)!;
-      this.#comments.update((c) => [newComment, ...c]);
+      this.#comments.update((c) => 
+      [{...newComment ,  attachment : preveiwImage}, ...c]);
     })
   );
 }
 
 
 // 🟢 Reply on Comment
-replyComment(postId: string, commentId: string, data: IReplyComment): Observable<{ data: { replyId: string } }> {
+replyComment(postId: string, commentId: string, data: IReplyComment , preveiwImage? : string)
+: Observable<{ data: { replyId: string } }> {
   const formData = this.buildCommentFormData(data);
 
   return this.#singleTonApi.create<{ data: { replyId: string } }>(
@@ -110,13 +112,14 @@ replyComment(postId: string, commentId: string, data: IReplyComment): Observable
   ).pipe(
     tap(({ data: { replyId } }) => {
       const newReplyComment: IComment = this.getCommentItems(postId, replyId, 'reply', data, commentId)!;
-      this.#replies.update((r) => [newReplyComment, ...r]);
+      this.#replies.update((c) => 
+      [{...newReplyComment , attachment : preveiwImage}, ...c]);
     })
   );
 }
 
 // 🟢 Update Comment
-updateComment(postId: string, commentId: string, data: IUpdateComment): Observable<void> {
+updateComment(postId: string, commentId: string, data: IUpdateComment, previewImage?: string): Observable<void> {
   const formData = this.buildCommentFormData(data);
 
   return this.#singleTonApi.patch<void>(
@@ -125,15 +128,48 @@ updateComment(postId: string, commentId: string, data: IUpdateComment): Observab
   ).pipe(
     tap(() => {
       this.#comments.update((comments) =>
-        comments.map((c) =>
-          c._id === commentId
-            ? {
-                ...c,
-                content: data.content ?? c.content,
-                tags: data.tags ?? c.tags ?? [],
-              }
-            : c
-        )
+        comments.map((c) => {
+          if (c._id !== commentId) return c;
+
+          // Handle tags update
+          let updatedTags = [...(c.tags || [])];
+          
+          // Remove tags that are in removedTags
+          if (data.removedTags?.length) {
+            updatedTags = updatedTags.filter(tag => !data.removedTags?.includes(tag));
+          }
+
+          // Add new tags
+          if (data.tags?.length) {
+            // Filter out existing tags to avoid duplicates
+            const newTags = data.tags.filter(tag => !updatedTags.includes(tag));
+            updatedTags = [...updatedTags, ...newTags];
+          }
+
+          // Handle attachment
+          let updatedAttachment = c.attachment;
+          if (data.removeAttachment) {
+            updatedAttachment = '';
+          } else if (previewImage) {
+            updatedAttachment = previewImage;
+          }
+
+          return {
+            ...c,
+            content: data.content ?? c.content,
+            tags: updatedTags,
+            attachment: updatedAttachment,
+            updatedAt: new Date().toISOString()
+          };
+        })
+      );
+
+      // Update replies if this comment is also in replies
+      this.#replies.update((replies) =>
+        replies.map((r) => {
+          if (r._id !== commentId) return r;
+          return this.comments().find(c => c._id === commentId) || r;
+        })
       );
     })
   );

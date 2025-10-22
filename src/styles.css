@@ -72,7 +72,7 @@
 
 *{
   scrollbar-width: thin;
-  scrollbar-color: var(--color-brand-color) var(--color-light);
+  scrollbar-color: var(--color-brand-color) var(--color-dark);
   scroll-behavior: smooth;
 }
 
