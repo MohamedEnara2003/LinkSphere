@@ -9,11 +9,12 @@ export const isAuthGuard: CanActivateFn = (route, state) => {
 
   const redirectToLogin = () => router.createUrlTree(['/auth/login']);
 
-  // ⚡ استثناء صفحات auth من الـ guard عشان نتجنب infinite loop
-  if (state.url.startsWith('/auth')) {
-    return of(true);
-  }
 
+  // if (state.url.startsWith('/auth')) {
+  //   return of(true);
+  // }
+
+  
   return userService.getUserProfile().pipe(
     map(user => {
       if (user) return true;

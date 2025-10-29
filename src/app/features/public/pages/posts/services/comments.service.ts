@@ -28,7 +28,9 @@ export class CommentService {
   comment = computed<IComment | null>(() => this.#comment());
   reply = computed<IComment | null>(() => this.#reply());
 
-
+  updateReplies(updateFn: (replies: IComment[]) => IComment[]): void {
+    this.#replies.update(updateFn);
+  }
 // 🟢 Create Comment
 
 getCommentItems (
@@ -111,43 +113,50 @@ replyComment(postId: string, commentId: string, data: IReplyComment , preveiwIma
     formData
   ).pipe(
     tap(({ data: { replyId } }) => {
-      const newReplyComment: IComment = this.getCommentItems(postId, replyId, 'reply', data, commentId)!;
-      this.#replies.update((c) => 
-      [{...newReplyComment , attachment : preveiwImage}, ...c]);
+
+    const newReplyComment: IComment = this.getCommentItems(postId, replyId, 'reply', data, commentId)!;
+
+    this.#replies.update((replies) => 
+    [{...newReplyComment , attachment : preveiwImage}, ...replies].map((r) =>
+    r._id === commentId ? ({...r , lastReply : 'new Reply'}) : r
+    )
+    );
+
+    this.#comments.update((comments) => comments.map((c) => 
+    c._id === commentId ? ({...c , lastReply : 'new Reply'}) : c
+    ))
+
     })
   );
 }
 
 // 🟢 Update Comment
-updateComment(postId: string, commentId: string, data: IUpdateComment, previewImage?: string): Observable<void> {
-  const formData = this.buildCommentFormData(data);
+  updateComment(postId: string, commentId: string, data: IUpdateComment, previewImage?: string): Observable<void> {
+    const formData = this.buildCommentFormData(data);
 
-  return this.#singleTonApi.patch<void>(
-    `${this.#routeName}/${postId}/update/${commentId}`,
-    formData
-  ).pipe(
-    tap(() => {
-      this.#comments.update((comments) =>
-        comments.map((c) => {
-          if (c._id !== commentId) return c;
+    return this.#singleTonApi.patch<void>(
+      `${this.#routeName}/${postId}/update/${commentId}`,
+      formData
+    ).pipe(
+      tap(() => {
+        // Helper function to update a single comment
+        const updateCommentData = (comment: IComment): IComment => {
+          if (comment._id !== commentId) return comment;
 
           // Handle tags update
-          let updatedTags = [...(c.tags || [])];
+          let updatedTags = [...(comment.tags || [])];
           
-          // Remove tags that are in removedTags
           if (data.removedTags?.length) {
             updatedTags = updatedTags.filter(tag => !data.removedTags?.includes(tag));
           }
 
-          // Add new tags
           if (data.tags?.length) {
-            // Filter out existing tags to avoid duplicates
             const newTags = data.tags.filter(tag => !updatedTags.includes(tag));
             updatedTags = [...updatedTags, ...newTags];
           }
 
           // Handle attachment
-          let updatedAttachment = c.attachment;
+          let updatedAttachment = comment.attachment;
           if (data.removeAttachment) {
             updatedAttachment = '';
           } else if (previewImage) {
@@ -155,42 +164,58 @@ updateComment(postId: string, commentId: string, data: IUpdateComment, previewIm
           }
 
           return {
-            ...c,
-            content: data.content ?? c.content,
+            ...comment,
+            content: data.content ?? comment.content,
             tags: updatedTags,
             attachment: updatedAttachment,
             updatedAt: new Date().toISOString()
           };
-        })
-      );
+        };
 
-      // Update replies if this comment is also in replies
-      this.#replies.update((replies) =>
-        replies.map((r) => {
-          if (r._id !== commentId) return r;
-          return this.comments().find(c => c._id === commentId) || r;
-        })
-      );
-    })
-  );
-}
+        // Update in main comments
+        this.#comments.update(comments => 
+          comments.map(c => updateCommentData(c))
+        );
+
+        // Update in replies including nested ones
+        this.#replies.update(replies => 
+          replies.map(r => updateCommentData(r))
+        );
+      })
+    );
+  }
 
   
 // 🟢 Delete Comment
-deleteComment(postId: string, commentId: string): Observable<void> {
-return this.#singleTonApi.deleteById<void>( `${this.#routeName}/${postId}/delete`, commentId
-).pipe(
-tap(() => {
+  deleteComment(postId: string, commentId: string): Observable<void> {
+    return this.#singleTonApi.deleteById<void>(`${this.#routeName}/${postId}/delete`, commentId)
+      .pipe(
+        tap(() => {
 
-  if(this.#replies().length > 0){
-  this.#replies.update((c) => c.filter((c) => (c._id !== commentId)));
+          // Delete the comment itself
+          this.#comments.update(comments => comments.filter(c => c._id !== commentId));
+
+
+          // Delete the reply comment itself
+          if (this.#replies().length > 0) {
+
+          const deletedReply = this.#replies().find(r => r._id === commentId);
+          const parentCommentId = deletedReply?.commentId;
+
+          const commentReplies = this.#replies().filter((r) => r._id === parentCommentId);
+
+          this.#replies.update(replies =>
+          replies
+          .map(r =>
+          (r._id === parentCommentId && commentReplies.length === 0) ? {...r, lastReply: null } : r
+          )
+          .filter(r => r._id !== commentId)
+          );
+          }
+
+        })
+      );
   }
-
-  this.#comments.update((c) => c.filter((c) => (c._id !== commentId)));
-})
-
-);
-}
 
     // 🟢 Get Comment By Id
     #enrichCommentsWithAssets(
@@ -254,41 +279,89 @@ tap(() => {
         );
     }
   
-    // 🔹 جلب ردود التعليق
-    getCommentReplies(
-      postId: string,
-      commentId: string,
-      page: number = 1,
-      limit: number = 2
-    ): Observable<IPaginatedCommentsRepliesRes> {
-      return this.#singleTonApi
-        .find<IPaginatedCommentsRepliesRes>(
-          `${this.#routeName}/${postId}/${commentId}/replies?page=${page}&limit=${limit}`
-        )
-        .pipe(
-          switchMap(({ data: { replies, pagination } }) =>
-            this.#enrichCommentsWithAssets(replies, 'reply').pipe(
-              map((enrichedReplies) => ({
-                data: { replies: enrichedReplies, pagination },
-              }))
-            )
-          ),
-          tap(({ data: { replies } }) => this.#replies.set(replies))
-        );
-    }
+
+  getCommentReplies(
+    postId: string,
+    commentId: string,
+    page: number = 1,
+    limit: number = 2
+  ): Observable<IPaginatedCommentsRepliesRes> {
+    return this.#singleTonApi
+      .find<IPaginatedCommentsRepliesRes>(
+        `${this.#routeName}/${postId}/${commentId}/replies?page=${page}&limit=${limit}`
+      )
+      .pipe(
+        switchMap(({ data: { replies, pagination } }) =>
+          this.#enrichCommentsWithAssets(replies, 'reply').pipe(
+            map((enrichedReplies) => ({
+              data: {
+                replies: this.organizeReplies(enrichedReplies, commentId),
+                pagination
+              },
+            }))
+          )
+        ),
+        tap(({ data: { replies } }) => {
+          // Merge new replies with existing ones, replacing any duplicates
+          this.#replies.update(existing => {
+            const newReplies = replies.filter(r => 
+              !existing.some(e => e._id === r._id)
+            );
+            return [...existing, ...newReplies];
+          });
+        })
+      );
+  }
+
+  private organizeReplies(replies: IComment[], parentId: string): IComment[] {
+    // Get direct replies to the parent comment
+    const directReplies = replies.filter(r => r.commentId === parentId);
     
-    getCommentById(postId: string, commentId: string): Observable<{data : {comment : IComment}}> {
-    if(this.#comment() && this.#comment()?._id === commentId) return EMPTY;
-    return this.#singleTonApi.find<{data : {comment : IComment}}>
-    (`${this.#routeName}/${postId}/comment/${commentId}`).pipe(
-    tap(({data : {comment}}) => {
-    this.#comment.set(comment);
-    }) 
+    // Get nested replies
+    const nestedReplies = replies.filter(r => 
+      r.commentId !== parentId && 
+      replies.some(p => p._id === r.commentId)
     );
-    }
-    
-      // 🟢 Like/Unlike Comment
-    likeComment(postId: string, commentId: string): Observable<any> {
-    return this.#singleTonApi.create<any>(`${this.#routeName}/${postId}/${commentId}/like`, null);
-    }
+
+    // Return all replies in correct order
+    return [...directReplies, ...nestedReplies];
+  }
+
+  // 🟢 Like/Unlike Comment
+likeComment(postId: string, commentId: string, userId: string): Observable<void> {
+  if (!postId || !commentId || !userId) return EMPTY;
+
+
+  const prevComments = this.#comments();
+  const prevReplies = this.#replies();
+
+  const toggleLike = (list: IComment[]) =>
+    list.map((c) => {
+      if (c._id !== commentId) return c;
+      const updatedLikes = new Set(c.likes ?? []);
+      updatedLikes.has(userId)
+        ? updatedLikes.delete(userId)
+        : updatedLikes.add(userId);
+      return { ...c, likes: Array.from(updatedLikes) };
+    });
+
+  this.#comments.update(toggleLike);
+
+  if (this.#replies().length) {
+    this.#replies.update(toggleLike);
+  }
+
+  // استدعاء الـ API
+  return this.#singleTonApi
+    .create<void>(`${this.#routeName}/${postId}/${commentId}/like`)
+    .pipe(
+      catchError(() => {
+        this.#comments.set(prevComments);
+        if (prevReplies.length) this.#replies.set(prevReplies);
+        return EMPTY;
+      })
+    );
+}
+
+
 }

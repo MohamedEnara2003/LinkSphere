@@ -1,47 +1,58 @@
-import { Component, computed, HostListener, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
 import { IComment } from '../../../../../../../../../../core/models/comments.model';
 import { NgImage } from "../../../../../../../../../../shared/components/ng-image/ng-image";
-import { UserProfileService } from '../../../../../../../profile/services/user-profile.service';
 import { CommentService } from '../../../../../../services/comments.service';
 import { SharedModule } from '../../../../../../../../../../shared/modules/shared.module';
+import { FormatDateService } from '../../../../../../../../../../core/services/format-date.service';
+import { NgMenuActions } from "../../../../../../../../components/navigations/menu-actions/menu-actions";
+import { Router } from '@angular/router';
+import { LikeToggle } from "../../../../../like-toggle/like-toggle";
+import { TagsService } from '../../../../../../../../../../core/services/tags.service';
 
 
 @Component({
   selector: 'app-comment-item',
-  imports: [SharedModule, NgImage],
+  imports: [SharedModule, NgImage, NgMenuActions, LikeToggle],
 
   // ✅ HTML inline template
   template: `
-  <article 
-    class=" flex gap-2 items-start p-2 animate-opacity border-b border-base-200 dark:border-base-content/10"
+  <main 
+    class="flex flex-col gap-2"
     aria-label="User comment"
-  >
+    >
 
     <!-- 🧑‍💻 Author Avatar -->
-    <app-ng-image
+    <article   class="flex gap-2 ">
+      <app-ng-image
       [routerLink]="[
         '/public',
         { outlets: { primary: ['profile', 'user', comment().author._id || ''], model: null } }
       ]"
       [options]="{
-        src: comment().author.picture || '/user-placeholder.jpg',
+        src: comment().author.picture || '',
+        placeholder:  '/user-placeholder.webp',
         alt: comment().author.userName + ' profile picture',
-        width: 100,
+        width:  100,
         height: 100,
         decoding: 'async',
         fetchpriority: 'high',
-        class: 'size-10 rounded-full object-cover border border-base-200 cursor-pointer hover:ring-2 hover:ring-brand-color/50 transition'
+        class: comment().flag === 'comment' ? 
+        'size-8 rounded-full object-cover border border-base-200 cursor-pointer hover:ring-2 hover:ring-brand-color/50 transition ' 
+        : 
+        'size-6  rounded-full object-cover border border-base-200 cursor-pointer hover:ring-2 hover:ring-brand-color/50 transition '
       }"
-      [isPreview]="!!comment().author.picture"
     />
 
     <!-- 💬 Comment Content -->
-    <section class="relative flex-1 space-y-2">
+    <section class="relative flex-1 space-y-1">
+
       <!-- Header -->
-      <header class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
+      <header class="flex  justify-between">
+
+        <div class="flex gap-2">
           <a 
-            class="font-semibold text-sm text-base-content hover:text-brand-color transition-colors"
+            class="font-semibold text-base-content hover:text-brand-color transition-colors"
+            [ngClass]="comment().flag === 'comment' ? 'text-sm sm:text-base ' : 'text-xs sm:text-sm'"
             [routerLink]="[
               '/public',
               { outlets: { primary: ['profile', 'user', comment().author._id || ''], model: null } }
@@ -50,43 +61,71 @@ import { SharedModule } from '../../../../../../../../../../shared/modules/share
           >
             {{ comment().author.userName }}
           </a>
+
           <time
             class="badge-xs badge bg-brand-color/10 text-brand-color border-transparent"
             [attr.datetime]="comment().createdAt"
             aria-label="Comment creation date"
           >
-            {{ formatDate(comment().createdAt) }}
+            {{formatDate.format(comment().createdAt)}}
           </time>
         </div>
 
-        @if (isMyComment()) {
-          <button
-            type="button"
-            title="Open comment menu"
-            (click)="toggleMenu($event)"
-            class="btn btn-sm btn-circle bg-card-light dark:bg-card-dark hover:bg-base-200 transition"
-            aria-haspopup="true"
-            aria-expanded="{{ isOpenMenu() }}"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-              stroke-width="1.5" stroke="currentColor" class="size-5">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 
-                1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 
-                0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 
-                0 0 1 0 1.5Z" />
-            </svg>
-          </button>
-        }
+  
+      <app-ng-menu-actions
+      title="Comment Menu"
+      [actions]="[
+      { type: 'edit', label: 'Edit Comment', icon: 'edit', variant: 'info' },
+      { type: 'delete', label: 'Delete Comment', icon: 'delete', variant: 'danger' },
+      ]"
+      (action)="handleCommentMenu($event)"
+      [userId]="comment().author._id"
+      />
       </header>
 
+
       <!-- Comment Text -->
-      <p class="text-sm leading-relaxed text-base-content break-words">
-        <span *ngIf="isReplyTagName()" class="text-sm text-brand-color font-semibold">
-          {{ '@' + isReplyTagName() }}
-        </span>
+  <article 
+  role="article"
+  class="text-sm leading-relaxed break-words flex flex-col gap-2">
+
+  <!-- Reply Tag -->
+  @if (isReplyTagName()) {
+    <span
+      class="ngText font-normal"
+      role="text"
+      [attr.aria-label]="'Replying to ' + isReplyTagName()"
+    >
+    Replying to  {{isReplyTagName() }}
+    </span>
+  }
+
+  <p class="flex items-center gap-1"> 
+    <!-- Tagged Users -->
+  @if (comment().tags.length) {
+    @for (tag of comment().tags; track tag) {
+      <a 
+        [href]="[ '/public', { outlets: { primary: ['profile', 'user', tag], model: null } } ]"
+        [routerLink]="[ '/public', { outlets: { primary: ['profile', 'user', tag], model: null } } ]"
+        class="link link-hover text-brand-color"
+        role="link"
+        tabindex="0"
+        aria-label="Tagged user"
+      >
+      {{ tagService.getUserNameById(tag) }}
+    </a>
+    }
+  }
+      <!-- Comment Content -->
+      <span
+      class="text-base-content"
+      role="text"
+      aria-label="Comment content"
+      >
         {{ comment().content }}
+      </span> 
       </p>
+      </article>
 
       <!-- 🖼️ Comment Image (optional) -->
       @if(comment().attachment) {
@@ -107,25 +146,13 @@ import { SharedModule } from '../../../../../../../../../../shared/modules/share
       }
 
       <!-- Actions -->
-      <footer class="flex items-center gap-3">
-        <button
-          class="flex items-center gap-1 text-sm text-base-content hover:text-brand-color transition"
-          title="Like comment"
-          aria-label="Like this comment"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-            viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-            class="size-5">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 
-              1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 
-              3.75 3 5.765 3 8.25c0 7.22 9 12 9 
-              12s9-4.78 9-12Z" />
-          </svg>
-          <span>{{ comment().likes.length || 0 }}</span>
-        </button>
+      <nav class="flex items-center gap-3">
+      <app-like-toggle
+      [postId]="postId()"
+      [commentId]="comment()._id || ''"
+      [existingLikes]="comment().likes || []"
+      />
 
-        @if (comment().flag === 'comment') {
           <a
             [routerLink]="[]"
             [queryParams]="{ commentId: comment()._id || '', type: 'reply' }"
@@ -135,121 +162,125 @@ import { SharedModule } from '../../../../../../../../../../shared/modules/share
           >
             Reply
           </a>
-        }
-      </footer>
+        
+      </nav>
+</section>
 
-      <!-- Dropdown Menu -->
-      @if (isOpenMenu()) {
-        <nav class="" aria-label="Comment menu" (click)="$event.stopPropagation()">
-          <ul
-            class="absolute right-0 top-10 w-44 ngCard
-            shadow-md  border border-base-200 dark:border-base-content/10 
-            overflow-hidden z-50 animate-opacity"
-            role="menu"
-          >
-            <li role="menuitem">
-              <a
-                [routerLink]="[]"
-                [queryParams]="{ commentId: comment()._id || '', type: 'edit' }"
-                queryParamsHandling="merge"
-                (click)="closeMenu()"
-                class="flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-base-200/60 transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                  viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-                  class="size-4 opacity-80">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="m16.862 4.487 1.687-1.688a1.875 
-                    1.875 0 1 1 2.652 2.652L10.582 
-                    16.07a4.5 4.5 0 0 1-1.897 1.13L6 
-                    18l.8-2.685a4.5 4.5 0 0 1 
-                    1.13-1.897l8.932-8.931Z" />
-                </svg>
-                Edit Comment
-              </a>
-            </li>
-            <li role="menuitem">
-              <button
-                (click)="deleteComment()"
-                class="flex items-center gap-2 w-full px-4 py-2 text-sm text-error hover:bg-error/10 transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                  viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-                  class="size-4 opacity-80">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="m14.74 9-.346 9m-4.788 0L9.26 
-                    9m9.968-3.21c.342.052.682.107 
-                    1.022.166m-1.022-.165L18.16 
-                    19.673a2.25 2.25 0 0 1-2.244 
-                    2.077H8.084a2.25 2.25 0 0 
-                    1-2.244-2.077L4.772 5.79m14.456 
-                    0a48.108 48.108 0 0 0-3.478-.397m-12 
-                    .562c.34-.059.68-.114 
-                    1.022-.165m0 0a48.11 48.11 0 
-                    1 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 
-                    51.964 0 0 0-3.32 0c-1.18.037-2.09 
-                    1.022-2.09 2.201v.916m7.5 0a48.667 
-                    48.667 0 0 0-7.5 0" />
-                </svg>
-                Delete Comment
-              </button>
-            </li>
-          </ul>
-        </nav>
-      }
-    </section>
-  </article>
+</article>
+
+@if(replies().length && comment().lastReply) {
+  <ul class=" flex flex-col gap-4">
+    @for (reply of replies(); track reply._id) {
+      <li class="p-2 ngCard border-b border-base-200 dark:border-base-content/10">
+        @if(reply && comment().lastReply) {
+          <app-comment-item
+            [comment]="reply"
+            [postId]="postId()"
+          />
+        }
+      </li>
+    }
+  </ul>
+}
+
+<footer>
+  @if(comment().lastReply ) {
+  <button
+    type="button"
+    (click)="toggleReplies()"
+    class="btn btn-xs sm:btn-sm btn-link text-neutral-400 link-hover duration-300 transition-all p-0
+    flex items-center gap-1"
+  >
+    @if(this.isShowReplies().includes(comment()._id) || replies().length) {
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+        stroke-width="1.5" stroke="currentColor" class="size-3 rotate-180 transition-transform">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 15.75L12 8.25l-7.5 7.5" />
+      </svg>
+      Hide replies
+    } @else {
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+        stroke-width="1.5" stroke="currentColor" class="size-3 transition-transform">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 8.25l7.5 7.5 7.5-7.5" />
+      </svg>
+      View replies
+    }
+  </button>
+}
+</footer>
+
+</main>
 
   `,
 })
 export class CommentItem {
-  
-  #userService = inject(UserProfileService);
-  #commentService = inject(CommentService);
+  tagService = inject(TagsService);
+  commentService = inject(CommentService);
+  formatDate = inject(FormatDateService);
   
   comment = input.required<IComment>();
   postId = input.required<string>();
-
-  isOpenMenu = signal<boolean>(false);
-  isMyComment = computed<boolean>(() => (this.#userService.user()?._id || '') === this.comment().createdBy)
   
-  isReplyTagName = computed(() => 
-  this.comment().flag === 'reply' ?
-  this.#commentService.comments().find((c) => c._id ===  this.comment().commentId)?.author.userName || ''
-  : ''
-)
+  #router = inject(Router);
 
-  toggleMenu(event: MouseEvent) {
-    event.stopPropagation();
-    this.isOpenMenu.set(!this.isOpenMenu());
-  }
+  isReplyTagName = computed(() => {
+  const comment = this.comment();
+  if (comment.flag !== 'reply') return '';
 
-  @HostListener('document:click')
-  closeMenu() : void {
-  this.isOpenMenu.set(false);
-  }
+  const allComments = [
+    ...this.commentService.comments(),
+    ...this.commentService.replies()
+  ];
+  const parent = allComments.find(c => c._id === comment.commentId);
+  return parent?.author.userName || '';
+});
 
-  // ✅ Utilities
-  formatDate(dateStr?: string): string {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    return date.toLocaleString(undefined, {
-      dateStyle: 'medium',
-      timeStyle: 'short'
-    });
-  }
+replies = linkedSignal<IComment[]>(() => 
+this.commentService.replies().filter((r) => r.commentId === this.comment()._id)
+);
+
+isShowReplies = signal<string[]>([]);
 
 
-  deleteComment  () : void {
-  const {_id : commentId} = this.comment();
-  const postId = this.postId();
-  if(commentId && postId){
-  this.#commentService.deleteComment(postId , commentId).subscribe()
-  this.closeMenu()
+  handleCommentMenu(type : string) : void {
+  switch (type) {
+    case 'edit':  this.#router.navigate([], {
+    queryParams : {type : 'edit' , commentId : this.comment()._id || null} ,
+    queryParamsHandling : 'merge'})
+    break;
+    case 'delete' : this.deleteComment();
   }
   }
 
 
+  deleteComment(): void {
+    const { _id: commentId } = this.comment();
+    const postId = this.postId();
+    if (commentId && postId) {
+      this.commentService.deleteComment(postId, commentId).subscribe();
+    }
+  }
+
+  toggleReplies(): void {
+    const { _id: commentId , lastReply } = this.comment();
+    const postId = this.postId();
+
+    const isReply = this.replies().length === 0 &&
+    !this.isShowReplies().includes(commentId);
+
+    if (postId && commentId && lastReply) {
+      if (isReply) {
+        
+        this.commentService.getCommentReplies(postId, commentId).subscribe({
+          next: () => {
+          this.isShowReplies.update((ids) => [...ids , commentId]);
+          }
+        });
+      } else {
+        this.replies.set([]);
+        this.isShowReplies.update((ids) => ids.filter((id) => id !== commentId));
+      }
+    }
+  }
 
 
 }

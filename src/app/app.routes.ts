@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 
+import { isAuthGuard } from './core/guards/is-auth.guard';
+
 export const routes: Routes = [
   {
     path: 'public',

@@ -40,16 +40,16 @@ export interface ImageOption {
         [decoding]="options().decoding || 'async'"
         [attr.fetchpriority]="options().fetchpriority || 'auto'"
         [attr.referrerpolicy]="options().referrerpolicy || 'no-referrer'"
-        (click)="isPreview() ? openPreview() : null"
+        (click)="(isPreview() && !isError()) ? openPreview() : null"
         (error)="onError()"
-        [class]="isPreview() ? 'cursor-zoom-in' : '' "
+        [class]="(isPreview() && !isError() )? 'cursor-zoom-in' : '' "
       />
     
     <!-- Fullscreen Preview -->
   @if (preview()) {
     <section
   class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm
-         transition-opacity duration-300 ease-out animate-fadeIn"
+  transition-opacity duration-300 ease-out animate-fadeIn"
   role="dialog"
   aria-modal="true"
   aria-labelledby="image-preview-title"
@@ -77,15 +77,15 @@ export interface ImageOption {
       aria-label="Close image preview"
     >
       <svg xmlns="http://www.w3.org/2000/svg"
-           viewBox="0 0 24 24"
-           fill="currentColor"
-           class="size-6">
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        class="size-6">
         <path fill-rule="evenodd"
-              d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 
-                 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 
-                 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 
-                 5.47 6.53a.75.75 0 0 1 0-1.06Z"
-              clip-rule="evenodd" />
+        d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 
+        1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 
+        13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 
+        5.47 6.53a.75.75 0 0 1 0-1.06Z"
+        clip-rule="evenodd" />
       </svg>
     </button>
 
@@ -112,17 +112,20 @@ export interface ImageOption {
 })
 export class NgImage {
   #domService = inject(DomService);
-  public options = model.required<ImageOption>();
 
+  public options = model.required<ImageOption>();
   isPreview = input<boolean>(false);
+
+  isError = signal<boolean>(false);
   preview = signal<boolean>(false);
 
 
   onError(): void {
     this.options.update((prev) => ({
       ...prev,
-      src: prev.placeholder || '/17316704336156_Event-Image-Not-Found.jpg',
+      src: prev.placeholder || 'Image-Not-Found.webp',
     }));
+    this.isError.set(true);
   }
 
 openPreview(): void {

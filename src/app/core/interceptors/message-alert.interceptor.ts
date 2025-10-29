@@ -45,7 +45,7 @@ export const MessageAlertInterceptor: HttpInterceptorFn = (req, next) => {
   ) ?  'Updated' : 'Deleted';
 
 
-  if(req.url.includes('/posts/like')) return ;
+  if(req.url.includes('like')) return ;
 
   initAlert(
   'alert-success' ,

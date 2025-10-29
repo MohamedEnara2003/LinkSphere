@@ -32,7 +32,8 @@ imports: [
 ],
 
 template: `
-<main class="w-full min-h-[90svh] flex flex-col justify-start  items-center  py-5 p-2 overflow-x-hidden ">
+<main class="w-full min-h-[90svh] flex flex-col justify-start  items-center  py-5 p-2 
+overflow-hidden ">
 
 <article class="w-full max-w-4xl   mb-4 ngCard rounded-none p-6  grid grid-cols-1 gap-8
 animate-sideRight">

@@ -84,11 +84,7 @@ import { IUser } from '../../../../../../core/models/user.model';
 })
 export class FriendRequests {
       userProfileService = inject(UserProfileService);
-    
-
-      constructor(){
-      this.userProfileService.getFriendsRequests().subscribe();
-      }
+  
 
       cancelRequest(requestId : string) : void {
       if(!requestId) return ;

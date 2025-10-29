@@ -1,10 +1,11 @@
 import { Routes } from '@angular/router';
 import { isAuthGuard } from '../../core/guards/is-auth.guard';
 
+
 export const publicRoutes: Routes = [
   {
     path: '',
-    canActivate: [isAuthGuard],
+   canActivate : [isAuthGuard],
     loadComponent: () => import('./public').then(c => c.Public),
     children: [
       {

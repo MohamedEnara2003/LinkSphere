@@ -12,7 +12,6 @@ export interface IFriendRequest {
   sendTo: string;
   createdAt: string;  // ISO date string
   updatedAt: string;  // ISO date string
-  acceptedAt: string;
   __v: number;
 }
 

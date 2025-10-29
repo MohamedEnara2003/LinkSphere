@@ -1,193 +1,105 @@
-import { Component, computed, HostListener, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { NgImage } from "../../../../../../../../shared/components/ng-image/ng-image";
 import { Router, RouterModule } from '@angular/router';
-import { DomService } from '../../../../../../../../core/services/dom.service';
 import { PostService } from '../../../../services/post.service';
 import { IPost } from '../../../../../../../../core/models/posts.model';
 import { UserProfileService } from '../../../../../profile/services/user-profile.service';
+import { ActionType, IMenuAction, NgMenuActions } from "../../../../../../components/navigations/menu-actions/menu-actions";
+import { FormatDateService } from '../../../../../../../../core/services/format-date.service';
+import { TagsService } from '../../../../../../../../core/services/tags.service';
 
 
 @Component({
 selector: 'app-post-header',
-imports: [NgImage , RouterModule],
+imports: [NgImage, RouterModule, NgMenuActions],
 template: `
-  <header class="flex justify-between items-center border-b border-brand-color/10 pb-1">
-    <address class="not-italic flex items-center gap-2">
 
+  <header class="flex justify-between items-center border-b border-brand-color/10 pb-1">
+    
+    <address class="not-italic flex  gap-2">
       <!-- Profile Image -->
       <app-ng-image  
         [routerLink]="userId() ? ['/public/profile/user', userId()] : []"
         [options]="{
-          src: userPicture(),
-          placeholder: post()?.author?.placeholder ?? '',
+          src:  post()?.author?.picture || '' ,
+          placeholder: '/user-placeholder.webp',
           alt: 'Profile picture of ' + post()?.author?.userName || '',
-          width: 60,
+          width:  60,
           height: 60, 
-          class: 'object-cover btn btn-circle btn-outline'
+          class: 'size-8 sm:size-10 object-cover btn btn-circle btn-outline'
         }" 
       />
 
       <!-- Author Info -->
-      <div class="flex flex-col">
-        <h2  class="card-title ngText capitalize">
-          {{ post()?.author?.userName || userService.userProfile()?.userName || ''}}
-        </h2>
-        <time 
+<section class="flex flex-col gap-2">
+
+<div class="flex  flex-wrap items-center gap-2">
+  <h2  class="text-base sm:text-lg card-title ngText capitalize ">
+    {{ post()?.author?.userName || userService.userProfile()?.userName || ''}}
+  </h2>
+
+    <time 
           class="text-brand-color badge badge-xs p-1 bg-brand-color/20"
           [attr.datetime]="post()?.createdAt || ''">
-          {{ formatTime(post()?.createdAt || '') }}
-        </time>
-      </div>
-    </address>
+          {{ formatDate.format(post()?.createdAt || '') }}
+      </time>
+</div>
 
-  @if(isMyPost()){
-
-  <section class="relative flex flex-col gap-2 select-none">
-
-  <!-- Menu Button -->
-  <button
-  (click)="toggleMenu($event)"
-  title="Post Menu"
-  type="button"
-  class="btn btn-sm btn-circle flex items-center justify-center bg-card-light dark:bg-card-dark hover:opacity-80
-  transition duration-300 ">
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
-  class="size-6">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
-  </svg>
-  </button>
-
-  <!-- Dropdown Menu -->
-  @if (isOpenPostMenu()) {
-
-    <nav
-      class="absolute right-0 top-10 w-48 z-50 bg-card-light dark:bg-card-dark  shadow-lg rounded-xl 
-      border border-base-200 dark:border-base-content/20 flex flex-col gap-1 py-2 animate-opacity"
-      (click)="$event.stopPropagation()"
-    >
-    @if(!post()?.isFreezed){ 
-      <button
-        type="button"
-        class="w-full flex items-center gap-2 px-4 py-2 text-left
-        hover:bg-info/10 rounded-md transition"
-        (click)="editPost()"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-          viewBox="0 0 24 24" stroke-width="1.5"
-          stroke="currentColor" class="size-5">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 
-            16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 
-            4.5 0 0 1 1.13-1.897l8.932-8.931ZM18 14v4.75A2.25 
-            2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 
-            3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-        </svg>
-        Edit Post
-      </button>
-
-
-      <button
-        type="button"
-        class="w-full flex items-center gap-2 px-4 py-2 text-left
-        hover:bg-error/10 text-error rounded-md transition"
-        (click)="deletePost()"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-          viewBox="0 0 24 24" stroke-width="1.5"
-          stroke="currentColor" class="size-5">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="m14.74 9-.346 9m-4.788 0L9.26 
-            9m9.968-3.21c.342.052.682.107 
-            1.022.166m-1.022-.165L18.16 
-            19.673a2.25 2.25 0 0 1-2.244 
-            2.077H8.084a2.25 2.25 0 0 
-            1-2.244-2.077L4.772 5.79m14.456 
-            0a48.108 48.108 0 0 0-3.478-.397m-12 
-            .562c.34-.059.68-.114 
-            1.022-.165m0 0a48.11 48.11 0 
-            0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 
-            51.964 0 0 0-3.32 0c-1.18.037-2.09 
-            1.022-2.09 2.201v.916m7.5 0a48.667 
-            48.667 0 0 0-7.5 0" />
-        </svg>
-        Delete Post
-      </button>
-    }
-
-      <button
-        type="button"
-        class="w-full flex items-center gap-2 px-4 py-2 text-left
-        hover:bg-warning/10 rounded-md transition"
-        (click)="post()?.isFreezed ? unFreezPost() :  freezPost() "
-      > 
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-          viewBox="0 0 24 24" stroke-width="1.5"
-          stroke="currentColor" class="size-5">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M14.857 17.082a23.848 23.848 0 0 0 
-            5.454-1.31A8.967 8.967 0 0 1 
-            18 9.75V9A6 6 0 0 0 6 9v.75a8.967 
-            8.967 0 0 1-2.312 6.022c1.733.64 
-            3.56 1.085 5.455 1.31m5.714 
-            0a24.255 24.255 0 0 1-5.714 
-            0m5.714 0a3 3 0 1 1-5.714 
-            0M10.5 8.25h3l-3 4.5h3" />
-        </svg>
-        {{ post()?.isFreezed ? 'UnFreeze Post' : 'Freeze Post'}}
-      </button>
-    </nav>
-  }
-</section>
+@if(post()?.tags && post()?.tags?.length){
+<p class="text-brand-color badge badge-xs sm:badge-sm  p-1 bg-brand-color/20">
+{{tag.initTagText(post()?.tags || [])}}
+</p>
 }
+</section>
+
+</address>
+
+      <app-ng-menu-actions
+      title="Post Menu"
+      [actions]="menuActions()"
+      (action)="handleCommentMenu($event)"
+      [userId]="post()?.author?._id || ''"
+      />
+
 
   </header>
     
 `,
 })
 export class PostHeader {
-  userService = inject(UserProfileService);
-
-  #domService = inject(DomService);
+  tag = inject(TagsService);
   #postService = inject(PostService);
   #router = inject(Router);
+  
+  userService = inject(UserProfileService);
+  formatDate = inject(FormatDateService)
 
   post = input<IPost>();
 
   isMyPost = computed<boolean>(() => (this.userService.user()?._id || '') === (this.post()?.createdBy || ''))
   userId = computed<string>(() => this.post()?.author?._id || '');
   
-  userPicture = computed<string>(() => {
-  const author = this.post()?.author.picture  || '';
-  const userProfilePicture = this.userService.userProfile()?.picture || '';
-  if(author) return author;
-  else if(userProfilePicture) return userProfilePicture;
-  return "/user-placeholder.jpg";
-  })
 
-  isOpenPostMenu = signal<boolean>(false);
+  menuActions = computed<IMenuAction[]>(() => [
+  { type: 'edit', label: 'Edit Comment', icon: 'edit', variant: 'info' },
+  { type: 'delete', label: 'Delete Comment', icon: 'delete', variant: 'danger' },
+  { type: this.post()?.isFreezed ? 'freeze' : 'unFreeze', 
+  label: this.post()?.isFreezed ? 'UnFreeze Post' : 'Freeze Post', 
+  icon: 'freeze', variant: 'warning' 
+  }, 
+  ])
 
-  toggleMenu(event: MouseEvent) {
-    event.stopPropagation();
-    this.isOpenPostMenu.set(!this.isOpenPostMenu());
+
+  handleCommentMenu(type : ActionType) : void {
+  switch (type) {
+    case 'edit': this.editPost();
+    break;
+    case 'delete' : this.deletePost();
+    break;
+    case 'freeze' : this.freezPost();
+    break;
+    case 'unFreeze' : this.unFreezPost();
   }
-
-  @HostListener('document:click')
-  closeMenu() : void {
-    if(this.#domService.isBrowser()){
-      this.isOpenPostMenu.set(false);
-    }
-  }
-
-  formatTime(date: string): string {
-    const d = new Date(date);
-    return d.toLocaleDateString('en-US', { 
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric' ,
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
   }
 
   editPost() : void {
@@ -195,7 +107,6 @@ export class PostHeader {
   if(post){
   this.#router.navigate(['/public' ,{ outlets: { 'model': ['upsert-post'] } }])
   this.#postService.setPost(post);
-  this.closeMenu();
   }
   }
 
@@ -203,7 +114,6 @@ export class PostHeader {
   const post = this.post();
   if(post){
   this.#postService.freezePost(post._id , post).subscribe();
-  this.closeMenu();
   }
   }
 
@@ -211,7 +121,6 @@ export class PostHeader {
   const post = this.post();
   if(post){
   this.#postService.unfreezePost(post._id , post).subscribe();
-  this.closeMenu();
   }
   }
 
@@ -219,7 +128,6 @@ export class PostHeader {
   const postId = this.post()?._id;
   if(postId){
   this.#postService.deletePost(postId).subscribe();
-  this.closeMenu();
   }
   }
 

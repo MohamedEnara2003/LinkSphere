@@ -2,6 +2,7 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { SingleTonApi } from '../../../../../core/services/api/single-ton-api.service';
 import { 
   ChangePasswordDto, 
+  FriendRequestEnum, 
   IFriend, 
   IUpdateBasicInfo, 
   IUpdateEmail, 
@@ -58,32 +59,20 @@ export class UserProfileService {
   
   if(!user || !userProfile) return 'myProfile'
 
-  const {_id : userId , friends} = user;
-  const {_id : userProfileId ,} = userProfile;
+  const {_id : userId} = user;
+  const {_id : userProfileId} = userProfile;
 
-
-  const isRequestReceived = this.#receivedRequests().some((r) => {
-    return r.sender._id === userProfileId;
-    })
-
-  const isSentRequests= this.#sentRequests().some((r) => {
-  return r.receiver._id == userProfileId;
-  })
-  
   // My Profile
   if(userId === userProfileId ) return 'myProfile';
 
   // My Firend
-  const isFriend =  (friends || []).some((f) => f._id === userProfileId );
-
-  if(isFriend) return 'friend';
+  if(userProfile.isFriend) return 'friend';
 
   // Not Friend
-  if(userId !== userProfileId && !isFriend && (!isRequestReceived && !isSentRequests)) return 'notFriend';
+  if(userId !== userProfileId && !userProfile.isFriend && !userProfile.friendRequest) return 'notFriend';
   
-  if(isSentRequests) return 'requestSent';
-  if(isRequestReceived) return 'requestReceived';
-
+  if(userProfile.friendRequest ===  FriendRequestEnum.sent) return 'requestSent';
+  if(userProfile.friendRequest ===  FriendRequestEnum.resaved) return 'requestReceived';
 
   return 'myProfile';
   });
@@ -117,41 +106,40 @@ export class UserProfileService {
   // ==============================
 
   // 🟢 Get user profile
-    #prepareUser(user: IUser ,imageType : ImageType): Observable<IUser> {
-      const { picture, coverImages = [] , friends = [] } = user;
 
-      // 🟢 تحميل الصورة الشخصية
-      const picture$ = picture
-        ? this.#imagesService.getImages(picture, imageType).pipe(
-            map(({ url }) => url || ''),
-            catchError(() => of(''))
+  #prepareUser(user: IUser, imageType: ImageType): Observable<IUser> {
+  const { picture, coverImages = [], friends = [] } = user || {};
+
+  const picture$ = picture
+    ? this.#imagesService.getImages(picture, imageType).pipe(
+        map(({ url }) => url || ''),
+        catchError(() => of(''))
+      )
+    : of('');
+
+  const coverImages$ = coverImages.length
+    ? forkJoin(
+        coverImages.map((key) =>
+          this.#imagesService.getImages(key, imageType).pipe(
+            map(({ url }) => url),
+            catchError(() => of(null))
           )
-        : of('');
+        )
+      ).pipe(map((urls) => urls.filter(Boolean) as string[]))
+    : of<string[]>([]);
 
-      // 🟢 تحميل صور الغلاف
-      const coverImages$ = coverImages.length
-        ? forkJoin(
-            coverImages.map((key) =>
-              this.#imagesService.getImages(key, imageType).pipe(
-                map(({ url }) => url),
-                catchError(() => of(null))
-              )
-            )
-          ).pipe(map((urls) => urls.filter(Boolean) as string[]))
-        : of<string[]>([]);
-
-    const friendImages$ = friends.length
+  const friendImages$ = friends.length
     ? forkJoin(
         friends.map((friend) =>
           this.#imagesService.getImages(friend.picture || '', imageType).pipe(
             map((res) => ({
               ...friend,
-              picture: res?.url || '/user-placeholder.jpg',
+              picture: res?.url || 'user-placeholder.webp ',
             })),
             catchError(() =>
               of({
                 ...friend,
-                picture: '',
+                picture: 'user-placeholder.webp',
               })
             )
           )
@@ -159,51 +147,56 @@ export class UserProfileService {
       )
     : of<IFriend[]>([]);
 
-      // ✅ دمج النتائج في object واحد
-      return forkJoin({ picture: picture$, coverImages: coverImages$ , friends : friendImages$ }).pipe(
-        map(({ picture, coverImages , friends }) => ({
-          ...user,
-          picture,
-          coverImages,
-          friends ,
-          placeholder: '/user-placeholder.jpg',
-        }))
-      );
-    }
+  return forkJoin({
+    picture: picture$,
+    coverImages: coverImages$,
+    friends: friendImages$,
+  }).pipe(
+    map(({ picture, coverImages, friends }) => ({
+      ...user,
+      picture,
+      coverImages,
+      friends,
+    }))
+  );
+}
+
 
   // 🟢 جلب المستخدم من الـ API
-  getUser(routeName: string , imageType : ImageType): Observable<IUser> {
-    return this.#singleTonApi.find<UserProfile>(`${this.#routeName}/${routeName}`).pipe(
-      switchMap(({ data: { user } }) => this.#prepareUser(user , imageType))
-    );
-  }
 
-  
   getUserProfile(): Observable<IUser> {
   if(this.#user()) return EMPTY;
-  return this.getUser('profile' , 'profile').pipe(
+  return this.#singleTonApi.find<UserProfile>(`${this.#routeName}/profile`).pipe(
+  switchMap(({data : {user}}) => {
+  return this.#prepareUser(user , 'profile')
+  }),
   tap((user) => {
-
   this.#user.set(user);
   })
   )
   }
 
-  getUserProfileById(userId : string):  Observable<IUser> {
-  return this.getUser('user/' + userId  , 'user').pipe(
-  tap((user) => {
-  this.#userProfile.set(user); 
-  }),
-  catchError(() => {
-  this.#router.navigateByUrl('/public/profile/not-founed');
-  return EMPTY
-  })
+  
+// ✅ جلب بروفايل مستخدم آخر
+getUserProfileById(userId: string): Observable<IUser> {
+  return this.#singleTonApi
+    .findById<{ data: IUser }>(`${this.#routeName}/user` , userId)
+    .pipe(
+      switchMap(({ data }) => this.#prepareUser(data, 'user')),
+      tap((user) => {
+        this.#userProfile.set(user);
+      }),
+      catchError(() => {
+        this.#router.navigateByUrl('/public/profile/not-found');
+        return EMPTY;
+      })
+    );
+}
+
+  getUserById(userId : string): Observable<IUser> {
+  return this.#singleTonApi.findById<{ data: IUser }>(`${this.#routeName}/user` , userId).pipe(
+  switchMap(({ data }) => this.#prepareUser(data, 'user')),
   )
-  }
-
-
-  getUserById(userId : string): Observable<UserProfile> {
-  return this.#singleTonApi.findById<UserProfile>(`${this.#routeName}/user`, userId);
   }
 
 
@@ -273,7 +266,10 @@ export class UserProfileService {
         createdAt : new Date().toISOString(),
         receiver 
         }
-
+        this.#userProfile.update((u) => u ?
+        (u._id === receiver._id) ? ({...u  , friendRequest : FriendRequestEnum.sent}) : u 
+        : null
+        )
         this.#sentRequests.update((prevRequests) => [newRequests , ...prevRequests])
         
         })
@@ -281,96 +277,125 @@ export class UserProfileService {
   }
 
 
-  getFriendsRequests(): Observable<{
-    sender: SentFriendRequest[];
-    receiver: ReceivedFriendRequest[];
-  }> {
-    return this.#singleTonApi
-      .find<{ data: { requests: IFriendRequest[] } }>(
-        `${this.#routeName}/friend-requests`
-      )
-      .pipe(
-        switchMap(({ data: { requests } }) => {
-          if (!requests?.length)
-            return of({ sender: [], receiver: [] });
-  
-          const currentUserId = this.#user()?._id;
-          const friends = (this.#user()?.friends || []).map((f) => f._id);
-  
-          const sentRequests = requests.filter(req => 
-          req.sendBy === currentUserId &&  !friends.includes(req.sendTo)
+ getFriendsRequests(): Observable<{
+  sender: SentFriendRequest[];
+  receiver: ReceivedFriendRequest[];
+}> {
+  return this.#singleTonApi
+    .find<{ data: { requests: IFriendRequest[] } }>(
+      `${this.#routeName}/friend-requests`
+    )
+    .pipe(
+      switchMap(({ data: { requests } }) => {
+        if (!requests?.length) return of({ sender: [], receiver: [] });
+
+        const currentUserId = this.#user()?._id;
+        if (!currentUserId) return of({ sender: [], receiver: [] });
+
+        const friends = (this.#user()?.friends || []).map((f) => f._id);
+
+        const sentRequests = requests.filter(
+          (req) => req.sendBy === currentUserId && !friends.includes(req.sendTo)
+        );
+
+        const receivedRequests = requests.filter(
+          (req) => req.sendTo === currentUserId && !friends.includes(req.sendBy)
+        );
+
+        // 📨 لو حصل Error في getUserById → رجّع null بدل ما يبوّظ الكل
+        const safeGetUserById = (userId: string) =>
+          this.getUserById(userId).pipe(
+            catchError(() => {
+              return of(null);
+            })
           );
 
-          const receivedRequests = requests.filter(req => 
-          req.sendTo === currentUserId &&  !friends.includes(req.sendBy)
-          );
-  
-          const sentRequests$ = sentRequests.map(req =>
-            this.getUserById(req.sendTo).pipe(
-              switchMap(({ data: { user } }) =>
-                this.#imagesService.getImages(user.picture || '').pipe(
-                  map(({ url }) => ({
-                    requestId: req._id,
-                    createdAt: req.createdAt,
-                    receiver: {...user, picture: url }
-                  } as SentFriendRequest))
-                )
-              )
+        const sentRequests$ = sentRequests.map((req) =>
+          safeGetUserById(req.sendTo).pipe(
+            map(
+              (user) =>
+                ({
+                  requestId: req._id,
+                  createdAt: req.createdAt,
+                  receiver: user,
+                } as SentFriendRequest)
             )
-          );
-  
-          const receivedRequests$ = receivedRequests.map(req =>
-            this.getUserById(req.sendBy).pipe(
-              switchMap(({ data: { user } }) =>
-                this.#imagesService.getImages(user.picture || '').pipe(
-                  map(({ url }) => ({
-                    requestId: req._id,
-                    createdAt: req.createdAt,
-                    sender: { ...user, picture: url }
-                  } as ReceivedFriendRequest))
-                )
-              )
+          )
+        );
+
+        const receivedRequests$ = receivedRequests.map((req) =>
+          safeGetUserById(req.sendBy).pipe(
+            map(
+              (user) =>
+                ({
+                  requestId: req._id,
+                  createdAt: req.createdAt,
+                  sender: user,
+                } as ReceivedFriendRequest)
             )
-          );
-  
-          return forkJoin({
-            sender: sentRequests$.length ? forkJoin(sentRequests$) : of([]),
-            receiver: receivedRequests$.length ? forkJoin(receivedRequests$) : of([])
+          )
+        );
+
+        return forkJoin({
+          sender: sentRequests$.length ? forkJoin(sentRequests$) : of([]),
+          receiver: receivedRequests$.length ? forkJoin(receivedRequests$) : of([]),
+        });
+      }),
+      map(({ sender, receiver }) => ({
+        sender: sender.filter((r) => r.receiver !== null),
+        receiver: receiver.filter((r) => r.sender !== null),
+      })),
+      tap(({ sender, receiver }) => {
+        this.#sentRequests.set(sender);
+        this.#receivedRequests.set(receiver);
+      }),
+    );
+}
+
+acceptFriendRequest(requestId: string, sender: IUser): Observable<void> {
+  return this.#singleTonApi
+    .patch<void>(`${this.#routeName}/accept-friend-request/${requestId}`)
+    .pipe(
+      tap(() => {
+        const newFriend: IFriend = {
+          _id: sender._id,
+          userName: sender.userName,
+          firstName: sender.firstName,
+          lastName: sender.lastName,
+          email: sender.email,
+          picture: sender.picture,
+        };
+
+        // 🧩 حذف الطلب من قائمة الطلبات المستلمة
+        this.#receivedRequests.update((requests) =>
+          requests.filter((r) => r.requestId !== requestId)
+        );
+
+        // 🧩 تحديث قائمة الأصدقاء للمستخدم الحالي
+        this.#user.update((user) => {
+          if (!user) return user;
+          return {
+            ...user,
+            friends: [newFriend, ...(user.friends || [])],
+          };
+        });
+
+        // 🧩 تحديث بروفايل المستخدم اللي تم قبول صداقته
+        const userProfile = this.#userProfile();
+        if (userProfile && String(userProfile._id) === String(sender._id)) {
+          this.#userProfile.update((user) => {
+            if (!user) return user;
+            return {
+              ...user,
+              isFriend: true,
+              friends: [newFriend, ...(user.friends || [])],
+            };
           });
-        })
-      ).pipe(
-      tap(({sender , receiver}) => {
-      this.#sentRequests.set(sender);
-      this.#receivedRequests.set(receiver);
-      })
-      );
-  }
+        }
+      }),
+    );
+}
 
-
-  acceptFriendRequest(RequestId: string , sender : IUser): Observable<void> {
-  return this.#singleTonApi.patch<void>(`${this.#routeName}/accept-friend-request/${RequestId}`).pipe(
-  tap(() => {
-
-  const newFriend : IFriend = {
-  _id : sender._id ,
-  userName : sender.userName ,
-  firstName : sender.firstName ,
-  lastName : sender.lastName ,
-  email : sender.email ,
-  picture : sender.picture ,
-  }
-
-
-  this.#receivedRequests.update((r) => r.filter((r) => r.requestId !== RequestId));
-  this.#user.update((user) => ({...user! , friends : [newFriend , ...user?.friends || []]}));
-
-  if(this.#userProfile()?._id === sender._id){
-  this.#userProfile.update((user) => ({...user! , friends : [newFriend , ...user?.friends || []]}));
-  }
-
-  })
-  );
-  }
 
   cancelFriendRequest(RequestId: string): Observable<void> {
   return this.#singleTonApi.deleteById<void>(`${this.#routeName}/cancel-friend-request`, RequestId).pipe(
@@ -380,17 +405,32 @@ export class UserProfileService {
   );
   }
 
-  unFriend(friendId: string): Observable<void> {
-    return this.#singleTonApi.deleteById<void>(`${this.#routeName}/remove-friend`, friendId).pipe(
-    tap(() => {
+unFriend(friendId: string): Observable<void> {
+  return this.#singleTonApi
+    .deleteById<void>(`${this.#routeName}/remove-friend`, friendId)
+    .pipe(
+      tap(() => {
+        const currentUser = this.#user();
+        if (currentUser) {
+          this.#user.update((u) => ({
+            ...u!,
+            friends: (u?.friends || []).filter((f) => f._id !== friendId),
+          }));
+        }
 
-    this.#user.update((user) => ({...user! , 
-    friends : (user?.friends || []).filter((f) => f._id !== friendId)
-    }))
-
-    })
+        const currentProfile = this.#userProfile();
+        if (currentProfile) {
+          this.#userProfile.update((p) => ({
+            ...p!,
+            isFriend: false,
+            friendRequest : null ,
+            friends: (p?.friends || []).filter((f) => f._id !== friendId),
+          }));
+        }
+      }),
     );
-  }
+}
+
 
   // ==============================
   // 📝 User Information Updates (JSON)

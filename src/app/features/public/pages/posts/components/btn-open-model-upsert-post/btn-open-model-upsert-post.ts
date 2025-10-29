@@ -20,7 +20,7 @@ import { TranslateModule } from '@ngx-translate/core';
         [routerLink]="userId ? ['/public/profile/user', userId] : null"
         [options]="{
         src :  userProfileService.user()?.picture || ''  ,
-        placeholder : userProfileService.user()?.placeholder || '' ,
+        placeholder : 'user-placeholder.webp' ,
         alt : 'Profile Picture ' + userProfileService.user()?.userName,
         width  : 25,
         height : 25,

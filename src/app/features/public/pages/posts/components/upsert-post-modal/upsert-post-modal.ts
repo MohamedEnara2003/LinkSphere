@@ -12,8 +12,8 @@ import { CustomValidators } from '../../../../../../core/validations/custom/cust
 import { PostAttachments } from "./components/post-attachments";
 import { NgControl } from "../../../../../../shared/components/ng-control/ng-control.";
 import { SharedModule } from '../../../../../../shared/modules/shared.module';
-import { TagPeople } from "./components/tag-people";
 import { PreviewImage, UploadService } from '../../../../../../core/services/upload/upload.service';
+import { TagFriends } from "../tag-friends/tag-friends";
 
 
 
@@ -27,7 +27,7 @@ import { PreviewImage, UploadService } from '../../../../../../core/services/upl
     CreateByPostInfo,
     PostAttachments,
     NgControl,
-    TagPeople
+    TagFriends
 ],
   template: `
   <section class="w-full h-svh fixed top-0 left-0 flex justify-center items-center  z-20">
@@ -112,7 +112,7 @@ class="size-full flex flex-col gap-2  px-2 py-4">
 
 
 @if(isOpenTagModel()){
-<app-tag-people
+<app-tag-friends
 [postForm]="postForm"
 [isOpenTagModel]="isOpenTagModel()" 
 (isOpenTagModelChange)="isOpenTagModel.set($event)" 
@@ -175,7 +175,11 @@ export class UpsertPostModel implements  OnDestroy{
       validators: CustomValidators.post('content', 'attachments'),
     }
   );
-  
+
+
+
+  // helper to get display name
+
   constructor(){
   afterNextRender(() => this.#domService.setBodyOverflow('hidden'));
 

@@ -21,12 +21,22 @@ export class PostService {
 
   // Post Management
 
-  #posts = signal<IPost[]>([]);
+  #postsStateMap = signal<Record<Availability, { posts: IPost[]; page: number }>>({
+    public: { posts: [], page: 1 },
+    friends: { posts: [], page: 1 },
+    'only-me': { posts: [], page: 1 },
+  });
+
+  getPostsByState = computed(() => this.#postsStateMap())
+
+
+
+
   #userProfilePosts = signal<IPost[]>([]);
   #userFreezedPosts = signal<IPost[]>([]);
   #post = signal<IPost | null>(null);
   
-  posts = computed(() => this.#posts());
+
   userProfilePosts = computed(() => this.#userProfilePosts());
   userFreezedPosts = computed(() => this.#userFreezedPosts());
   post = computed(() => this.#post());
@@ -68,32 +78,43 @@ export class PostService {
     // 🚀 إرسال الطلب
     return this.#singleTonApi.create<{data : {postId : string , attachments : string[]} }>
     (`${this.#routeName}/create-post`, formData).pipe(
-    tap(({data : {postId , attachments}}) => {
+    tap(({data : {postId , attachments }}) => {
 
-    this.#router.navigate(['/public'] , {queryParams : {state : data.availability || 'public'}})
+    const availability = data.availability || 'public';
+    this.#router.navigate(['/public'] , {queryParams : {state : availability }})
 
-    this.#posts.update((posts) => [
-      {
-        _id: postId,
-        content: data.content || '',
-        availability: data.availability || 'public',
-        attachments: attachments,
-        imageUrls : prevViewImages ,
-        tags: data.tags || [],
-        createdBy: this.#userService.user()?._id ?? '', // لو عندك المستخدم 
-        author : this.#userService.user(), 
-        allowComments: 'allow',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      } as IPost,
-      ...posts,
-    ].filter((p) => p.availability === data.availability));
-    
+     this.#postsStateMap.update((map) => {
+            const statePosts = map[availability].posts;
+            return {
+              ...map,
+              [availability]: {
+                posts: [
+                  {
+                    _id: postId,
+                    content: data.content || '',
+                    availability,
+                    attachments,
+                    imageUrls: prevViewImages,
+                    tags: data.tags || [],
+                    createdBy: this.#userService.user()?._id ?? '',
+                    author: this.#userService.user(),
+                    allowComments: 'allow',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                  } as IPost,
+                  ...statePosts,
+                ],
+                page: 1,
+              },
+            };
+          });
+        
     
     })
     );
   }
   
+
   // 🟢 Update Post
   updatePost(postId: string, data: IUpdatePost , prevViewImages : string[] = []): Observable<{ data: { postId: string } }> {
     const formData = new FormData();
@@ -138,20 +159,24 @@ export class PostService {
           this.#router.navigate(['/public' ,{ outlets: { 'model' :null} }]);
 
           // 🟢 تحديث الكاش المحلي بعد التعديل
-          this.#posts.update(posts =>
-            posts.map(p =>
-              p._id === postId
-                ? {
-                    ...p,
-                    content: data.content ?? p.content ?? '',
-                    attachments: [],
-                    imageUrls : prevViewImages ,
-                    tags: data.tags ?? p.tags,
-                    updatedAt: new Date().toISOString(),
-                  }
-                : p
-            )
-          );
+          this.#postsStateMap.update((map) => {
+            const newMap = { ...map };
+            for (const key of Object.keys(newMap) as Availability[]) {
+              newMap[key].posts = newMap[key].posts.map((p) =>
+                p._id === postId
+                  ? {
+                      ...p,
+                      content: data.content ?? p.content,
+                      imageUrls: prevViewImages,
+                      tags: data.tags ?? p.tags,
+                      updatedAt: new Date().toISOString(),
+                    }
+                  : p
+              );
+            }
+            return newMap;
+          });
+
         })
       );
   }
@@ -160,11 +185,17 @@ export class PostService {
   // 🟢 Delete Post
   deletePost(postId: string): Observable<void> {
     return this.#singleTonApi.deleteById<void>(`${this.#routeName}`, postId).pipe(
-    tap(() => {
-    this.#posts.update((posts) => posts.filter((post) => post._id !== postId));
-    this.#userProfilePosts.update((posts) => posts.filter((post) => post._id !== postId));
-    this.#userFreezedPosts.update((posts) => posts.filter((post) => post._id !== postId));
-    })
+      tap(() => {
+        this.#postsStateMap.update((map) => {
+          const newMap = { ...map };
+          for (const key of Object.keys(newMap) as Availability[]) {
+            newMap[key].posts = newMap[key].posts.filter(
+              (post) => post._id !== postId
+            );
+          }
+          return newMap;
+        });
+      })
     );
   }
 
@@ -172,7 +203,7 @@ export class PostService {
   #preparePosts(
   routeName : string,
   page: number = 1,
-  limit: number = 10
+  limit: number = 5
   ) : Observable<{ data: IPaginatedPostsResponse }> {
     return this.#singleTonApi
     .find<{ data: IPaginatedPostsResponse }>(
@@ -180,8 +211,8 @@ export class PostService {
     )
     .pipe(
       switchMap(({ data: { posts, pagination } }) => {
+
         if (!posts.length) {
-          this.#posts.set([]);
           return of({ data: { posts, pagination } });
         }
 
@@ -236,30 +267,34 @@ export class PostService {
   }
 
 
-  // 🟢 Get Posts (paginated)
-  getPosts(
-    availability: Availability,
-    page: number = 1,
-    limit: number = 2
-  ): Observable<{ data: IPaginatedPostsResponse }> {
+// 🟢 Get Posts (paginated)
+getPosts(
+availability: Availability ,
+
+): Observable<{ data: IPaginatedPostsResponse }> {
+
+  const page = this.#postsStateMap()[availability].page;
+
+  return this.#preparePosts('', page, 10).pipe(
+    tap(({ data: { posts : newPosts} }) => {
+
+  if (!newPosts || newPosts.length === 0) return;
+
+  const filteredPosts = newPosts.filter(p => p.availability === availability);
+
+      this.#postsStateMap.update((map) => ({
+        ...map,
+        [availability]: {
+          posts: [...map[availability].posts, ...filteredPosts],
+          page: map[availability].page + 1,
+        },
+      }));
+
+
     
-    const posts = this.#posts();
-    const cachedPosts = posts.filter((p) => p.availability === availability);
-  
-    // ✅ كاش جاهز
-    if (cachedPosts.length > 0) {
-      return EMPTY
-    }
-  
-    // 🌐 استدعاء الـ API
-  return this.#preparePosts('', page , limit).pipe(
-    tap(({data : {posts}}) => {
-      this.#posts.set(
-        posts.filter((p) => p.availability === availability)
-      );
     }),
-  )
-  }
+  );
+}
 
 
   getUserPosts(
@@ -308,61 +343,87 @@ export class PostService {
     )
     }
 
-  // 🟢 Like / Unlike Post
 // 🟢 Like / Unlike Post with cache update
-toggleLikeSignal(postId: string, userId: string): void {
-  if (!postId || !userId) return;
+  toggleLikePost(postId: string, userId: string): Observable<void> {
+    if (!postId || !userId) return EMPTY;
 
-  const prevPosts = this.#posts();
-  const prevUserProfilePosts = this.#userProfilePosts();
-  const prevFreezedPosts = this.#userFreezedPosts();
+    const prevMap = this.#postsStateMap();
 
-  const updateLikes = (posts: IPost[]) =>
-    posts.map((p) => {
-      if (p._id !== postId) return p;
-      const updatedLikes = new Set(p.likes ?? []);
-      if (updatedLikes.has(userId)) updatedLikes.delete(userId);
-      else updatedLikes.add(userId);
-      return { ...p, likes: Array.from(updatedLikes) };
+    const updateLikes = (posts: IPost[]) =>
+      posts.map((p) => {
+        if (p._id !== postId) return p;
+        const updatedLikes = new Set(p.likes ?? []);
+        updatedLikes.has(userId)
+          ? updatedLikes.delete(userId)
+          : updatedLikes.add(userId);
+        return { ...p, likes: Array.from(updatedLikes) };
+      });
+
+    this.#postsStateMap.update((map) => {
+      const newMap = { ...map };
+      for (const key of Object.keys(newMap) as Availability[]) {
+        newMap[key].posts = updateLikes(newMap[key].posts);
+      }
+      return newMap;
     });
 
-  // ✅ تحديث الكاش فورًا (Optimistic)
-  this.#posts.update(updateLikes);
-  this.#userProfilePosts.update(updateLikes);
-  this.#userFreezedPosts.update(updateLikes);
+    return this.#singleTonApi
+      .create<void>(`${this.#routeName}/like/${postId}`)
+      .pipe(
+        catchError(() => {
+          this.#postsStateMap.set(prevMap);
+          return EMPTY;
+        })
+      )
+  }
 
-  // 🚀 إرسال الطلب للـ backend
-  this.#singleTonApi
-    .create<void>(`${this.#routeName}/like/${postId}`)
-    .pipe(
-      catchError(() => {
-        // ❌ في حالة الخطأ نرجع الكاش القديم
-        this.#posts.set(prevPosts);
-        this.#userProfilePosts.set(prevUserProfilePosts);
-        this.#userFreezedPosts.set(prevFreezedPosts);
-        return of(null);
-      })
-    )
-    .subscribe();
-}
 
   // 🟢 Freeze Post
-  freezePost(postId: string , post : IPost): Observable<void> {
-    return this.#singleTonApi.deleteById<void>(`${this.#routeName}/freeze`, postId).pipe(
+freezePost(postId: string, post: IPost): Observable<void> {
+  return this.#singleTonApi.deleteById<void>(`${this.#routeName}/freeze`, postId).pipe(
     tap(() => {
-    this.#posts.update((posts) => posts.filter((post) => post._id !== postId));
-    this.#userFreezedPosts.update((posts) => [{...post , isFreezed : true}, ...posts]);
+      const availability = post.availability || 'public';
+
+      // 🧹 احذف البوست من الـ state map الحالي
+      this.#postsStateMap.update(prev => ({
+        ...prev,
+        [availability]: {
+          ...prev[availability],
+          posts: prev[availability].posts.filter(p => p._id !== postId),
+        },
+      }));
+
+      // 🧩 أضفه في قائمة البوستات المجمّدة
+      this.#userFreezedPosts.update(posts => [
+        { ...post, isFreezed: true },
+        ...posts,
+      ]);
     })
-    );
-  }
+  );
+}
+
 
   // 🟢 Unfreeze Post
-  unfreezePost(postId: string , post : IPost): Observable<void> {
+unfreezePost(postId: string, post: IPost): Observable<void> {
   return this.#singleTonApi.patch<void>(`${this.#routeName}/unfreeze/${postId}`).pipe(
-  tap(() => {
-  this.#userFreezedPosts.update((posts) => posts.filter((post) => post._id !== postId));
-  this.#posts.update((posts) => [{...post , isFreezed : false} , ...posts]);
-  })
+    tap(() => {
+      const availability = post.availability || 'public';
+
+      // 🧹 احذف البوست من قائمة المجمّدات
+      this.#userFreezedPosts.update(posts =>
+        posts.filter(p => p._id !== postId)
+      );
+
+      // 🔄 أضفه تاني في الـ state map
+      this.#postsStateMap.update(prev => ({
+        ...prev,
+        [availability]: {
+          ...prev[availability],
+          posts: [{ ...post, isFreezed: false }, ...prev[availability].posts],
+        },
+      }));
+    })
   );
-  }
+}
+
 }

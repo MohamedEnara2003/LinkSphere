@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component} from '@angular/core';
+import { SharedModule } from '../../../../../../shared/modules/shared.module';
 
 @Component({
     selector: 'app-not-found-profile',
-    imports: [CommonModule],
+    imports: [SharedModule],
     template : `
 <main
   class="min-h-[90vh] flex flex-col items-center justify-center text-center "
@@ -36,6 +37,7 @@ import { Component} from '@angular/core';
 
     <footer class="mt-6">
       <button
+        routerLink="/public"
         class="btn btn-error btn-wide"
         type="button"
         aria-label="Go back to home page"

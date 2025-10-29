@@ -16,12 +16,12 @@ import { FriendActionButton } from "../friend-action-button/friend-action-button
     gap-6 ngCard p-4 md:p-6 ">
 
     
-    <picture class="relative  ">
+    <picture class="relative">
     <!-- Profile Picture -->
     <app-ng-image
         [options]="{
-        src : userProfileService.userProfile()?.picture || '/user-placeholder.jpg',
-        placeholder : userProfileService.userProfile()?.placeholder,
+        src : userProfileService.userProfile()?.picture || '',
+        placeholder :  'user-placeholder.webp',
         alt : 'Profile picture of '+  userProfileService.userProfile()?.userName,
         width : 300, 
         height : 300,
@@ -51,7 +51,7 @@ import { FriendActionButton } from "../friend-action-button/friend-action-button
     </picture>
 
     <!-- User Info -->
-    <section class="w-full flex flex-col items-center md:items-start gap-2">
+    <section class="w-full flex flex-col items-center md:items-start gap-4">
 
         <!-- Hidden title for accessibility/SEO -->
         <h2 id="profile-section-title" class="sr-only">User profile</h2>
@@ -72,7 +72,7 @@ import { FriendActionButton } from "../friend-action-button/friend-action-button
     {{userProfileService.userProfile()?.friends?.length || 0}} Friends
     </span>
 
-    <nav class="w-full grid grid-cols-2 gap-4">  
+    <nav class="w-full grid grid-cols-1 sm:grid-cols-2 gap-4">  
 
     @if(userProfileService.relationshipState() !== 'myProfile'){
     <app-friend-action-button />

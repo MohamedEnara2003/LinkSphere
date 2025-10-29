@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal, viewChild} from '@angular/core';
-import { FormArray, FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { SharedModule } from '../../../../../../../../../../shared/modules/shared.module';
 import { NgControl } from '../../../../../../../../../../shared/components/ng-control/ng-control.';
-import { CommentTagPeople } from "../comment-tag-people/comment-tag-people";
 import { toSignal } from '@angular/core/rxjs-interop';
 import { finalize, map, Observable } from 'rxjs';
 import { CommentService } from '../../../../../../services/comments.service';
@@ -10,37 +9,40 @@ import { IUpdateComment } from '../../../../../../../../../../core/models/commen
 import { ActivatedRoute, Router } from '@angular/router';
 import { UploadService } from '../../../../../../../../../../core/services/upload/upload.service';
 import { CustomValidators } from '../../../../../../../../../../core/validations/custom/custom-validations';
-import { UserProfileService } from '../../../../../../../profile/services/user-profile.service';
+import { TagFriends } from "../../../../../tag-friends/tag-friends";
+import { TagsService } from '../../../../../../../../../../core/services/tags.service';
 
 
 
 
 @Component({
 selector: 'app-upsert-comment',
-imports: [SharedModule, NgControl, CommentTagPeople],
+imports: [SharedModule, NgControl, TagFriends],
 template: `
 
 
-<section class="relative w-full  p-2 sm:p-3">
-
-
-<form [formGroup]="commentForm" class="relative flex flex-col gap-3 w-full">
-
-    @if(isTagging()){
-      
-    <fieldset class="w-full absolute bottom-full left-0">
-    <app-comment-tag-people
-      [commentForm]="commentForm"
-      [isVisible]="isTagging()"
-      (isVisibleChange)="isTagging.set($event)"
-    />
-    </fieldset>
-    }
+<section class="relative w-full ngCard p-2">
+  <form 
+  [formGroup]="commentForm" 
+  role="form"
+  aria-label="Add or edit comment"
+  class="flex flex-col gap-3">
 
     <!-- Upload + Input Section -->
     <fieldset class="w-full flex flex-col gap-3">
+
+    @if (isTagging()) {
+      <app-tag-friends
+        [postForm]="commentForm"
+        [isOpenTagModel]="isTagging()"
+        (isOpenTagModelChange)="isTagging.set($event)"
+        class="w-full h-70 z-20 absolute  bottom-40 left-0"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Tag friends dialog"
+      />
+    }
       <div class="flex items-center justify-between gap-2">
-        
         <div class="flex items-center gap-2">
         
         <label
@@ -100,15 +102,13 @@ template: `
           type="submit"
           [disabled]="commentForm.invalid"
           (click)="onSubmit()"
-          class="btn btn-sm  bg-transparent border-transparent transition-colors hover:opacity-80"
+          class="btn  btn-sm  btn-circle btn-info"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             fill="currentColor"
-            class="size-6"
-            [ngClass]="commentForm.invalid ? 'text-gray-400' : 'text-brand-color'"
-          >
+            class="size-5">
             <path
               d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z"
             />
@@ -161,23 +161,7 @@ template: `
           </button>
         </nav>
       }
- 
-
-      @if (tags.controls.length > 0) {
-        <div class="flex flex-wrap gap-2 mt-2 p-2 border-t border-brand-color/20">
-          @for (tag of tags.controls; let i = $index; track i) {
-            <span class=" badge badge-soft  rounded-lg text-brand-color bg-brand-color/10 text-sm">
-              {{getUserNameById(tag.value)}}
-              <button type="button" 
-              (click)="removeTag(i)"
-              class="text-red-500 hover:text-red-600 cursor-pointer">
-              &times;
-            </button>
-            </span>
-        }
-        </div>
-    }
-
+    
       <!-- Comment Input -->
       <app-ng-control
         #ngControlRef
@@ -203,8 +187,9 @@ changeDetection : ChangeDetectionStrategy.OnPush
 })
 export class UpsertComment {
   uploadService = inject(UploadService);
+  tagsService = inject(TagsService);
   #commentService = inject(CommentService);
-  #userService = inject(UserProfileService);
+
   #fb  = inject(FormBuilder);
   #route  = inject(ActivatedRoute);
   #router = inject(Router);
@@ -229,7 +214,6 @@ export class UpsertComment {
   })
 
 
-
   type = toSignal<'reply' | 'edit' | undefined>(
     this.#route.queryParamMap.pipe(
       map((query) => {
@@ -249,20 +233,11 @@ export class UpsertComment {
     validators: CustomValidators.post('content', 'image')
   });
 
-  public get tags(): FormArray {
-    return this.commentForm.get('tags') as FormArray;
-  }
-
-  // helper to get display name
-  getUserNameById(userId: string): string {
-    return this.#userService.user()?.friends?.find(f => f._id === userId)?.userName || userId;
-  }
 
   isTagging = signal<boolean>(false);
   
   constructor() {
     // ... existing effects ...
-
     // Update form when editing existing comment
     effect(() => {
       if (this.commentId() && this.type() === 'edit') {
@@ -288,25 +263,15 @@ export class UpsertComment {
           }];
         }
       }
+    
     });
+      
   }
 
-
-  removeTag(index: number): void {
-    if (index < 0 || index >= this.tags.length) return;
-
-    const userId = this.tags.at(index).value;
-    this.tags.removeAt(index);
-
-    const existing: string[] = this.commentForm.get('existingTags')?.value || [];
-    if (existing.includes(userId)) {
-      const removedCtrl = this.commentForm.get('removedTags');
-      const current = removedCtrl?.value || [];
-      if (!current.includes(userId)) {
-        removedCtrl?.setValue([...current, userId]);
-      }
-    }
+  ngOnInit(): void {
+  this.tagsService.initForm(this.commentForm)
   }
+
 
  removeQueries() : void {
     this.#router.navigate([], {
@@ -316,8 +281,8 @@ export class UpsertComment {
     }, queryParamsHandling : 'merge'
     });
     this.commentForm.reset();
-    // clear uploads as well
     this.uploadService.clear();
+    this.isTagging.set(false);
   }
 
   async onUpload(event: Event): Promise<void> {

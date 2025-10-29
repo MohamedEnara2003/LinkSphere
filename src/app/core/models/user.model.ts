@@ -4,6 +4,11 @@ export enum GenderEnum {
   female = "female",
 }
 
+export enum FriendRequestEnum {
+  sent = "sent",
+  resaved = "received",
+}
+
 export enum RoleEnum {
   user = "user",
   admin = "admin",
@@ -49,11 +54,11 @@ export interface IUser {
   role: RoleEnum;
 
   picture?: string;
-  placeholder? : string ,
-  
   coverImages?: string[];
 
   friends?: IFriend[];
+  isFriend : boolean ,
+  friendRequest : FriendRequestEnum | null ,
   createdAt: string;
   updatedAt: string;
   __v: number;

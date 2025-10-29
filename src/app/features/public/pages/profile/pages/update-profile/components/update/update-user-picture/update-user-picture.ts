@@ -40,7 +40,7 @@ import { tap } from 'rxjs';
         <app-ng-image
         [options]="{
           src: userPicture,
-          placeholder: userProfileService.user()?.placeholder || '',
+          placeholder:  'user-placeholder.webp',
           alt: 'Profile picture',
           width:  200,
           height: 200,

@@ -25,20 +25,16 @@ import { CommonModule } from '@angular/common';
   }
 
   </main>
-
   
   `,
 })
+
 export class Public {
 #userProfileService = inject(UserProfileService);
 loadingService = inject(LoadingService);
 
 constructor(){
-this.#userProfileService.getUserProfile().subscribe();
 this.#userProfileService.getFriendsRequests().subscribe();
 }
-
-
-
 
 }

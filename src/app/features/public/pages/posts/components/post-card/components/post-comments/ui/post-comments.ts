@@ -11,7 +11,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { LoadingService } from '../../../../../../../../../core/services/loading.service';
 import { map } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ReplyList } from "../components/reply-list/reply-list";
+
 import { CommentItem } from "../components/comment-item/comment-item";
 
 
@@ -19,8 +19,7 @@ import { CommentItem } from "../components/comment-item/comment-item";
 
 @Component({
   selector: 'app-post-comments',
-  imports: [SharedModule, UpsertComment, ReplyList, CommentItem],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [SharedModule, UpsertComment, CommentItem],
   template: `
 
     <!-- Overlay -->
@@ -31,8 +30,8 @@ import { CommentItem } from "../components/comment-item/comment-item";
       aria-modal="true">
 
       <!-- Comments Card -->
-      <article
-    class="relative w-full sm:w-[85%] md:w-[70%] lg:w-1/2  h-[85%] flex flex-col  gap-5
+    <article
+    class="relative w-full sm:w-[85%] md:w-[80%] lg:w-1/2   flex flex-col  gap-5
       rounded-t-3xl rounded-b-none ngCard shadow-2xl animate-up overflow-hidden"
     aria-labelledby="comments-title" >
 
@@ -71,23 +70,15 @@ import { CommentItem } from "../components/comment-item/comment-item";
 
     <!-- Comments List -->
     <section class="w-full h-full flex-1 overflow-y-auto p-2   grid grid-cols-1 "
-    >
+    style="scrollbar-width: none;">
       <ul class="list flex flex-col gap-4">
         @for (comment of commentService.comments(); track comment._id) {
         @defer (when !loadingService.isLoading()) {
-  
-        <li class="p-2 ngCard border-b border-base-200 dark:border-base-content/10  flex flex-col gap-2">
+        <li class="p-2 ngCard border-b border-base-200 dark:border-base-content/10 ">
         <app-comment-item
         [comment]="comment!" 
         [postId]="postId() || ''"
         />
-
-        @if(comment.lastReply){
-        <app-reply-list
-        [commentId]="comment._id || ''"
-        [postId]="postId()"
-        />
-        }
         </li>
 
         }@placeholder {
@@ -129,6 +120,7 @@ import { CommentItem } from "../components/comment-item/comment-item";
       </div>
     </section>
   `,
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PostComments implements OnDestroy{
     commentService = inject(CommentService);
@@ -154,7 +146,7 @@ export class PostComments implements OnDestroy{
     
 
     #getComments(): void {
-      const post = this.#postService.post() || this.#postService.posts().find((p) => p._id === this.postId());
+      const post = this.#postService.post() ;
       if (post && post._id) {
       this.commentService.getPostComment(post._id).subscribe();
       }

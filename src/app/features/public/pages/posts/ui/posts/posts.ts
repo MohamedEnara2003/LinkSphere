@@ -1,10 +1,10 @@
-import { Component , inject, signal } from '@angular/core';
+import { Component , computed, inject } from '@angular/core';
 import { PostCard } from "../../components/post-card/ui/post-card";
 import { PostService } from '../../services/post.service';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { map, switchMap } from 'rxjs';
-import { Availability} from '../../../../../../core/models/posts.model';
+import { EMPTY, map, switchMap } from 'rxjs';
+import { Availability, IPost} from '../../../../../../core/models/posts.model';
 
 
 @Component({
@@ -12,9 +12,8 @@ import { Availability} from '../../../../../../core/models/posts.model';
   imports: [PostCard , RouterModule],
   template: `
   
-
 <main class="size-full grid grid-cols-1 gap-5">
-@for (post of postService.posts(); track post._id) {
+@for (post of posts(); track post._id) {
 <article class="w-full min-h-60">
 @defer (on viewport) {
 <app-post-card [post]="post" class="size-full"/>
@@ -53,12 +52,19 @@ import { Availability} from '../../../../../../core/models/posts.model';
     </section>
 }
 
+
+<footer class="w-full  ngCard p-1">
+  <button type="button" (click)="loadMore()" class="w-full text-center cursor-pointer ">
+  Load More
+</button>
+</footer>
+
 </main>
 `,
 })
 
 export class Posts {
-    postService = inject(PostService);
+    #postService = inject(PostService);
     #route = inject(ActivatedRoute);
 
     postsState = toSignal<Availability , Availability>(
@@ -67,29 +73,31 @@ export class Posts {
     ) 
     , {initialValue : 'public'});
 
-    page = signal(1);
-    limit = signal(3);
-    totalPages = signal(1);
+    posts = computed<IPost[]>(() => 
+    this.#postService.getPostsByState()[this.postsState() || 'public'].posts ?? []
+    );
 
-    constructor(){
-      toObservable(this.postsState)
+
+  constructor(){
+
+    toObservable(this.postsState)
       .pipe(
-        switchMap((state) =>
-          this.postService.getPosts(state || 'public' , 1 ,10)
-        ),
+        switchMap((state) => {
+          const currentState = state || 'public';
+          const cached = this.#postService.getPostsByState()[currentState]?.posts ?? [];
+          if (cached.length > 0) return EMPTY;
+          return this.#postService.getPosts(currentState);
+        }),
         takeUntilDestroyed()
       )
       .subscribe();
+
     }
     
 
     loadMore() {
-      this.page.update((p) => p + 1);
-      this.postService
-        .getPosts(this.postsState(), this.page() , this.limit())
-        .subscribe(({ data }) => {
-          this.totalPages.set(data.pagination.totalPages);
-        });
+    const currentState = this.postsState() || 'public';
+    this.#postService.getPosts(currentState ).subscribe();
     }
     
 }

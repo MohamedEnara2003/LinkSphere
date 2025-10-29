@@ -206,8 +206,7 @@ onUserAction() : void {
     const  {_id : userProfileId} = this.#userProfileService.userProfile()!;
     if(!userProfileId) return ;
     
-    const sentRequests = this.#userProfileService.sentRequests().find((s) => s.receiver._id === userProfileId);
-    this.#userProfileService.cancelFriendRequest(sentRequests?.requestId || '').subscribe()
+    // this.#userProfileService.cancelFriendRequest(sentRequests?.requestId || '').subscribe()
     }
     
     #accepRequest() : void {
@@ -215,6 +214,8 @@ onUserAction() : void {
     if(!userProfileId) return ;
     
     const sentRequests = this.#userProfileService.receivedRequests().find((s) => s.sender._id === userProfileId);
+    console.log(sentRequests);
+    
     if(sentRequests){
     this.#userProfileService.acceptFriendRequest(sentRequests.requestId || '' , sentRequests.sender).subscribe()
     }
