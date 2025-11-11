@@ -47,7 +47,7 @@ export interface ImageOption {
     
     <!-- Fullscreen Preview -->
   @if (preview()) {
-    <section
+  <section
   class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm
   transition-opacity duration-300 ease-out animate-fadeIn"
   role="dialog"
@@ -98,8 +98,8 @@ export interface ImageOption {
       [attr.fetchpriority]="options().fetchpriority || 'auto'"
       [attr.referrerpolicy]="options().referrerpolicy || 'no-referrer'"
       class="max-h-[95vh] max-w-[95vw] w-auto h-auto object-contain
-             rounded-lg shadow-2xl transition-transform duration-300
-             ease-out animate-scaleIn cursor-zoom-out"
+      rounded-lg shadow-2xl transition-transform duration-300
+      ease-out animate-scaleIn cursor-zoom-out"
       (click)="closePreview()"
       (error)="onError()"
     />

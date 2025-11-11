@@ -5,7 +5,7 @@ import { SharedModule } from '../../../../../../shared/modules/shared.module';
 
 @Component({
 selector: 'app-user-picture',
-imports: [NgImage  , SharedModule],
+imports: [NgImage  , SharedModule ,],
 template: `
 
         <figure class="size-full"
@@ -16,7 +16,7 @@ template: `
         [routerLink]="path() || null"
         [options]="{
         src :  userProfileService.user()?.picture || '',
-        placeholder :'user-placeholder.webp',
+        placeholder : userProfileService.placeHolderUser() ,
         alt : 'Profile picture ' + userProfileService.user()?.userName || '',
         width  : 200,
         height : 200,

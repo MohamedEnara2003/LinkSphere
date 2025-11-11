@@ -5,13 +5,13 @@ import { PostService } from '../../../../services/post.service';
 import { IPost } from '../../../../../../../../core/models/posts.model';
 import { UserProfileService } from '../../../../../profile/services/user-profile.service';
 import { ActionType, IMenuAction, NgMenuActions } from "../../../../../../components/navigations/menu-actions/menu-actions";
-import { FormatDateService } from '../../../../../../../../core/services/format-date.service';
+import { FormatDatePipe } from '../../../../../../../../shared/pipes/format-date-pipe';
 import { TagsService } from '../../../../../../../../core/services/tags.service';
 
 
 @Component({
 selector: 'app-post-header',
-imports: [NgImage, RouterModule, NgMenuActions],
+imports: [NgImage, RouterModule, NgMenuActions , FormatDatePipe],
 template: `
 
   <header class="flex justify-between items-center border-b border-brand-color/10 pb-1">
@@ -35,13 +35,13 @@ template: `
 
 <div class="flex  flex-wrap items-center gap-2">
   <h2  class="text-base sm:text-lg card-title ngText capitalize ">
-    {{ post()?.author?.userName || userService.userProfile()?.userName || ''}}
+    {{ post()?.author?.userName}}
   </h2>
 
     <time 
           class="text-brand-color badge badge-xs p-1 bg-brand-color/20"
           [attr.datetime]="post()?.createdAt || ''">
-          {{ formatDate.format(post()?.createdAt || '') }}
+          {{ post()?.createdAt! | formatDate }}
       </time>
 </div>
 
@@ -61,7 +61,6 @@ template: `
       [userId]="post()?.author?._id || ''"
       />
 
-
   </header>
     
 `,
@@ -72,7 +71,7 @@ export class PostHeader {
   #router = inject(Router);
   
   userService = inject(UserProfileService);
-  formatDate = inject(FormatDateService)
+
 
   post = input<IPost>();
 

@@ -8,7 +8,6 @@ import { tap } from 'rxjs';
 
 @Component({
   selector: 'app-update-user-picture',
-  standalone: true,
   imports: [CommonModule, NgImage],
   template: `
     <section class="w-full flex flex-col gap-5 items-center" aria-labelledby="user-picture-title">
@@ -40,7 +39,7 @@ import { tap } from 'rxjs';
         <app-ng-image
         [options]="{
           src: userPicture,
-          placeholder:  'user-placeholder.webp',
+          placeholder:  userProfileService.placeHolderUser() ,
           alt: 'Profile picture',
           width:  200,
           height: 200,

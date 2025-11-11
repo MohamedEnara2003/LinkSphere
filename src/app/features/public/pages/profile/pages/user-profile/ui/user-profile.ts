@@ -1,7 +1,5 @@
-import { ChangeDetectionStrategy, Component, effect, inject, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { coverImage } from "../components/cover-image/cover-image";
-import { btnOpenModelUpsertPost } from "../../../../posts/components/btn-open-model-upsert-post/btn-open-model-upsert-post";
-import { profileTitleAction } from "../components/profile-title-action/profile-title-action";
 import { profileLinks } from "../components/profile-links/profile-links";
 import { UserFriends } from "../components/user-friends/user-friends";
 import { UserAbout } from "../components/user-about/user-about";
@@ -14,158 +12,106 @@ import { UserProfileService } from '../../../services/user-profile.service';
 import { userProfileHeader } from "../components/user-profile-header/user-profile-header";
 import { UserPictures } from "../components/user-pictures/user-pictures";
 import { PostService } from '../../../../posts/services/post.service';
-import { PostCard } from "../../../../posts/components/post-card/ui/post-card";
-import { NgImage } from "../../../../../../../shared/components/ng-image/ng-image";
+import { UserPosts } from "../components/user-posts/user-posts";
 
 
 @Component({
 selector: 'app-user-profile',
 imports: [
     coverImage,
-    btnOpenModelUpsertPost,
-    profileTitleAction,
     profileLinks,
     UserFriends,
     UserAbout,
     SharedModule,
     userProfileHeader,
     UserPictures,
-    PostCard,
-    NgImage
+    UserPosts
 ],
 template: `
+<section 
+  class="relative w-full flex flex-col gap-6 p-2 xl:p-10 xl:px-20 animate-up"
+  aria-labelledby="profile-section-title"
+>
 
+  <!-- Cover Image -->
+  <app-cover-image
+    [coverImages]="userProfileService.userProfile()?.coverImages || []"
+    [userId]="userId()"
+    aria-label="User cover image"
+  />
 
-<section class="relative w-full grid grid-cols-1 gap-2 p-2  xl:p-10 xl:px-20 animate-up " 
-aria-labelledby="profile-section-title">
+  <!-- Profile Info -->
+  <article
+    class="w-full grid grid-cols-1 md:grid-cols-2 -mt-10"
+    aria-labelledby="profile-info-title"
+  >
+    <h2 id="profile-info-title" class="sr-only">Profile Information</h2>
+    <app-user-profile-header />
+  </article>
 
+  <!-- Navigation Tabs -->
+  <nav
+    class="md:sticky top-0 md:top-[10svh] z-40 ngCard md:h-[12svh]
+    flex flex-col md:flex-row justify-between items-center gap-4 p-2"
+    aria-label="Profile navigation"
+  >
+    <app-profile-links
+      [listType]="listType()!"
+      class="w-full"
+    />
 
-<app-cover-image  
-[coverImages]="userProfileService.userProfile()?.coverImages || []"
-[userId]="userId()"
-/>
+    @if (userProfileService.isMyProfile()) {
+      <section class="w-full flex justify-end p-2">
+        <button
+          [routerLink]="['/public/profile/user', userProfileService.userProfile()?._id, 'update']"
+          type="button"
+          class="btn btn-outline ngBtn w-full md:w-auto "
+          aria-label="Edit profile"
+          [title]="'profile.actions.edit_profile' | translate "
+        >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+        </svg>
+          {{ 'profile.actions.edit_profile' | translate }}
+        </button>
+      </section>
+    }
+  </nav>
 
-<!-- Profile Info -->
-<article 
-class="w-full grid grid-cols-1 md:grid-cols-2  -mt-10  gap-4"
-aria-labelledby="profile-info-title">
-<app-user-profile-header />
-</article>
-
-<nav class="w-full h-12 sticky top-0 md:top-[10svh] flex justify-center md:justify-start items-center  
-z-10 bg-dark">
-<app-profile-links [listType]="listType()!"/>
-</nav>
-
-
-@if (listType() === 'Friends') {
-<!-- User Friends -->
-<app-user-friends />
-}
-
-@else if (listType() === 'Photos') {
-<!-- User Pictures -->
-<app-user-pictures [pictures]="userProfileService.pictures()" />
-}
-
-
-@else if (listType() === 'About' && userProfileService.about()) {
-<!-- User About -->
-<app-user-about  [about]="userProfileService.about()"/>
-}
-
-@else if (listType() === 'Posts' || !listType()) {
-<!-- Profile Details -->
-<article class="relative w-full grid grid-cols-1 md:grid-cols-2 gap-4 ">
-
-<section class="w-full  flex flex-col gap-5 md:h-100 md:sticky md:top-[20svh]">
-@if(userProfileService.isMyProfile()){
-<button [routerLink]="['/public/profile/user', userProfileService.userProfile()?._id, 'update']"
-type="button" 
-class="ngBtn ">
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-<path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
-</svg>
-{{ 'profile.actions.edit_profile' | translate }}
-</button>
-}
-
-<nav class="flex flex-col gap-2">
-<app-profile-title-action [title]="'profile.actions.photos' | translate" query="Photos"/>
-
-@if(userProfileService.userProfile()?.coverImages?.length! > 0){
-<app-ng-image
-              [options]="{
-                src : userProfileService.userProfile()?.coverImages![0] || '',
-                alt : '',
-                width  : 200,
-                height : 200,
-                class : 'object-cover rounded-b-2xl transition-transform duration-500 hover:scale-105',
-              }"
-              [isPreview]="true"
-            />
-}
-</nav>
-
-<app-profile-title-action [title]="'profile.actions.friends' | translate" query="Friends"/>
-</section>
-
-
-<!-- Posts Section -->
-<section class="w-full flex flex-col gap-4   " aria-labelledby="user-posts-title">
-
-    <app-btn-open-model-upsert-post />
-    <header class="w-full flex justify-between items-center">
-    <h2 id="user-posts-title" class="ngText text-lg md:text-2xl">{{ 'profile.actions.posts' | translate }}</h2>
-    </header>
-    
-
-<main class="size-full grid grid-cols-1 gap-5">
-@for (post of postService.userProfilePosts(); track post.id) {
-<article class="w-full min-h-60">
-@defer (on viewport) {
-<app-post-card [post]="post" class="size-full"/>
-}@placeholder {
-<div class="size-full bg-neutral-300 animate-pulse ngCard"></div>
-}
-</article>
-}@empty {
-  <section
-      class="w-full h-100 flex flex-col items-center justify-center gap-4  ngCard text-center animate-opacity"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        class="size-16 text-info"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke-width="1.5"
-        stroke="currentColor"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          d="M12 4.5v15m7.5-7.5h-15"
+  <!-- Dynamic Sections -->
+  @switch (listType()) {
+    @case ('Friends') {
+      <app-user-friends 
+      [isShowTitle]="true"
+      [friends]="friends() || []"
+      />
+    }
+    @case ('Photos') {
+      <app-user-pictures
+        [pictures]="userProfileService.pictures()"
+        aria-label="User photos"
+      />
+    }
+    @case ('About') {
+      @if (userProfileService.userAbout()) {
+        <app-user-about
+          [aboutData]="userProfileService.userAbout()"
+          aria-label="About user section"
         />
-      </svg>
-      <h2 class="text-lg font-semibold ngText">
-        No posts yet
-      </h2>
-      <p class="text-sm text-gray-500 dark:text-gray-400">
-      Content from this user will appear here once available.     Be the first to share something with your friends!
-      </p>
-    </section>
-}
-</main>
-
+      }
+    }
+    @default {
+    <!-- Posts Section -->
+    <app-user-posts 
+    [userId]="userId()"
+    />
+    }
+  }
 </section>
-</article>
 
-}
-
-</section>
 
 `,
-changeDetection : ChangeDetectionStrategy.OnPush
+changeDetection : ChangeDetectionStrategy.OnPush ,
 })
 
 export class UserProfile {
@@ -179,25 +125,21 @@ this.#route.queryParamMap.pipe(map((queryMap) => queryMap.get('list') as Profile
 { initialValue: null } 
 );
 
+friends = computed(() => 
+this.userProfileService.userProfile()?.friends || []
+);
+
+friendsChunks = computed(() => {
+const chunkSize = 2;
+const friendsList = this.friends();
+return friendsList.filter((_, index) => index < chunkSize);
+});
 
 userId = toSignal<string , string>(
 this.#route.paramMap.pipe(map((paramMap) => paramMap.get('userId') || '')),
 { initialValue: '' } 
 );
 
-constructor(){
-effect(() => {
-untracked(() => this.#getUserPosts());
-})
-}
-
-#getUserPosts () : void {
-const userId = this.userId();
-if(userId) {
-this.postService.getUserPosts(userId).subscribe();
-};
-
-}
 
 
 }

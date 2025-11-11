@@ -35,11 +35,12 @@ import { tap } from 'rxjs';
         }
 
         <!-- Submit -->
-        <button type="submit" class="ngBtn w-full" 
+      <button type="submit" class="ngBtn w-full" 
         [disabled]="form.invalid">
-          Save Changes
-        </button>
-      </form>
+        Save Changes
+      </button>
+
+    </form>
 
 
     </section>
@@ -91,7 +92,7 @@ export class UpdateUserInfoComponent {
     return Object.entries(newData).reduce((changed, [key, value]) => {
       const userValue = currentUser[key as keyof IUser];
       if (value !== undefined && value !== userValue) {
-        changed[key as keyof IUpdateBasicInfo] = value;
+      changed[key as keyof IUpdateBasicInfo] = value;
       }
       return changed;
     }, {} as Partial<IUpdateBasicInfo>);

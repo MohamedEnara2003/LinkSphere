@@ -1,16 +1,14 @@
-import { Injectable } from '@angular/core';
+import { Pipe, PipeTransform } from '@angular/core';
 
-
-@Injectable({
-  providedIn: 'root'
+@Pipe({
+  name: 'formatDate'
 })
-export class FormatDateService {
+export class FormatDatePipe implements PipeTransform {
 
-
-public format(dateStr?: string): string {
-  if (!dateStr) return '';
-
-  const date = new Date(dateStr);
+  transform(value: string): string {
+  if (!value) return '';
+  
+  const date = new Date(value);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffSec = Math.floor(diffMs / 1000);
@@ -29,6 +27,6 @@ public format(dateStr?: string): string {
   if (now.getFullYear() !== date.getFullYear()) options.year = 'numeric';
   
   return date.toLocaleDateString(undefined, options);
-}
+  }
 
 }

@@ -89,4 +89,13 @@ initTagText(taggedIds : string[]) : string {
 }
 
 
+clearForm() : void {
+  this.form = this.#fb.group({
+    content: this.#fb.control(''),
+    tags: this.#fb.array([]),
+    existingTags: this.#fb.array([]),
+    removedTags: this.#fb.array([]),
+  });
+}
+
 }

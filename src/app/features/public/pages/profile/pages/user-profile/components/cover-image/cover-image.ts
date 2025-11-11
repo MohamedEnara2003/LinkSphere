@@ -11,6 +11,7 @@ template: `
 
 <header class="relative w-full h-[30svh] sm:h-[45svh] md:h-[50svh] overflow-hidden rounded-b-2xl shadow-md">
 
+@if(!isNavHide()) {
 <nav class="w-full flex justify-between items-center absolute top-0 left-0  p-4 ">
 <app-back-link />
   <button 
@@ -42,14 +43,15 @@ template: `
     <span class="text-sm font-medium  hidden md:inline">Add cover photo </span>
   </button>
 </nav>
+}
 
     @if(coverImages().length >= 1) {
     <app-ng-image
         [options]="{
         src : coverImages()[0] ,
         alt : 'Profile picture ' ,
-        width  : 200,
-        height : 200,
+        width  : 800,
+        height : 800,
         class : 'size-full object-cover rounded-b-2xl transition-transform duration-500 hover:scale-105',
         loading : 'eager' ,
         decoding : 'async' ,
@@ -59,9 +61,7 @@ template: `
         />
     }@else {
     <div
-    class="w-full h-full bg-gradient-to-r  from-light via-light/50 to-card-light 
-    dark:from-dark dark:via-dark/50 dark:to-card-dark
-    flex items-center justify-center rounded-b-2xl text-gray-700 dark:text-gray-500 text-sm">
+    class="w-full h-full ngCard flex items-center justify-center rounded-b-2xl t text-sm">
     <span>No cover image</span>
     </div>
     }
@@ -73,4 +73,5 @@ template: `
 export class coverImage {
   coverImages = input<string[]>([]);
   userId = input<string>('');
+  isNavHide = input<boolean>(false);
 }

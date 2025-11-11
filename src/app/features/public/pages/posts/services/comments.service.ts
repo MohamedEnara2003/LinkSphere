@@ -1,4 +1,4 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, linkedSignal, signal } from '@angular/core';
 import { SingleTonApi } from '../../../../../core/services/api/single-ton-api.service';
 import { catchError, EMPTY, forkJoin, map, Observable, of, switchMap, tap } from 'rxjs';
 import { IComment, ICreateComment, IPaginatedCommentsRes , IPaginatedCommentsRepliesRes, IReplyComment, IUpdateComment, CommentFlag } from '../../../../../core/models/comments.model';
@@ -17,6 +17,10 @@ export class CommentService {
   // Post Management
 
   #comments = signal<IComment[]>([]);
+  commentsPage = signal<number>(1);
+  hasMoreComments = linkedSignal<boolean>(() => this.commentsPage() > 1 );
+
+
   #replies = signal<IComment[]>([]);
 
   #comment = signal<IComment | null>(null);
@@ -260,12 +264,15 @@ replyComment(postId: string, commentId: string, data: IReplyComment , preveiwIma
     // 🔹 جلب تعليقات المنشور
     getPostComment(
       postId: string,
-      page: number = 1,
-      limit: number = 5
+      limit: number = 4
     ): Observable<IPaginatedCommentsRes> {
+      
+      const page = this.commentsPage() ;
+      if(!this.hasMoreComments() && page > 1) return EMPTY;
+
       return this.#singleTonApi
         .find<IPaginatedCommentsRes>(
-          `${this.#routeName}/${postId}/comments?page=${page}&limit=${limit}`
+        `${this.#routeName}/${postId}/comments?page=${page}&limit=${limit}`
         )
         .pipe(
           switchMap(({ data: { comments, pagination } }) =>
@@ -275,7 +282,15 @@ replyComment(postId: string, commentId: string, data: IReplyComment , preveiwIma
               }))
             )
           ),
-          tap(({ data: { comments } }) => this.#comments.set(comments))
+          tap(({ data: { comments : newComments} }) => {
+          if(!newComments.length){
+          return this.hasMoreComments.set(false)
+          }
+
+          this.#comments.update((comments) => [...comments ,...newComments]);
+          this.commentsPage.update((p) => p + 1)
+
+          })
         );
     }
   
@@ -302,10 +317,9 @@ replyComment(postId: string, commentId: string, data: IReplyComment , preveiwIma
           )
         ),
         tap(({ data: { replies } }) => {
-          // Merge new replies with existing ones, replacing any duplicates
           this.#replies.update(existing => {
             const newReplies = replies.filter(r => 
-              !existing.some(e => e._id === r._id)
+            !existing.some(e => e._id === r._id)
             );
             return [...existing, ...newReplies];
           });
@@ -363,5 +377,11 @@ likeComment(postId: string, commentId: string, userId: string): Observable<void>
     );
 }
 
+clearData() : void {
+this.#comments.set([]);
+this.#replies.set([]);
+this.commentsPage.set(1);
+this.hasMoreComments.set(this.commentsPage() > 1);
+}
 
 }

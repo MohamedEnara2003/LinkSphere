@@ -21,16 +21,15 @@ export class PostService {
 
   // Post Management
 
-  #postsStateMap = signal<Record<Availability, { posts: IPost[]; page: number }>>({
-    public: { posts: [], page: 1 },
-    friends: { posts: [], page: 1 },
-    'only-me': { posts: [], page: 1 },
+  #postsStateMap = signal<Record<Availability, { posts: IPost[]; page: number , hasMorePosts : boolean}>>({
+    public: { posts: [], page: 1   , hasMorePosts : false},
+    friends: { posts: [], page: 1  , hasMorePosts : false},
+    'only-me': { posts: [], page: 1, hasMorePosts : false},
   });
 
+
+
   getPostsByState = computed(() => this.#postsStateMap())
-
-
-
 
   #userProfilePosts = signal<IPost[]>([]);
   #userFreezedPosts = signal<IPost[]>([]);
@@ -83,7 +82,7 @@ export class PostService {
     const availability = data.availability || 'public';
     this.#router.navigate(['/public'] , {queryParams : {state : availability }})
 
-     this.#postsStateMap.update((map) => {
+    this.#postsStateMap.update((map) => {
             const statePosts = map[availability].posts;
             return {
               ...map,
@@ -210,13 +209,16 @@ export class PostService {
       `${this.#routeName}/${routeName}?page=${page}&limit=${limit}`
     )
     .pipe(
-      switchMap(({ data: { posts, pagination } }) => {
-
-        if (!posts.length) {
-          return of({ data: { posts, pagination } });
+    switchMap(({ data: { posts, pagination } }) => {
+    if (!posts.length) {
+          return of({
+            data: {
+              posts: [],
+              pagination
+            }
+          });
         }
-
-        // ✅ تجهيز كل بوست مع الصور والـ author picture
+    
         const postsWithAssets$ = posts.map((post) => {
 
           const attachmentUrls$ = post.attachments?.length
@@ -270,30 +272,46 @@ export class PostService {
 // 🟢 Get Posts (paginated)
 getPosts(
 availability: Availability ,
-
 ): Observable<{ data: IPaginatedPostsResponse }> {
+
+  if(this.#postsStateMap()[availability].hasMorePosts) return EMPTY;
 
   const page = this.#postsStateMap()[availability].page;
 
-  return this.#preparePosts('', page, 10).pipe(
-    tap(({ data: { posts : newPosts} }) => {
+  return this.#preparePosts('', page, 5).pipe(
 
-  if (!newPosts || newPosts.length === 0) return;
+tap(({ data: { posts : newPosts} }) => {
+
+if (!newPosts || newPosts.length === 0) {
+  this.#postsStateMap.update((state) => ({
+    ...state,
+    [availability]: {
+      ...state[availability],
+      hasMorePosts: true, 
+    },
+  }));
+  return;
+}
+
 
   const filteredPosts = newPosts.filter(p => p.availability === availability);
 
-      this.#postsStateMap.update((map) => ({
-        ...map,
-        [availability]: {
-          posts: [...map[availability].posts, ...filteredPosts],
-          page: map[availability].page + 1,
-        },
-      }));
+  this.#postsStateMap.update((map) => ({
+    ...map,
+    [availability]: {
+      posts: [...map[availability].posts, ...filteredPosts], 
+      page: map[availability].page + 1,
+      hasMorePosts : false 
+    },
+  }));
 
 
     
     }),
   );
+
+
+  
 }
 
 
@@ -302,9 +320,10 @@ availability: Availability ,
   page: number = 1,
   limit: number = 10
   ) : Observable<{data: IPaginatedPostsResponse }>{
-
+  
   const posts = this.#userProfilePosts();
-  const cachedPosts = posts.filter((p) => p.createdBy === userId);
+
+  const cachedPosts = posts.filter((p) => p.createdBy === (userId || ''));
   if (cachedPosts.length > 0)  return EMPTY
   
   return this.#preparePosts(`user/${userId}` , page , limit).pipe(
@@ -329,7 +348,7 @@ availability: Availability ,
             page,
             limit,
             count: cachedPosts.length,
-            totalPosts: cachedPosts.length,
+            total: cachedPosts.length,
             totalPages: 1,
           },
         },

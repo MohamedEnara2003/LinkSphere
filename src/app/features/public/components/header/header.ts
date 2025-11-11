@@ -33,11 +33,21 @@ md:sticky md:top-0 ">
         [title]=""
         [href]="profileLink()" 
         [routerLink]="profileLink()" 
-        class="flex items-center gap-2 ngText text-sm font-normal hover:bg-brand-color/20 rounded-2xl 
+        class="flex items-center gap-2 ngText text-sm font-normal
+        hover:bg-brand-color/20 rounded-2xl hover:text-brand-color 
         duration-300 transition-all p-1">
         <app-user-picture styleClass="size-8 object-cover rounded-full" />
-        <span class="text-xs text-brand-color">{{ 'navigation.hello' | translate }}</span> 
+
+        <span class="text-xs text-brand-color hidden sm:inline">
+        {{ 'navigation.hello' | translate }}
+        </span> 
+
+        <span class="text-sm font-semibold ">
         {{userProfileService.user()?.firstName || 'User'}} 
+        </span> 
+       
+
+
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" 
         class="size-4 duration-300 transition-transform"
         [ngClass]="isProfile() ? 'rotate-180' : ''">
@@ -45,6 +55,7 @@ md:sticky md:top-0 ">
           d="M11.47 7.72a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 1 1-1.06 1.06L12 9.31l-6.97 6.97a.75.75 0 0 1-1.06-1.06l7.5-7.5Z" 
           clip-rule="evenodd" />
         </svg>
+
       </a>
   </nav>
 </header>

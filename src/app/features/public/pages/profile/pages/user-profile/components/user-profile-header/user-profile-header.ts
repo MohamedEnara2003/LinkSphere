@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component,inject } from '@angular/core';
 import { NgImage } from "../../../../../../../../shared/components/ng-image/ng-image";
 import { SharedModule } from '../../../../../../../../shared/modules/shared.module';
 import { UserProfileService } from '../../../../services/user-profile.service';
-import { Router } from '@angular/router';
 import { FriendActionButton } from "../friend-action-button/friend-action-button";
 
 @Component({
@@ -21,7 +20,7 @@ import { FriendActionButton } from "../friend-action-button/friend-action-button
     <app-ng-image
         [options]="{
         src : userProfileService.userProfile()?.picture || '',
-        placeholder :  'user-placeholder.webp',
+        placeholder :  userProfileService.placeHolderUser() ,
         alt : 'Profile picture of '+  userProfileService.userProfile()?.userName,
         width : 300, 
         height : 300,
@@ -39,7 +38,7 @@ import { FriendActionButton } from "../friend-action-button/friend-action-button
       [href]="['/public/profile/user' , (userProfileService.user()?._id || '') ,'update']"     
       [routerLink]="['/public/profile/user' , (userProfileService.user()?._id || '') ,'update']"
       [queryParams]="{edit : 'picture'}"
-      class="absolute right-4 top-4 bg-dark  btn   btn-circle text-brand-color 
+      class="absolute right-4 top-4 ngCard  btn   btn-circle text-brand-color 
       hover:bg-dark transition z-10 "
       >
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
@@ -80,6 +79,7 @@ import { FriendActionButton } from "../friend-action-button/friend-action-button
   
 
 <button 
+routerLink="/public/chats"
 type="button" 
 class="w-full ngBtn">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
@@ -98,13 +98,4 @@ changeDetection : ChangeDetectionStrategy.OnPush
 
 export class userProfileHeader {
 userProfileService = inject(UserProfileService);
-#router = inject(Router);
-
-
-
-
-
-
-
-
 }

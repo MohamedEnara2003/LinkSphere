@@ -7,29 +7,27 @@ import { SharedModule } from '../../../../../../../../shared/modules/shared.modu
 selector: 'app-profile-links',
 imports: [SharedModule],
 template: `
+<nav class="w-full">
 
     <ul class="w-full flex items-center gap-2">
     @for (item of profileLinks(); track item.id) {
     <li>
     <a 
+    [title]="item.translationKey | translate"
     href="/profile" 
     [routerLink]="[]" 
     [queryParams]="{list : item.name}"
-    class="ngText capitalize flex items-center gap-1 hover:text-brand-color 
-    duration-200 transition-colors"
+    class="ngText capitalize flex items-center gap-1 hover:text-brand-color rounded-2xl px-3 p-1
+    duration-200 transition-colors hover:bg-brand-color/20"
     [ngClass]="listType() === item.name ||  (!listType() && item.name === 'Posts')
-    ? 'text-brand-color' : ''">
+    ? 'text-brand-color bg-brand-color/20 px-2 ' : ''">
     {{item.translationKey | translate}}
 
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4">
-    <path fill-rule="evenodd" d="M16.28 11.47a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 0 1-1.06-1.06L14.69 12 7.72 5.03a.75.75 0 0 1 1.06-1.06l7.5 7.5Z" clip-rule="evenodd" />
-    </svg>
-    
     </a>
     </li>
     }
     </ul>
-
+</nav>
 `,
 })
 export class profileLinks {

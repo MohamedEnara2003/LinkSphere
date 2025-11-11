@@ -1,11 +1,12 @@
-import { Component, input } from '@angular/core';
+import { Component, input, signal } from '@angular/core';
 import { NgImage } from "../../../../../../../../shared/components/ng-image/ng-image";
 import { SharedModule } from '../../../../../../../../shared/modules/shared.module';
+import { ShowTextPipe } from '../../../../../../../../shared/pipes/show-text-pipe';
 
 
 @Component({
 selector: 'app-post-content',
-imports: [NgImage , SharedModule],
+imports: [NgImage , SharedModule , ShowTextPipe],
 template: `
     <main class="w-full flex flex-col  gap-2  "
     [id]="'post-desc-' + postId()"
@@ -35,9 +36,14 @@ template: `
         }
 
         <p 
-        class="ngText capitalize text-sm line-clamp-1 sm:line-clamp-2 md:line-clamp-3 
-        col-span-2 ">
-        {{content()}}
+        class="ngText capitalize text-sm  col-span-2">
+        {{content() | showText : isShowContent()}}
+        @if(content().length > 180){
+        <span (click)="isShowContent.set(!isShowContent())"
+        class="cursor-pointer hover:underline text-brand-color font-normal">
+        {{isShowContent() ? ' Show less' : ' Show more'}}
+        </span>
+        }
         </p>
 
     </main>
@@ -48,4 +54,5 @@ export class PostContent {
     postId = input.required<string>();
     content = input<string>('');
     attachments = input<string[]>([]);
+    isShowContent = signal<boolean>(false);
 }

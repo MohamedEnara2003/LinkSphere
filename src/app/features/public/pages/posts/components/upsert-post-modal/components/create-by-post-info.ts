@@ -32,4 +32,9 @@ export class CreateByPostInfo {
 tagsService = inject(TagsService);
 
 
+
+ngOnDestroy(): void {
+this.tagsService.clearForm();
+}
+
 }

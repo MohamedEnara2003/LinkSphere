@@ -1,7 +1,7 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { NgImage } from "../../../../../../../../shared/components/ng-image/ng-image";
-import { UserProfileService } from '../../../../services/user-profile.service';
 import { SharedModule } from '../../../../../../../../shared/modules/shared.module';
+import { IFriend } from '../../../../../../../../core/models/user.model';
 
 
 
@@ -13,7 +13,9 @@ import { SharedModule } from '../../../../../../../../shared/modules/shared.modu
       class="w-full pb-10" 
       aria-labelledby="friends-title">
 
-      <!-- Section Title -->
+    <!-- Section Title -->
+
+      @if(isShowTitle()) {
       <h2 
         id="friends-title" 
         class="text-lg md:text-xl font-bold mb-4 ngText flex items-center gap-2">
@@ -23,15 +25,17 @@ import { SharedModule } from '../../../../../../../../shared/modules/shared.modu
         </svg>
         {{ 'profile.friends.title' | translate }}
       </h2>
+    }
 
-      <!-- Friends List -->
-      <ul 
-        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5"
-        role="list">
+    <!-- Friends List -->
+    <ul 
+    [ngClass]="ulStyleClass() || 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5'"
+    aria-label="User friends list"
+    role="list">
 
     @for (friend of friends(); track friend._id) {
     <li 
-    class="flex flex-col items-center ngCard
+    class="w-full flex flex-col items-center ngCard
     rounded-lg p-3 shadow hover:shadow-md transition"
     role="listitem"
     >
@@ -66,7 +70,7 @@ import { SharedModule } from '../../../../../../../../shared/modules/shared.modu
   `,
 })
 export class UserFriends {
-  #userService = inject(UserProfileService);
-  friends = computed(() =>  this.#userService.userProfile()?.friends || []);
-
+  isShowTitle = input<boolean>(true);
+  friends = input<IFriend[]>([]);
+  ulStyleClass = input<string>('');
 }

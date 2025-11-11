@@ -3,18 +3,21 @@ import { IComment } from '../../../../../../../../../../core/models/comments.mod
 import { NgImage } from "../../../../../../../../../../shared/components/ng-image/ng-image";
 import { CommentService } from '../../../../../../services/comments.service';
 import { SharedModule } from '../../../../../../../../../../shared/modules/shared.module';
-import { FormatDateService } from '../../../../../../../../../../core/services/format-date.service';
 import { NgMenuActions } from "../../../../../../../../components/navigations/menu-actions/menu-actions";
 import { Router } from '@angular/router';
 import { LikeToggle } from "../../../../../like-toggle/like-toggle";
 import { TagsService } from '../../../../../../../../../../core/services/tags.service';
+import { FeedAutoLoader } from "../../../../../../../../components/navigations/feed-auto-loader/feed-auto-loader";
+import { Pagination } from '../../../../../../../../../../core/models/pagination';
+import { tap } from 'rxjs';
+import { FormatDatePipe } from '../../../../../../../../../../shared/pipes/format-date-pipe';
 
 
 @Component({
   selector: 'app-comment-item',
-  imports: [SharedModule, NgImage, NgMenuActions, LikeToggle],
+  imports: [
+  SharedModule, NgImage, NgMenuActions, LikeToggle, FeedAutoLoader , FormatDatePipe],
 
-  // ✅ HTML inline template
   template: `
   <main 
     class="flex flex-col gap-2"
@@ -67,7 +70,7 @@ import { TagsService } from '../../../../../../../../../../core/services/tags.se
             [attr.datetime]="comment().createdAt"
             aria-label="Comment creation date"
           >
-            {{formatDate.format(comment().createdAt)}}
+            {{ comment().createdAt! | formatDate }}
           </time>
         </div>
 
@@ -181,6 +184,14 @@ import { TagsService } from '../../../../../../../../../../core/services/tags.se
       </li>
     }
   </ul>
+
+  @if(pagination().page < pagination().totalPages) {
+  <app-feed-auto-loader
+  loadingType="comment"
+  (loadData)="loadMore()"
+  aria-label="Load more replies"
+  />
+  }
 }
 
 <footer>
@@ -208,6 +219,8 @@ import { TagsService } from '../../../../../../../../../../core/services/tags.se
 }
 </footer>
 
+
+
 </main>
 
   `,
@@ -215,7 +228,7 @@ import { TagsService } from '../../../../../../../../../../core/services/tags.se
 export class CommentItem {
   tagService = inject(TagsService);
   commentService = inject(CommentService);
-  formatDate = inject(FormatDateService);
+
   
   comment = input.required<IComment>();
   postId = input.required<string>();
@@ -238,8 +251,14 @@ replies = linkedSignal<IComment[]>(() =>
 this.commentService.replies().filter((r) => r.commentId === this.comment()._id)
 );
 
-isShowReplies = signal<string[]>([]);
+pagination = signal<Pagination>({
+  page: 1,
+  limit: 5,
+  totalPages: 2,
+  total: 0,
+});
 
+isShowReplies = signal<string[]>([]);
 
   handleCommentMenu(type : string) : void {
   switch (type) {
@@ -269,9 +288,9 @@ isShowReplies = signal<string[]>([]);
 
     if (postId && commentId && lastReply) {
       if (isReply) {
-        
         this.commentService.getCommentReplies(postId, commentId).subscribe({
-          next: () => {
+          next: ({data : {pagination}}) => {
+          this.pagination.set(pagination);
           this.isShowReplies.update((ids) => [...ids , commentId]);
           }
         });
@@ -283,4 +302,31 @@ isShowReplies = signal<string[]>([]);
   }
 
 
+loadMore() : void {
+  const { _id: commentId , lastReply } = this.comment();
+  const postId = this.postId();
+  const { page, totalPages } = this.pagination();
+
+  if (!postId || !commentId || !lastReply) return;
+  if (page >= totalPages) return;
+  
+  const nextPage = (+page + 1);
+
+  this.commentService.getCommentReplies(postId, commentId , nextPage).pipe(
+  tap(({data : {replies  , pagination}}) => {
+
+    this.replies.update(existing => {
+            const newReplies = replies.filter(r => 
+            !existing.some(e => e._id === r._id)
+            );
+            return [...existing, ...newReplies];
+          });
+  this.pagination.set(pagination);
+  })
+  ).subscribe();
+    
 }
+    
+}
+
+

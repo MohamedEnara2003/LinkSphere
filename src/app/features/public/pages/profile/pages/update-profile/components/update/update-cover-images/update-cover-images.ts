@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, input } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { NgImage } from "../../../../../../../../../shared/components/ng-image/ng-image";
 import { UploadService } from '../../../../../../../../../core/services/upload/upload.service';
 import { UserProfileService } from '../../../../../services/user-profile.service';
@@ -115,7 +115,7 @@ export class UpdateCoverImagesComponent {
 
 
   onFileSelected(input: HTMLInputElement) : void {
-    this.uploadService.uploadAttachments(input , 3 , 0.75 , 1280 , 720);
+    this.uploadService.uploadAttachments(input , 1 , 0.75 , 1280 , 720);
   }
 
   removePreview(preview: string) : void {
@@ -135,44 +135,17 @@ export class UpdateCoverImagesComponent {
   saveCovers(): void {
     const files = this.uploadService.files();
     const previews = this.uploadService.previews().map((c) => c.url);
-
-    if (!Array.isArray(files) || ( files.length > 3 && files.length === 0 )) return;
-
-    this.userProfileService.uploadProfileCoverImages(files)
-      .pipe(
-        tap(() => {
-        const user = this.userProfileService.user() ;
-        if(!user) return ;
-        const prevCoverImages = user.coverImages || [];
-
-        const newUserData : IUser = { ...user, coverImages: [...prevCoverImages , ...previews] }
-          this.userProfileService.setUser(newUserData);
-          if(this.userProfileService.isMyProfile()){
-          this.userProfileService.setUserProfile(newUserData);
-          }
-          this.uploadService.clear();
-        })
-      ).subscribe()
+    if (!Array.isArray(files) || files.length === 0 ) return;
+    this.userProfileService.uploadProfileCoverImages(files , previews).subscribe()
   }
 
   removeAllCoverImage () : void {
   this.userProfileService.deleteProfileCoverImages().pipe(
-  tap(() => {
-    const user = this.userProfileService.user() ;
-    const userProfile = this.userProfileService.userProfile() ;
-    if(!user || !userProfile) return;
-    this.userProfileService.setUser({...user , coverImages : []});
-
-    if(this.userProfileService.isMyProfile()){
-    this.userProfileService.setUserProfile({...userProfile , coverImages : []});
-    }
-
-    this.uploadService.clear();
-  })
+  tap(() =>  this.uploadService.clear())
   ).subscribe();
   }
 
   ngOnDestroy(): void {
-    this.uploadService.clear();
+  this.uploadService.clear();
   }
 }
