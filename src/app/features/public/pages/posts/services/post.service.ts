@@ -277,22 +277,26 @@ export class PostService {
   }
 
 
-  // 🟢 Delete Post
-  deletePost(postId: string , availability : Availability): Observable<void> {
-    return this.#singleTonApi.deleteById<void>(this.#routeName, postId).pipe(
-      tap(() => {
-        
-    this.#postsStateMap.update((map) => ({
-    ...map,
-    [availability]: {
-    ...map[availability],
-    posts: map[availability].posts.filter((p) => p._id !== postId),
-    },
-    }));
+// 🟢 Delete Post
+private removePostFromState(postId: string, availability: Availability) {
+  this.#postsStateMap.update((state) => {
+    const target = state[availability];
+    return {
+      ...state,
+      [availability]: {
+        ...target,
+        posts: target.posts.filter((p) => p._id !== postId),
+      },
+    };
+  });
+}
 
-    }),
-    );
-  }
+deletePost(postId: string, availability: Availability): Observable<void> {
+  return this.#singleTonApi.deleteById<void>(this.#routeName, postId).pipe(
+  tap(() => this.removePostFromState(postId, availability)),
+  );
+}
+
 
 
 // 🟢 Get Posts (paginated)

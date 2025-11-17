@@ -11,7 +11,8 @@ import { ThemeService } from './core/services/theme/theme.service';
   template : `
 
   <main class="bg-light dark:bg-dark ">
-    <!-- Alert And confirm Popup -->
+    
+  <!-- Alert And confirm Popup -->
   @if(alertService.alertOption().length > 0){
   <nav role="navigation"
   class="w-full fixed top-2 left-0  z-[100] flex flex-col items-center  sm:items-end gap-2 p-5 sm:px-8">
