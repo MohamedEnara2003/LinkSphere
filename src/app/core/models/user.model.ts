@@ -1,3 +1,5 @@
+import { Picture } from "./picture";
+
 // نفس الـ enums عشان تكون متطابقة مع الـ backend
 export enum GenderEnum {
   male = "male",
@@ -31,7 +33,7 @@ export type RelationshipState =
 export interface IFriend {
   _id: string;
   id?: string;
-  picture?: string;
+  picture?: Picture;
   firstName: string;
   lastName : string;
   userName: string;
@@ -53,8 +55,8 @@ export interface IUser {
   gender: GenderEnum;
   role: RoleEnum;
 
-  picture?: string;
-  coverImages?: string[];
+  picture?: Picture;
+  coverImage?: Picture;
 
   friends?: IFriend[];
   isFriend : boolean ,
@@ -70,13 +72,19 @@ export interface UserProfile {
   }
 }
 
+export interface Author {
+    id: string;
+    firstName: string;
+    lastName: string;
+    userName: string;
+    _id: string;
+    picture? : Picture;
+}
 
 export interface UnfreezePayload {
   email: string;
   password: string;
 }
-
-
 
 
 

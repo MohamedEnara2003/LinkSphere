@@ -33,11 +33,11 @@ template: `
     >
         <!-- Sidebar -->
         <aside
-        class="w-full md:h-120 grid grid-cols-1 gap-6 md:sticky md:top-[25svh]   "
+        class="w-full md:h-140 flex flex-col justify-center items-center     gap-6 md:sticky md:top-0   "
         role="complementary"
         >
 
-        <section class="w-full ngCard  p-2 flex flex-col gap-5">
+        <section class="w-full h-full ngCard  p-2 flex flex-col gap-5">
 
         <app-profile-title-action
         [title]="'profile.actions.photos' | translate"
@@ -55,7 +55,6 @@ template: `
             height: 200,
             class: 'w-full h-40 object-cover rounded hover:scale-105 transition-transform duration-500'
             }"
-            [isPreview]="true"
             />
             </li>
         }
@@ -63,7 +62,7 @@ template: `
         } 
         </section>
 
-        <section class="w-full ngCard  p-2 flex flex-col gap-5">
+        <section class="w-full  h-full  ngCard  p-2 flex flex-col gap-5">
         <app-profile-title-action
         [title]="'profile.actions.friends' | translate"
         query="Friends" />

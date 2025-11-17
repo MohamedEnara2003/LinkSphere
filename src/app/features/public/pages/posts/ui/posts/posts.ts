@@ -26,7 +26,7 @@ import { EmptyPosts } from "../../components/empty-posts/empty-posts";
 </article>
 }@empty {
 <app-empty-posts />
-}
+} 
 
 
 @if(!hasMorePosts()){ 

@@ -1,7 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormGroup, NonNullableFormBuilder, Validators } from '@angular/forms';
 import { SharedModule } from '../../../../shared/modules/shared.module';
-import { TranslateModule } from '@ngx-translate/core';
 import { NgControl } from "../../../../shared/components/ng-control/ng-control.";
 import { NgEmail } from "../../components/ng-email/ng-email";
 import { CustomValidators } from '../../../../core/validations/custom/custom-validations';
@@ -15,7 +14,6 @@ import { tap } from 'rxjs';
   selector: 'app-register',
   imports: [
     SharedModule,
-    TranslateModule,
     NgControl,
     NgEmail,
     AuthRedirectLink,
@@ -32,9 +30,8 @@ import { tap } from 'rxjs';
         <legend class="fieldset-legend col-span-1 md:col-span-2">{{ 'auth.register.title' | translate }}</legend>
 
         <!-- UserName -->
-        <div>
           <app-ng-control
-            [option]="{
+          [option]="{
               type : 'text',
               name : 'UserName',
               formControlName : 'userName',
@@ -43,28 +40,13 @@ import { tap } from 'rxjs';
               autocomplete : 'name',
               isRequired : true
             }"
-            [form]="registerForm" />
-        </div>
+            [form]="registerForm" 
+            class="col-span-2"
+            />
 
         <!-- Email -->
         <div>
           <app-ng-email [emailForm]="registerForm" />
-        </div>
-
-        <!-- Phone -->
-        <div>
-          <app-ng-control
-            [option]="{
-              type : 'tel',
-              name : 'phone',
-              formControlName : 'phone',
-              label : 'auth.register.phone',
-              id : 'phone',
-              autocomplete : 'tel',
-              inputmode : 'tel',
-              isRequired : true
-            }"
-            [form]="registerForm" />
         </div>
 
         <!-- Gender -->
@@ -170,13 +152,6 @@ export class Register implements OnInit  {
           Validators.minLength(8),
           Validators.maxLength(80),
           Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?!.*\s).+$/)
-        ]
-      ],
-      phone: [
-        '', 
-        [
-          Validators.required,
-          Validators.pattern(/^\+?[0-9]{8,15}$/)
         ]
       ],
       gender: [

@@ -59,7 +59,7 @@ export interface FormControlOption {
         [name]="option().name"
         [formControlName]="option().formControlName" 
         [autocomplete]="option().autocomplete || 'on'"
-        [class]="option().inputClass || 'ng-select'" 
+        [class]="'capitalize ' +(option().inputClass || 'ng-select')" 
         aria-selected="true"
         [attr.aria-required]="option().isRequired"
         [attr.aria-describedby]="option().formControlName + 'Help'"
@@ -67,7 +67,7 @@ export interface FormControlOption {
         'select-error' : ''">
         @for (o of this.option().selectOptions; track o) {
         @let option =  this.option().textForTranslate  ? this.option().textForTranslate + o : o;
-        <option [value]="o">{{
+        <option [value]="o" class="capitalize">{{
         translationService.heroTexts(option)}}
         </option>
         }

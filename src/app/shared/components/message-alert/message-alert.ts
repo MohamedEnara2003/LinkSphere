@@ -8,7 +8,7 @@ import { AlertOption, AlertService } from '../../../core/services/alert.service'
   imports: [SharedModule],
   template: `
   <article aria-label="Model Alert"  role="alert" aria-modal="true" 
-  class="w-full  h-15  alert flex justify-between items-center animate-down "
+  class="w-full  h-15  alert flex justify-between items-center animate-down z-[100]"
   [ngClass]="alertOption()?.alertType || 'alert-success'">
 
   <p class="flex  items-center gap-2"> 

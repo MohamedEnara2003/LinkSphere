@@ -1,16 +1,18 @@
 import { computed, inject, Injectable, linkedSignal, signal } from '@angular/core';
 import { SingleTonApi } from '../../../../../core/services/api/single-ton-api.service';
-import { catchError, EMPTY, forkJoin, map, Observable, of, switchMap, tap } from 'rxjs';
+import { catchError, EMPTY, Observable, tap } from 'rxjs';
 import { IComment, ICreateComment, IPaginatedCommentsRes , IPaginatedCommentsRepliesRes, IReplyComment, IUpdateComment, CommentFlag } from '../../../../../core/models/comments.model';
 import { UserProfileService } from '../../profile/services/user-profile.service';
-import { ImagesService } from '../../../../../core/services/api/images.service';
+import { Picture } from '../../../../../core/models/picture';
+import { Author } from '../../../../../core/models/user.model';
+
 
 @Injectable({
   providedIn: 'root'
 })
 export class CommentService {
   #singleTonApi = inject(SingleTonApi);
-  #imagesService = inject(ImagesService);
+
   #userService = inject(UserProfileService);
   #routeName: string = "posts";
 
@@ -44,8 +46,7 @@ getCommentItems (
   data : ICreateComment , 
   commentId?: string ,
 ) : IComment | null{
-  const user =  this.#userService.user();
-  if(!user) return null;
+
   return {
     _id : id,
     id ,
@@ -53,21 +54,31 @@ getCommentItems (
     postId,
     content : data.content ?? '' ,
     tags : data.tags ?? [] ,
-    attachment :  '' , 
+    attachment :  undefined , 
     flag,
-    author : {
-      _id: user._id ,
-      id: user._id ,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      userName: user.userName,
-      picture : user.picture || '',
-    },
+    author : this.getAuthor()!,
     createdAt : new Date().toISOString(),
     updatedAt : new Date().toISOString(),
     createdBy : this.#userService.user()?._id || '',
     likes : [],
     }
+}
+
+
+getAuthor() : Author | null {
+  const user =  this.#userService.user();
+  if(!user) return null;  
+  return {
+    _id: user._id ,
+      id: user._id ,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      userName: user.userName,
+      picture : {
+      url : user.picture?.url || '' ,
+      public_id : user.picture?.public_id || '' ,
+  }
+}
 }
 
 private buildCommentFormData(data: ICreateComment | IReplyComment | IUpdateComment): FormData {
@@ -91,37 +102,44 @@ private buildCommentFormData(data: ICreateComment | IReplyComment | IUpdateComme
   return formData;
 }
 
-createComment(postId: string, data: ICreateComment , preveiwImage? : string): Observable<{ data: { commentId: string } }> {
+createComment(postId: string, data: ICreateComment)
+: Observable<{ data: {comment : IComment} }> {
   const formData = this.buildCommentFormData(data);
-
-  return this.#singleTonApi.create<{ data: { commentId: string } }>(
+  return this.#singleTonApi.create<{ data: {comment : IComment} }>(
     `${this.#routeName}/${postId}/create-comment`,
     formData
   ).pipe(
-    tap(({ data: { commentId } }) => {
-      const newComment: IComment = this.getCommentItems(postId, commentId, 'comment', data)!;
-      this.#comments.update((c) => 
-      [{...newComment ,  attachment : preveiwImage}, ...c]);
-    })
+    tap(({ data: {comment} }) => {
+    const newComment :IComment = {
+    ...comment ,
+    author : this.getAuthor()!
+    }
+    
+    this.#comments.update((c) =>  [{...newComment}, ...c])
+    }
+  
+  )
   );
 }
 
 
 // 🟢 Reply on Comment
-replyComment(postId: string, commentId: string, data: IReplyComment , preveiwImage? : string)
-: Observable<{ data: { replyId: string } }> {
+replyComment(postId: string, commentId: string, data: IReplyComment )
+: Observable<{ data: IComment}> {
   const formData = this.buildCommentFormData(data);
 
-  return this.#singleTonApi.create<{ data: { replyId: string } }>(
+  return this.#singleTonApi.create<{ data: IComment}>(
     `${this.#routeName}/${postId}/${commentId}/create-reply`,
     formData
   ).pipe(
-    tap(({ data: { replyId } }) => {
-
-    const newReplyComment: IComment = this.getCommentItems(postId, replyId, 'reply', data, commentId)!;
+    tap(({data}) => {
+    const newReplyComment :IComment = {
+    ...data ,
+    author : this.getAuthor()!
+    }
 
     this.#replies.update((replies) => 
-    [{...newReplyComment , attachment : preveiwImage}, ...replies].map((r) =>
+    [{...newReplyComment }, ...replies].map((r) =>
     r._id === commentId ? ({...r , lastReply : 'new Reply'}) : r
     )
     );
@@ -135,7 +153,7 @@ replyComment(postId: string, commentId: string, data: IReplyComment , preveiwIma
 }
 
 // 🟢 Update Comment
-  updateComment(postId: string, commentId: string, data: IUpdateComment, previewImage?: string): Observable<void> {
+  updateComment(postId: string, commentId: string, data: IUpdateComment, previewImage?: Picture): Observable<void> {
     const formData = this.buildCommentFormData(data);
 
     return this.#singleTonApi.patch<void>(
@@ -161,8 +179,9 @@ replyComment(postId: string, commentId: string, data: IReplyComment , preveiwIma
 
           // Handle attachment
           let updatedAttachment = comment.attachment;
+          
           if (data.removeAttachment) {
-            updatedAttachment = '';
+            updatedAttachment = undefined ;
           } else if (previewImage) {
             updatedAttachment = previewImage;
           }
@@ -221,46 +240,6 @@ replyComment(postId: string, commentId: string, data: IReplyComment , preveiwIma
       );
   }
 
-    // 🟢 Get Comment By Id
-    #enrichCommentsWithAssets(
-      comments: IComment[],
-      type: 'comment' | 'reply'
-    ): Observable<IComment[]> {
-      if (!comments.length) return of([]);
-  
-      const enriched$ = comments.map((c) => {
-        // جلب صورة الكاتب
-        const authorPicture$ = c.author?.picture
-          ? this.#imagesService
-              .getImages(c.author.picture, 'comment')
-              .pipe(
-                map(({ url }) => url || ''),
-                catchError(() => of(''))
-              )
-          : of('');
-  
-        // جلب المرفق (لو موجود)
-        const attachment$ = c.attachment
-          ? this.#imagesService
-              .getImages(c.attachment, type === 'comment' ? 'comment' : 'post')
-              .pipe(
-                map(({ url }) => url || ''),
-                catchError(() => of(''))
-              )
-          : of('');
-              
-        return forkJoin({ authorPicture$, attachment$ }).pipe(
-          map(({ authorPicture$, attachment$ }) => ({
-            ...c,
-            author: { ...c.author, picture: authorPicture$ },
-            attachment: attachment$,
-          }))
-        );
-      });
-  
-      return forkJoin(enriched$);
-    }
-  
     // 🔹 جلب تعليقات المنشور
     getPostComment(
       postId: string,
@@ -275,13 +254,6 @@ replyComment(postId: string, commentId: string, data: IReplyComment , preveiwIma
         `${this.#routeName}/${postId}/comments?page=${page}&limit=${limit}`
         )
         .pipe(
-          switchMap(({ data: { comments, pagination } }) =>
-            this.#enrichCommentsWithAssets(comments, 'comment').pipe(
-              map((enrichedComments) => ({
-                data: { comments: enrichedComments, pagination },
-              }))
-            )
-          ),
           tap(({ data: { comments : newComments} }) => {
           if(!newComments.length){
           return this.hasMoreComments.set(false)
@@ -306,16 +278,7 @@ replyComment(postId: string, commentId: string, data: IReplyComment , preveiwIma
         `${this.#routeName}/${postId}/${commentId}/replies?page=${page}&limit=${limit}`
       )
       .pipe(
-        switchMap(({ data: { replies, pagination } }) =>
-          this.#enrichCommentsWithAssets(replies, 'reply').pipe(
-            map((enrichedReplies) => ({
-              data: {
-                replies: this.organizeReplies(enrichedReplies, commentId),
-                pagination
-              },
-            }))
-          )
-        ),
+
         tap(({ data: { replies } }) => {
           this.#replies.update(existing => {
             const newReplies = replies.filter(r => 
@@ -327,25 +290,10 @@ replyComment(postId: string, commentId: string, data: IReplyComment , preveiwIma
       );
   }
 
-  private organizeReplies(replies: IComment[], parentId: string): IComment[] {
-    // Get direct replies to the parent comment
-    const directReplies = replies.filter(r => r.commentId === parentId);
-    
-    // Get nested replies
-    const nestedReplies = replies.filter(r => 
-      r.commentId !== parentId && 
-      replies.some(p => p._id === r.commentId)
-    );
-
-    // Return all replies in correct order
-    return [...directReplies, ...nestedReplies];
-  }
 
   // 🟢 Like/Unlike Comment
 likeComment(postId: string, commentId: string, userId: string): Observable<void> {
   if (!postId || !commentId || !userId) return EMPTY;
-
-
   const prevComments = this.#comments();
   const prevReplies = this.#replies();
 

@@ -1,11 +1,9 @@
 import { computed, Injectable, signal, inject } from "@angular/core";
 import { DomService } from "../dom.service";
 import { AlertService } from "../alert.service";
+import { Picture } from "../../models/picture";
 
-export interface PreviewImage {
-  key : string , 
-  url : string
-}
+
 @Injectable({ providedIn: 'root' })
 export class UploadService {
 
@@ -13,18 +11,18 @@ export class UploadService {
   #alertService = inject(AlertService);
 
   #files = signal<File[]>([]);
-  #previews = signal<PreviewImage[]>([]);
+  #previews = signal<Picture[]>([]);
   isLoading = signal<boolean>(false);
 
 
   files = computed<File[]>(() => this.#files());
-  previews = computed<PreviewImage[]>(() => this.#previews());
+  previews = computed<Picture[]>(() => this.#previews());
 
   set setFiles(files: File[]) {
   this.#files.set(files);
   }
 
-  set setPreviews(previews:  PreviewImage[]) {
+  set setPreviews(previews:  Picture[]) {
   this.#previews.set(previews);
   }
 
@@ -35,12 +33,13 @@ export class UploadService {
   maxWidth : number =  1280,
   maxHeight : number = 1280,
   ): Promise<void> {
-    if (!this.#domService.isBrowser()) return; // ✅ تجاهل أثناء SSR
+    if (!this.#domService.isBrowser()) return; 
 
     const files = input.files;
     if (!files || files.length === 0) return;
     
-    if ((this.#files().length + files.length) > maxFiles) {
+
+    if ((this.#files().length + files.length) > maxFiles || this.#previews().length >= maxFiles) {
       this.#alertService.alertOption.set([{
       id : 1 ,
       isLoad : true ,
@@ -84,7 +83,7 @@ export class UploadService {
       const img = new Image();
 
       img.onload = () => {
-        // 🔹 نحسب أبعاد جديدة متناسبة
+
         let { width, height } = img;
         if (width > maxWidth || height > maxHeight) {
           const scale = Math.min(maxWidth / width, maxHeight / height);
@@ -120,34 +119,37 @@ export class UploadService {
   }
 
   /**
-   * إنشاء Previews
+   * Create Previews
    */
-  private generatePreviews(files: File[]): void {
-    if (!this.#domService.isBrowser()) return; // ✅ تجاهل في SSR
-    
-    const currentPreviews = [...this.#previews()]
 
-    this.#previews.set([]);
-    files.forEach(file => {
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (e: ProgressEvent<FileReader>) => {
-          const result = e.target?.result;
-          if (typeof result === 'string') {
+private generatePreviews(files: File[]): void {
+  if (!this.#domService.isBrowser()) return;
 
-            const newPreview: PreviewImage = {
-              key: crypto.randomUUID(), // 🔑 مفتاح فريد
-              url: result
-            };
+  const currentPreviews = [...this.#previews()];
 
-            this.#previews.set([...currentPreviews, newPreview]);
-  
-          }
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-  }
+  files.forEach(file => {
+    if (file.type.startsWith('image/')) {
+
+      const reader = new FileReader();
+
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        const result = e.target?.result;
+        if (typeof result === 'string') {
+          const newPreview: Picture = {
+            public_id: crypto.randomUUID(),
+            url: result
+          };
+
+          // 👌 ضيف بدون مسح القديم
+          this.#previews.set([...currentPreviews, newPreview]);
+        }
+      };
+
+      reader.readAsDataURL(file);
+    }
+  });
+}
+
 
   clear(): void {
     this.#files.set([]);

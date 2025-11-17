@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { NgImage } from "../../../../../../../../../shared/components/ng-image/ng-image";
 import { UploadService } from '../../../../../../../../../core/services/upload/upload.service';
 import { UserProfileService } from '../../../../../services/user-profile.service';
@@ -11,14 +11,13 @@ import { tap } from 'rxjs';
   imports: [CommonModule, NgImage],
   template: `
     <section class="w-full flex flex-col gap-5 items-center" aria-labelledby="user-picture-title">
-    @let userPicture =  userProfileService.user()?.picture  || '';
 
     <header class="w-full flex justify-between items-center">
         <h2 id="user-picture-title" class="text-xl font-semibold text-base-content">
         Update Profile Picture
       </h2>
 
-    @if(userPicture){
+    @if(userPicture()){
     <button
           title="Remove profile image"
           role="button"
@@ -38,7 +37,7 @@ import { tap } from 'rxjs';
       <!-- Current Picture -->
         <app-ng-image
         [options]="{
-          src: userPicture,
+          src: userPicture()?.url || '',
           placeholder:  userProfileService.placeHolderUser() ,
           alt: 'Profile picture',
           width:  200,
@@ -48,7 +47,7 @@ import { tap } from 'rxjs';
           fetchpriority : 'high', 
           class: 'size-50 object-cover  rounded-full  border-2 border-brand-color'
         }"
-        [isPreview]="userPicture ? true : false"
+        [isPreview]="userPicture() ? true : false"
       />
 
       <!-- Upload Input -->
@@ -97,6 +96,7 @@ export class UpdateUserPictureComponent {
   uploadService = inject(UploadService);
   userProfileService = inject(UserProfileService);
 
+  userPicture = computed(() => this.userProfileService.user()?.picture);
 
   onFileSelected(input: HTMLInputElement) {
   this.uploadService.uploadAttachments(input , 1 , 0.75 , 900 , 900);  
@@ -108,13 +108,10 @@ export class UpdateUserPictureComponent {
 
     if ((files && files.length === 1) && (previews && previews.length === 1)) {
     const file = files[0]; 
-    const preview = previews[0]; 
+    const preview = previews[0].url; 
     this.uploadService.isLoading.set(true);
-    this.userProfileService.uploadProfilePicture(file).pipe(
+    this.userProfileService.uploadProfilePicture(file , preview).pipe(
     tap(() => {
-    this.userProfileService.setUser(
-    {...this.userProfileService.user()! , picture : preview.url }
-    )
     this.uploadService.isLoading.set(false);
     this.uploadService.clear();
     })
@@ -124,19 +121,7 @@ export class UpdateUserPictureComponent {
 
   removeProfileImage() : void {
   this.userProfileService.deleteProfilePicture().pipe(
-  tap(() => {
-    const user = this.userProfileService.user() ;
-    const userProfile = this.userProfileService.userProfile() ;
-    if(!user || !userProfile) return;
-
-    this.userProfileService.setUser({...user , picture : 'user-placeholder.jpg'});
-
-    if(this.userProfileService.isMyProfile()){
-    this.userProfileService.setUserProfile({...userProfile , picture :''});
-    }
-
-  this.uploadService.clear();
-  })
+  tap(() => this.uploadService.clear())
   ).subscribe()
   }
 

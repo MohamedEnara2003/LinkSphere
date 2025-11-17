@@ -27,7 +27,8 @@ import { SharedModule } from '../../../../../../shared/modules/shared.module';
     <app-ng-image
     [routerLink]="['/public/profile/user/' , friend._id]"
     [options]="{
-    src : friend.picture || '',
+    src : friend.picture?.url || '',
+    placeholder : 'user-placeholder.jpg',
     alt :('profile.friends.profile_picture_of' | translate) + ' ' + friend.firstName,
     width :  48,
     height : 48,

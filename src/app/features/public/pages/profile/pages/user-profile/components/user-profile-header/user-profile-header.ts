@@ -15,11 +15,12 @@ import { FriendActionButton } from "../friend-action-button/friend-action-button
     gap-6 ngCard p-4 md:p-6 ">
 
     
-    <picture class="relative">
+    <picture class="size-40 md:size-50  relative rounded-full border border-brand-color 
+    shadow-md overflow-hidden flex  justify-end items-center ">
     <!-- Profile Picture -->
     <app-ng-image
         [options]="{
-        src : userProfileService.userProfile()?.picture || '',
+        src : userProfileService.userProfile()?.picture?.url || '',
         placeholder :  userProfileService.placeHolderUser() ,
         alt : 'Profile picture of '+  userProfileService.userProfile()?.userName,
         width : 300, 
@@ -27,7 +28,7 @@ import { FriendActionButton } from "../friend-action-button/friend-action-button
         loading : 'eager' ,
         decoding : 'async' ,
         fetchpriority : 'high', 
-        class : 'object-cover size-40 md:size-50 rounded-full border border-brand-color shadow-md transition-transform duration-300 hover:scale-105'
+        class : 'object-cover size-full rounded-full  transition-transform duration-500 hover:scale-115'
         }"
       [isPreview]="userProfileService.userProfile()?.picture ? true : false"
     />
@@ -38,8 +39,7 @@ import { FriendActionButton } from "../friend-action-button/friend-action-button
       [href]="['/public/profile/user' , (userProfileService.user()?._id || '') ,'update']"     
       [routerLink]="['/public/profile/user' , (userProfileService.user()?._id || '') ,'update']"
       [queryParams]="{edit : 'picture'}"
-      class="absolute right-4 top-4 ngCard  btn   btn-circle text-brand-color 
-      hover:bg-dark transition z-10 "
+      class="absolute   ngBtn   btn-circle  transition z-10 "
       >
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
     <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32l8.4-8.4Z" />

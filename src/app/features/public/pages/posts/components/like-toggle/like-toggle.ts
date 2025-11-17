@@ -61,7 +61,7 @@ export class LikeToggle {
 
   ngOnInit() {
     this.#likeClick$
-    .pipe(debounceTime(300), takeUntilDestroyed(this.#destroyRef))
+    .pipe(debounceTime(200), takeUntilDestroyed(this.#destroyRef))
     .subscribe(() => this.#onToggleLike());
   }
 
@@ -76,13 +76,11 @@ export class LikeToggle {
   this.#likeClick$.next();
   }
 
-   #onToggleLike(): void {
+  #onToggleLike(): void {
     const postId = this.postId() || '';
     const commentId = this.commentId() || '';
     const userId = this.#userService.user()?._id || '';
-
     if (!userId) return;
-
     if (commentId) {
       this.#commentService.likeComment(postId, commentId, userId).subscribe();
     } else {

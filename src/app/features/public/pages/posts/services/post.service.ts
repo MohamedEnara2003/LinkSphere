@@ -1,10 +1,11 @@
 import {computed, inject, Injectable, signal } from '@angular/core';
 import {SingleTonApi } from '../../../../../core/services/api/single-ton-api.service';
-import {catchError, EMPTY, forkJoin, map, Observable , of,switchMap, tap } from 'rxjs';
-import {Availability, ICreatePost, IPaginatedPostsResponse, IPost, IUpdatePost } from '../../../../../core/models/posts.model';
+import {catchError, EMPTY,Observable , tap } from 'rxjs';
+import {Availability, FormPost, ICreatePost, IPaginatedPostsResponse, IPost, IUpdatePostAttachments, IUpdatePostContent } from '../../../../../core/models/posts.model';
 import {UserProfileService } from '../../profile/services/user-profile.service';
 import {Router } from '@angular/router';
-import {ImagesService } from '../../../../../core/services/api/images.service';
+
+import { Picture } from '../../../../../core/models/picture';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +13,7 @@ import {ImagesService } from '../../../../../core/services/api/images.service';
 
 export class PostService {
   #singleTonApi = inject(SingleTonApi);
-  #imagesService= inject(ImagesService);
+
   #userService = inject(UserProfileService);
 
   #router = inject(Router);
@@ -48,39 +49,55 @@ export class PostService {
 
  //_____________________________________________________
 
+
+  #closeUpsertModelPost(availability : Availability) : void {
+  this.#router.navigate(['/public'] , {queryParams : {state : availability }})
+  }
+
+
   // 🟢 Create Post
-  createPost(data: ICreatePost , prevViewImages : string[] = [])
-  : Observable<{data : {postId : string , attachments : string[]} }> {
+  createPost(data: FormPost)
+  : Observable<{data : {postId : string , attachments : Picture[]} }> {
+
+    // Preload Post
+    const post = data as any;
+
+    const createdPost: ICreatePost = {
+      ...post,
+      allowCommentsEnum: post.allowCommentsEnum || 'allow',
+    };
+
     const formData = new FormData();
-  
+
     // 🟢 Attachments (optional, max 2)
-    if (data.attachments && data.attachments.length > 0) {
-      data.attachments.forEach(file => formData.append('attachments', file));
+    if (createdPost.attachments && createdPost.attachments.length > 0) {
+      createdPost.attachments.forEach(file => formData.append('attachments', file));
     }
   
     // 🟢 Content (optional)
-    if (data.content) {
-      formData.append('content', data.content);
+    if (createdPost.content) {
+      formData.append('content', createdPost.content);
     }
   
     // 🟢 Availability (default = public)
-    formData.append('availability', data.availability || 'public');
+    formData.append('availability', createdPost.availability || 'public');
+    formData.append('allowCommentsEnum', createdPost.allowCommentsEnum|| 'allow');
   
     // 🟢 Tags (optional array)
-    if (data.tags && data.tags.length > 0) {
-      data.tags.forEach((tagId, index) => {
+    if (createdPost.tags && createdPost.tags.length > 0) {
+      createdPost.tags.forEach((tagId, index) => {
         // الـ backend بيستقبلها كـ tags[0], tags[1], ...
         formData.append(`tags[${index}]`, tagId);
       });
     }
 
     // 🚀 إرسال الطلب
-    return this.#singleTonApi.create<{data : {postId : string , attachments : string[]} }>
+    return this.#singleTonApi.create<{data : {postId : string , attachments : Picture[]} }>
     (`${this.#routeName}/create-post`, formData).pipe(
     tap(({data : {postId , attachments }}) => {
 
     const availability = data.availability || 'public';
-    this.#router.navigate(['/public'] , {queryParams : {state : availability }})
+    this.#closeUpsertModelPost(availability);
 
     this.#postsStateMap.update((map) => {
             const statePosts = map[availability].posts;
@@ -90,14 +107,13 @@ export class PostService {
                 posts: [
                   {
                     _id: postId,
-                    content: data.content || '',
+                    content: createdPost.content || '',
                     availability,
                     attachments,
-                    imageUrls: prevViewImages,
-                    tags: data.tags || [],
+                    tags: createdPost.tags || [],
                     createdBy: this.#userService.user()?._id ?? '',
                     author: this.#userService.user(),
-                    allowComments: 'allow',
+                    allowComments: createdPost.allowCommentsEnum|| 'allow' ,
                     createdAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString(),
                   } as IPost,
@@ -113,158 +129,168 @@ export class PostService {
     );
   }
   
+    // 🟢 Update Post Content
+    updatePostContent(postId: string, data : FormPost): Observable<{ data: { postId: string } }> {
 
-  // 🟢 Update Post
-  updatePost(postId: string, data: IUpdatePost , prevViewImages : string[] = []): Observable<{ data: { postId: string } }> {
-    const formData = new FormData();
-  
-    // 🟢 Attachments (optional)
-    if (data.attachments && data.attachments.length > 0) {
-      data.attachments.forEach(file => formData.append('attachments', file));
+    const payload: Partial<IUpdatePostContent> = {};
+
+    const existingPost = this.#post();
+    if (!existingPost) return EMPTY;
+
+    // Check content change
+    if (data.content && data.content !== existingPost.content) {
+      payload.content = data.content;
     }
-  
-    // 🟢 Removed Attachments (optional)
-    if (data.removedAttachments && data.removedAttachments.length > 0) {
-      data.removedAttachments.forEach((att, index) => {
-        formData.append(`removedAttachments[${index}]`, att);
-      });
+
+    // Check availability change
+    if (data.availability && data.availability !== existingPost.availability) {
+      payload.availability = data.availability;
     }
-  
-    // 🟢 Content (optional)
-    if (data.content) {
-      formData.append('content', data.content);
+
+    // Check allowComments change (normalize to check against proper field)
+    const currentAllowComments = (existingPost.allowComments as string) || 'allow';
+    if (data.allowComments  && data.allowComments!== currentAllowComments) {
+      payload.allowComments= data.allowComments;
     }
-  
-    // 🟢 Tags (optional)
-    if (data.tags && data.tags.length > 0) {
-      data.tags.forEach((tagId, index) => {
-        formData.append(`tags[${index}]`, tagId);
-      });
+
+    // Check tags change
+    const isExistingTags  = (data.tags || []).some((id) => existingPost.tags.includes(id));
+    if (data.tags && data.tags.length > 0 && !isExistingTags) {
+      payload.addToTags = data.tags.slice();
     }
-  
-    // 🟢 Removed Tags (optional)
+
+  // Check add removedTags
     if (data.removedTags && data.removedTags.length > 0) {
-      data.removedTags.forEach((tagId, index) => {
-        formData.append(`removedTags[${index}]`, tagId);
-      });
+    payload.removeFromTags = data.removedTags.slice();
     }
+
+    if (Object.keys(payload).length === 0) {
+    return EMPTY;
+    }
+
+    return this.#singleTonApi.patch<{ data: { postId: string } }>(
+    `${this.#routeName}/update-content/${postId}`,
+    payload
+    ).pipe(
+    
+    tap(() => {
   
-    // 🚀 Send PATCH request (single request)
-    return this.#singleTonApi
-      .patch<{ data: { postId: string } }>(`${this.#routeName}/update-post/${postId}`, formData)
-      .pipe(
-        tap(() => {
-
-          this.#router.navigate(['/public' ,{ outlets: { 'model' :null} }]);
-
-          // 🟢 تحديث الكاش المحلي بعد التعديل
-          this.#postsStateMap.update((map) => {
-            const newMap = { ...map };
-            for (const key of Object.keys(newMap) as Availability[]) {
-              newMap[key].posts = newMap[key].posts.map((p) =>
+      this.#postsStateMap.update((map) => {
+          const newMap = { ...map };
+          for (const key of Object.keys(newMap) as Availability[]) {
+            newMap[key] = {
+              ...newMap[key],
+              posts: newMap[key].posts.map((p) =>
                 p._id === postId
                   ? {
                       ...p,
-                      content: data.content ?? p.content,
-                      imageUrls: prevViewImages,
-                      tags: data.tags ?? p.tags,
-                      updatedAt: new Date().toISOString(),
+                    content : payload.content || p.content ,
+                    availability : payload.availability || p.availability  ,
+                    allowComments : payload.allowComments || p.allowComments,
+                    tags : payload.addToTags || [] ,
                     }
                   : p
-              );
-            }
-            return newMap;
-          });
-
-        })
-      );
-  }
-  
-
-  // 🟢 Delete Post
-  deletePost(postId: string): Observable<void> {
-    return this.#singleTonApi.deleteById<void>(`${this.#routeName}`, postId).pipe(
-      tap(() => {
-        this.#postsStateMap.update((map) => {
-          const newMap = { ...map };
-          for (const key of Object.keys(newMap) as Availability[]) {
-            newMap[key].posts = newMap[key].posts.filter(
-              (post) => post._id !== postId
-            );
+              ),
+            };
           }
           return newMap;
         });
-      })
+
+  this.#userProfilePosts.update((posts) =>
+          posts.map((p) =>
+            p._id === postId
+              ? {
+                  ...p,
+                  ...(payload.content  && { content: payload.content }),
+                  ...(payload.availability && { availability: payload.availability }),
+                  ...(payload.allowComments  && { allowComments: payload.allowComments }),
+                }
+              : p
+          )
+        );
+      
+      this.#closeUpsertModelPost(payload.availability || 'public');
+
+    })
+
     );
   }
 
+  updatePostAttachments(postId: string, data : FormPost )
+  : Observable<{ data: { post :IPost} }> {
 
-  #preparePosts(
-  routeName : string,
-  page: number = 1,
-  limit: number = 5
-  ) : Observable<{ data: IPaginatedPostsResponse }> {
-    return this.#singleTonApi
-    .find<{ data: IPaginatedPostsResponse }>(
-      `${this.#routeName}/${routeName}?page=${page}&limit=${limit}`
-    )
-    .pipe(
-    switchMap(({ data: { posts, pagination } }) => {
-    if (!posts.length) {
-          return of({
-            data: {
-              posts: [],
-              pagination
-            }
-          });
+   const payload: Partial<IUpdatePostAttachments> = {};
+
+    if (data.attachments && data.attachments.length > 0) {
+      payload.addToAttachments = data.attachments;
+    }
+
+    if (data.removedAttachments && data.removedAttachments.length > 0) {
+      payload.removeFromAttachments = data.removedAttachments;
+    }
+
+    // nothing to update
+    if (!payload.addToAttachments && !payload.removeFromAttachments) {
+    return EMPTY;
+    }
+
+    const formData = new FormData();
+
+    // 🟢 Attachments 
+    if (payload.addToAttachments && payload.addToAttachments.length > 0) {
+      payload.addToAttachments.forEach((file: File) => formData.append('addToAttachments', file));
+    }
+
+    // 🟢 Removed Attachments 
+    if (payload.removeFromAttachments && payload.removeFromAttachments.length > 0) {
+
+      payload.removeFromAttachments.forEach((att, index) => {
+        formData.append(`removeFromAttachments[${index}]`, att);
+      });
+    }
+    return this.#singleTonApi.patch<{ data: { post: IPost } }>(
+    `${this.#routeName}/update-attachments/${postId}`,
+    formData
+    ).pipe(
+    tap(({data : {post}}) => {
+    this.#postsStateMap.update((map) => {
+    const newMap = { ...map };
+    for (const key of Object.keys(newMap) as Availability[]) {
+           newMap[key] = {
+             ...newMap[key],
+             posts: newMap[key].posts.map((p) =>
+              p._id === postId ? { ...p, attachments: post.attachments } : p
+            ),
+          };
         }
-    
-        const postsWithAssets$ = posts.map((post) => {
+        return newMap;
+       });
 
-          const attachmentUrls$ = post.attachments?.length
-            ? forkJoin(
-                post.attachments.map((key) =>
-                  this.#imagesService
-                    .getImages(key, 'post')
-                    .pipe(map(({ url }) => url))
-                )
-              )
-            : of<string[]>([]);
+       // update user profile posts cache
+       this.#userProfilePosts.update((posts) =>
+         posts.map((p) => (p._id === postId ? { ...p, attachments: post.attachments  } : p))
+       );
 
-          const authorPicture$ = post.author?.picture
-            ? this.#imagesService
-                .getImages(post.author.picture, 'user')
-                .pipe(
-                  map(({ url }) => url || ''),
-                  catchError(() => of(''))
-                )
-            : of('');
+      this.#closeUpsertModelPost(post.availability);
+    })
+    )
+  }
 
-          // 🧩 دمج نتائج الصور كلها
-          return forkJoin({
-            attachments: attachmentUrls$,
-            authorPicture: authorPicture$,
-          }).pipe(
-            map(({ attachments, authorPicture }) => ({
-              ...post,
-              imageUrls : attachments ,
-              author: {
-                ...post.author,
-                picture: authorPicture,
-              },
-            }))
-          );
-        });
 
-        // 🧠 بعد ما كل البوستات تجهز
-        return forkJoin(postsWithAssets$).pipe(
-          map((finalPosts) => ({
-            data: {   
-            posts: finalPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-            ) , pagination },
-          }))
-        );
-      })
+  // 🟢 Delete Post
+  deletePost(postId: string , availability : Availability): Observable<void> {
+    return this.#singleTonApi.deleteById<void>(this.#routeName, postId).pipe(
+      tap(() => {
+        
+    this.#postsStateMap.update((map) => ({
+    ...map,
+    [availability]: {
+    ...map[availability],
+    posts: map[availability].posts.filter((p) => p._id !== postId),
+    },
+    }));
+
+    }),
     );
   }
 
@@ -277,11 +303,10 @@ availability: Availability ,
   if(this.#postsStateMap()[availability].hasMorePosts) return EMPTY;
 
   const page = this.#postsStateMap()[availability].page;
-
-  return this.#preparePosts('', page, 5).pipe(
+  return this.#singleTonApi.find<{data: IPaginatedPostsResponse }>(
+  `${this.#routeName}?page=${page}&limit=${5}`).pipe(
 
 tap(({ data: { posts : newPosts} }) => {
-
 if (!newPosts || newPosts.length === 0) {
   this.#postsStateMap.update((state) => ({
     ...state,
@@ -293,8 +318,8 @@ if (!newPosts || newPosts.length === 0) {
   return;
 }
 
-
-  const filteredPosts = newPosts.filter(p => p.availability === availability);
+  const filteredPosts = newPosts.filter(p => p.availability === availability)
+  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   this.#postsStateMap.update((map) => ({
     ...map,
@@ -305,13 +330,9 @@ if (!newPosts || newPosts.length === 0) {
     },
   }));
 
-
-    
+  
     }),
   );
-
-
-  
 }
 
 
@@ -326,7 +347,8 @@ if (!newPosts || newPosts.length === 0) {
   const cachedPosts = posts.filter((p) => p.createdBy === (userId || ''));
   if (cachedPosts.length > 0)  return EMPTY
   
-  return this.#preparePosts(`user/${userId}` , page , limit).pipe(
+  return this.#singleTonApi.find<{data :IPaginatedPostsResponse}>
+  (`${this.#routeName}/user/${userId}?page=${page}&limit=${5} `).pipe(
   tap(({data : {posts}}) => {
   this.#userProfilePosts.set(posts);
   })
@@ -337,64 +359,57 @@ if (!newPosts || newPosts.length === 0) {
     page: number = 1,
     limit: number = 10
   ) : Observable<{data: IPaginatedPostsResponse }>{
+
     const cachedPosts = this.#userFreezedPosts();
+    if (cachedPosts.length > 0) return EMPTY
 
-    // ✅ كاش جاهز
-    if (cachedPosts.length > 0) {
-      return of({
-        data: {
-          posts: cachedPosts,
-          pagination: {
-            page,
-            limit,
-            count: cachedPosts.length,
-            total: cachedPosts.length,
-            totalPages: 1,
-          },
-        },
-      });
-    }
-
-    return this.#preparePosts('freezed').pipe(
+    return this.#singleTonApi.find<{data : IPaginatedPostsResponse}>(`
+    ${this.#routeName}/freezed?page=${page}&limit=${5}`) .pipe(
     tap(({data : {posts}}) => {
     this.#userFreezedPosts.set(posts.map((p) => ({...p , isFreezed : true})))
     })
     )
     }
 
-// 🟢 Like / Unlike Post with cache update
-  toggleLikePost(postId: string, userId: string): Observable<void> {
-    if (!postId || !userId) return EMPTY;
+// 🟢 Like / Unlike
+toggleLikePost(postId: string, userId: string): Observable<void> {
+  if (!postId || !userId) return EMPTY;
 
-    const prevMap = this.#postsStateMap();
+  const prevMap = this.#postsStateMap();
+  const prevUserProfilePosts = this.#userProfilePosts();
 
-    const updateLikes = (posts: IPost[]) =>
-      posts.map((p) => {
-        if (p._id !== postId) return p;
-        const updatedLikes = new Set(p.likes ?? []);
-        updatedLikes.has(userId)
-          ? updatedLikes.delete(userId)
-          : updatedLikes.add(userId);
-        return { ...p, likes: Array.from(updatedLikes) };
-      });
-
-    this.#postsStateMap.update((map) => {
-      const newMap = { ...map };
-      for (const key of Object.keys(newMap) as Availability[]) {
-        newMap[key].posts = updateLikes(newMap[key].posts);
-      }
-      return newMap;
+  const updateLikes = (posts: IPost[]) =>
+    posts.map((p) => {
+      if (p._id !== postId) return p;
+      const updatedLikes = new Set(p.likes ?? []);
+      updatedLikes.has(userId)
+        ? updatedLikes.delete(userId)
+        : updatedLikes.add(userId);
+      return { ...p, likes: Array.from(updatedLikes) };
     });
 
-    return this.#singleTonApi
-      .create<void>(`${this.#routeName}/like/${postId}`)
-      .pipe(
-        catchError(() => {
-          this.#postsStateMap.set(prevMap);
-          return EMPTY;
-        })
-      )
-  }
+  // تحديث الحالة المحلية (Optimistic UI)
+  this.#postsStateMap.update((map) => {
+    const newMap = { ...map };
+    for (const key of Object.keys(newMap) as Availability[]) {
+      newMap[key].posts = updateLikes(newMap[key].posts);
+    }
+    return newMap;
+  });
+
+  this.#userProfilePosts.update((posts) => updateLikes(posts));
+
+  return this.#singleTonApi
+    .create<void>(`${this.#routeName}/like/${postId}`)
+    .pipe(
+      catchError(() => {
+        this.#postsStateMap.set(prevMap);
+        this.#userProfilePosts.set(prevUserProfilePosts);
+        return EMPTY;
+      })
+    );
+}
+
 
 
   // 🟢 Freeze Post

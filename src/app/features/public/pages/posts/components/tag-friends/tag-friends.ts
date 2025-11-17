@@ -61,7 +61,7 @@ p-5 z-10 animate-up flex flex-col gap-2">
           [ngClass]="tagsService.isUserTagged(friend._id) ? 'text-brand-color' : 'ngText'">
           <app-ng-image
             [options]="{
-              src : friend.picture || '/user-placeholder.jpg',
+              src : friend.picture?.url || '/user-placeholder.jpg',
               alt :'Profile picture of ' + friend.userName,
               width :  32,
               height : 32,

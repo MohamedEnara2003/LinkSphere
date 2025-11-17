@@ -17,7 +17,7 @@ import { TranslateModule } from '@ngx-translate/core';
 @if(!isHide()){ 
 <header  
 class="relative w-full h-[10svh] ngCard rounded-none  px-4  grid grid-cols-2 md:grid-cols-3  
-items-center z-20 border-b border-b-brand-color/10
+items-center z-50 border-b border-b-brand-color/10
 md:sticky md:top-0 ">
 
   <nav class="w-full">
@@ -45,8 +45,6 @@ md:sticky md:top-0 ">
         <span class="text-sm font-semibold ">
         {{userProfileService.user()?.firstName || 'User'}} 
         </span> 
-       
-
 
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" 
         class="size-4 duration-300 transition-transform"

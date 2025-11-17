@@ -1,12 +1,14 @@
 import { inject, Injectable } from '@angular/core';
 import { UserProfileService } from '../../features/public/pages/profile/services/user-profile.service';
 import { FormArray, FormGroup, NonNullableFormBuilder } from '@angular/forms';
+import { PostService } from '../../features/public/pages/posts/services/post.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class TagsService {
 
+  #postService = inject(PostService);
   #userService = inject(UserProfileService);
   #fb = inject(NonNullableFormBuilder);
 
@@ -23,35 +25,65 @@ get tags(): FormArray {
  removeTag(index: number): void {
     if (index < 0 || index >= this.tags.length) return;
 
-    const userId = this.tags.at(index).value;
+    // const userId = this.tags.at(index).value;
     this.tags.removeAt(index);
 
-    const existing: string[] = this.form.get('existingTags')?.value || [];
-    if (existing.includes(userId)) {
-      const removedCtrl = this.form.get('removedTags');
-      const current = removedCtrl?.value || [];
-      if (!current.includes(userId)) {
-        removedCtrl?.setValue([...current, userId]);
-      }
-    }
+    // const existing: string[] = this.form.get('existingTags')?.value || [];
+    // if (existing.includes(userId)) {
+    //   const removedCtrl = this.form.get('removedTags');
+    //   const current = removedCtrl?.value || [];
+    //   if (!current.includes(userId)) {
+    //     removedCtrl?.setValue([...current, userId]);
+    //   }
+    // }
   }
 
   isUserTagged(userId: string): boolean {
-    return this.tags.value.includes(userId);
+  return this.tags.value.includes(userId);
+  }
+  
+
+  #removedTags(id : string) : void {
+    const removedTagsCtrl = this.form.get('removedTags');
+        if (removedTagsCtrl && removedTagsCtrl instanceof FormArray) {
+          const current : string[] = removedTagsCtrl.value || [];
+          if (!current.includes(id)) {
+            removedTagsCtrl.push(this.#fb.control(id));
+          }else{
+          const index = removedTagsCtrl.controls.findIndex((tId ) => (tId.value) === id);
+          if(index < -1) return;
+          removedTagsCtrl.removeAt(index);
+          }
+        }
   }
 
-  toggleTag(userId: string, checked: boolean) {
+  toggleTag(userId: string, checked: boolean): void {
     if (!this.form) return;
 
     const tagsArray = this.tags;
+    if (!tagsArray) return; // Guard: ensure FormArray exists
+
     const id = String(userId);
+    const existingPost = this.#postService.post();
+
 
     if (checked && !tagsArray.value.includes(id)) {
+
+      // Add tag if checked and not already tagged
       tagsArray.push(this.#fb.control(id));
+    
     } else if (!checked) {
+      // Remove tag if unchecked
       const index = tagsArray.controls.findIndex(c => c.value === id);
-      if (index !== -1) tagsArray.removeAt(index);
+      if (index !== -1) {
+        tagsArray.removeAt(index);
+      }
     }
+
+      // If this was an existing tag, add to removedTags
+      if (existingPost && existingPost.tags.includes(id)) {
+      this.#removedTags(id);
+      }
   }
 
 getUserNameById(userId: string): string {

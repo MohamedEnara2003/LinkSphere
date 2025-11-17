@@ -1,36 +1,28 @@
 import { Component, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { NgImage } from "../../../../../../shared/components/ng-image/ng-image";
 import { UserProfileService } from '../../../profile/services/user-profile.service';
 import { TranslateModule } from '@ngx-translate/core';
-
+import { UserPicture } from "../../../profile/components/user-picture/user-picture";
+import { SharedModule } from '../../../../../../shared/modules/shared.module';
 
 
 
 @Component({
   selector: 'app-btn-open-model-upsert-post',
-  imports: [RouterModule, TranslateModule, NgImage],
+  imports: [SharedModule , UserPicture],
   template: `
 
 <article class="w-full  rounded-2xl ngCard p-4  flex justify-between items-center ">
 
     <div class="flex items-center gap-2 ">
-        @let userId = userProfileService.user()?._id || '';
-        <app-ng-image
-        [routerLink]="userId ? ['/public/profile/user', userId] : null"
-        [options]="{
-        src :  userProfileService.user()?.picture || ''  ,
-        placeholder : 'user-placeholder.webp' ,
-        alt : 'Profile Picture ' + userProfileService.user()?.userName,
-        width  : 25,
-        height : 25,
-        loading : 'eager' ,
-        decoding : 'async' ,
-        fetchpriority : 'high', 
-        class : 'size-10 object-cover  rounded-full shadow-md hover:scale-105 transition-transform duration-300 cursor-pointer'
-        }"
-        />
-        
+
+      @let userId = userProfileService.user()?._id || '';
+
+      <app-user-picture 
+      [routerLink]="userId ? ['/public/profile/user', userId] : null"
+      styleClass="size-10 object-cover  rounded-full shadow-md hover:scale-105 transition-transform duration-300 cursor-pointer"
+      />
+
     <button 
     [routerLink]="['/public' ,{ outlets: { 'model': ['upsert-post'] } }]" 
     queryParamsHandling="merge"

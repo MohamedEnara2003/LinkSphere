@@ -23,25 +23,34 @@ import { LoadingComment } from "../../../../loading/loading-comment/loading-comm
 
 @Component({
   selector: 'app-post-comments',
-  imports: [SharedModule, UpsertComment, CommentItem, CommentsHeader, EmptyComments, FeedAutoLoader, LoadingComment],
+  imports: [
+  SharedModule, 
+  UpsertComment, 
+  CommentItem, 
+  CommentsHeader, 
+  EmptyComments, 
+  FeedAutoLoader, 
+  LoadingComment
+  ],
   template: `
 
     <!-- Overlay -->
-    <section 
-      class="w-full h-svh fixed inset-0 flex justify-center items-end z-20"
-      aria-label="Comments Section"
-      role="dialog"
-      aria-modal="true">
-
-      <!-- Comments Card -->
+  <section 
+    class="fixed inset-0 flex items-end justify-center  z-[50]"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="postDialogTitle"
+    aria-describedby="postDialogDescription"
+    role="dialog">
+    
+    <!-- Comments Card -->
     <article
-    class="relative w-full sm:w-[85%] md:w-[80%] lg:w-1/2 h-[80%]  flex flex-col  gap-5
+    class="relative w-full sm:w-[85%] md:w-[80%] lg:w-1/2 h-[80%]  flex flex-col z-50  gap-5
     rounded-t-3xl rounded-b-none ngCard shadow-2xl animate-up overflow-hidden"
     aria-labelledby="comments-title" >
 
     <!-- Header -->
     <app-comments-header />
-
 
     <!-- Comments List -->
     <section class="w-full h-full flex-1 overflow-y-auto p-2   grid grid-cols-1 "
@@ -72,26 +81,27 @@ import { LoadingComment } from "../../../../loading/loading-comment/loading-comm
   />
   }
 
+  </section>
 
-    </section>
-
-    <!-- Add Comment -->
-    <footer
-      class="sticky bottom-0 z-10   p-1 md:p-3 ">
+  <!-- Add Comment -->
+  <footer
+      class="sticky bottom-0 z-10   p-1 md:p-2 ">
       <app-upsert-comment [postId]="postId()" />
     </footer>
     
   </article>
+
       <!-- Backdrop -->
       <div 
         (click)="closeComments()"
-        class="size-full bg-dark/50 fixed inset-0 -z-10"
+        class="size-full bg-dark/50 fixed inset-0 z-40"
         aria-hidden="true"
         tabindex="-1">
       </div>
+
     </section>
   `,
-    changeDetection: ChangeDetectionStrategy.OnPush,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PostComments implements OnDestroy{
     commentService = inject(CommentService);

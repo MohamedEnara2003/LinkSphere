@@ -32,7 +32,7 @@ import { FormatDatePipe } from '../../../../../../../../../../shared/pipes/forma
         { outlets: { primary: ['profile', 'user', comment().author._id || ''], model: null } }
       ]"
       [options]="{
-        src: comment().author.picture || '',
+        src: comment().author.picture ?.url|| '',
         placeholder:  '/user-placeholder.webp',
         alt: comment().author.userName + ' profile picture',
         width:  100,
@@ -132,22 +132,22 @@ import { FormatDatePipe } from '../../../../../../../../../../shared/pipes/forma
 
       <!-- 🖼️ Comment Image (optional) -->
       @if(comment().attachment) {
-        <figure class="mt-2">
+        <figure class="w-full h-80  flex mt-2">
           <app-ng-image
             [options]="{
-              src: comment().attachment || '',
+              src: comment().attachment?.url || '',
               alt: 'Image attached to comment by ' + comment().author.userName,
               width:  600,
               height: 400,
               decoding: 'async',
-              class: 'rounded-xl border border-base-200 dark:border-base-content/10 object-cover max-h-80 w-full  cursor-pointer hover:opacity-90 transition'
+              class: 'rounded-xl object-contain max-h-full w-full  cursor-pointer hover:opacity-90 transition'
             }"
             [isPreview]="true"
           />
           <figcaption class="sr-only">Comment image</figcaption>
         </figure>
       }
-
+      
       <!-- Actions -->
       <nav class="flex items-center gap-3">
       <app-like-toggle
@@ -324,9 +324,10 @@ loadMore() : void {
   this.pagination.set(pagination);
   })
   ).subscribe();
-    
+
 }
-    
+
+
 }
 
 

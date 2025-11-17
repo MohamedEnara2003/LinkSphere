@@ -1,13 +1,11 @@
-import { Component, inject, input, OnDestroy } from '@angular/core';
-import { FormArray, FormGroup, NonNullableFormBuilder } from '@angular/forms';
-import { UploadService } from '../../../../../../../core/services/upload/upload.service';
+import { Component, inject } from '@angular/core';
 import { NgImage } from "../../../../../../../shared/components/ng-image/ng-image";
-import { SharedModule } from '../../../../../../../shared/modules/shared.module';
 import { PostService } from '../../../services/post.service';
+import { AttachmentsService } from '../../../../../../../core/services/attachments.service';
 
 @Component({
 selector: 'app-post-attachments',
-imports: [SharedModule, NgImage],
+imports: [NgImage],
 template: `
 <section class="flex flex-col gap-4">
 
@@ -29,8 +27,9 @@ template: `
     </label>
 
     <ul aria-label="Menu Product Images" role="menu" 
-        class="w-full overflow-y-auto grid grid-cols-2 gap-2">
-        @for (item of uploadService.previews(); let i = $index; track item) {
+        class="w-full overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-2">
+
+        @for (item of attachmentsService.previews(); let i = $index; track item.public_id) {
         <li class="relative w-full animate-opacity">
             <app-ng-image
             [options]="{
@@ -43,6 +42,7 @@ template: `
                 decoding: 'async'
               }"
             />
+          
             <button 
               type="button"
               class="absolute top-1 right-1 btn btn-circle btn-xs border-transparent  bg-dark/50 hover:bg-error 
@@ -50,8 +50,8 @@ template: `
               (click)="removeAttachment(i)"
               aria-label="Remove image">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-</svg>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
 
             </button>
           </li>
@@ -60,62 +60,19 @@ template: `
 
   `,
 })
-export class PostAttachments implements OnDestroy {
-  
-  postForm = input.required<FormGroup>();
-  #fb = inject(NonNullableFormBuilder);
+export class PostAttachments {
 
+  attachmentsService = inject(AttachmentsService);
   #postService = inject(PostService);
-  uploadService = inject(UploadService);
 
-  get attachments(): FormArray {
-    return this.postForm().get('attachments') as FormArray;
+  
+  async uploadAttachments(input: HTMLInputElement): Promise<void> {
+  await this.attachmentsService.uploadAttachments(input , 2);
   }
 
-  get removedAttachments(): FormArray {
-    return this.postForm().get('removedAttachments') as FormArray;
+  removeAttachment(index: number): void {
+  const isExisitngPost = this.#postService.post() ? true : false;
+  this.attachmentsService.onRemoveAttachment(index , isExisitngPost)
   }
 
-  /**
-   * Handle file upload
-   */
-
-async uploadAttachments(input: HTMLInputElement): Promise<void> {
-
-    await this.uploadService.uploadAttachments(input, 2 , 0.75, 600, 600);
-    const filesArray = this.uploadService.files();
-
-    this.attachments.clear();
-
-    filesArray
-    .filter(file => !!file)
-    .forEach(file => {
-    this.attachments.push(this.#fb.control(file));
-    });
-
-}
-
-removeAttachment(index: number): void {
-  const previews = this.uploadService.previews();
-  const files = this.uploadService.files();
-  const post = this.#postService.post();
-
-  if (post && previews[index]) {
-  this.removedAttachments.push(this.#fb.control(previews[index].key));
-  }
-
-const filterPreviews = previews.filter((_ , i) => i !== index);
-const filterFiles =  files .filter((_ , i) => i !== index);
-this.uploadService.setPreviews =  filterPreviews;
-this.uploadService.setFiles = filterFiles;
-this.attachments.removeAt(index);
-}
-
-/**
-   * Cleanup on destroy
-   */
-ngOnDestroy(): void {
-    this.uploadService.clear();
-    this.attachments.clear();
-}
 }

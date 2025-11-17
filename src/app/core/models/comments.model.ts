@@ -1,4 +1,6 @@
 import { Pagination } from "./pagination";
+import { Picture } from "./picture";
+import { Author } from "./user.model";
 
 // ---- Comment Flag ----
 export type CommentFlag = 'comment' | 'reply';
@@ -10,36 +12,27 @@ export interface IUserRef {
   picture?: string;
 }
 
+
 // ---- Comment ----
 
 export interface IComment {
-  _id: string;               // معرف التعليق
-  id: string;      
-            // نفس المعرف غالبًا، يمكن توحيده
-  commentId?: string;    // if replay
-              // نفس المعرف غالبًا، يمكن توحيده
-  content: string;           // نص التعليق
-  createdAt: string;         // تاريخ الإنشاء (ISO string)
-  updatedAt: string;         // آخر تحديث (ISO string)
-  createdBy: string;         // معرف المستخدم اللي كتب التعليق
-  postId: string;            // معرف المنشور المرتبط
-  flag: CommentFlag;  // نوع التعليق (غالبًا ثابت 'comment')
-  lastReply?: string | null;  // آخر رد على التعليق (إن وجد)
-  replies?: IComment[],
-  likes: string[];           // قائمة بمعرفات المستخدمين اللي عملوا إعجاب
-  tags: string[];            // الوسوم (إن وجدت)
-  author: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    userName: string;
-    _id: string;
-    picture? : string;
-  };
-  attachment?: string;       // مرفق (اختياري)
-  __v?: number; 
+  _id: string;
+  id: string;
+  commentId?: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  postId: string;
+  flag: CommentFlag;
+  lastReply?: string | null;
+  replies?: IComment[];
+  likes: string[];
+  tags: string[];
+  author: Author;
+  attachment?: Picture;
+  __v?: number;
 }
-
 
 // ---- Paginated Response ----
 export interface IPaginatedCommentsRes{
@@ -83,11 +76,11 @@ export interface ICreateComment {
 }
 
 export interface IUpdateComment {
-  content?: string;         // نص التعليق الجديد
-  image?: File;             // صورة جديدة للتعليق (اختياري)
-  removedTags?: string[];   // التاجات اللي عايز تشيلها (اختياري)
-  tags?: string[];          // التاجات الجديدة (اختياري)
-  removeAttachment?: boolean; // لتحديد حذف الصورة القديمة قبل رفع جديدة
+  content?: string;        
+  image?: File;          
+  removedTags?: string[];  
+  tags?: string[];
+  removeAttachment?: boolean;
 }
 
 export interface IReplyComment extends ICreateComment {

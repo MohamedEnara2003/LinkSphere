@@ -1,9 +1,10 @@
 import { IComment } from "./comments.model";
 import { Pagination } from "./pagination";
+import { Picture } from "./picture";
 import { IUser } from "./user.model";
 
 // ---- Shared Enums ----
-export type AllowComments = 'allow' | 'disable';
+export type AllowComments = 'allow' | 'deny';
 export type Availability = 'public' | 'friends' | 'only-me';
 
 
@@ -27,7 +28,7 @@ export interface ICreatedBy{
     _id: string; // MongoDB ID
     id: string;  // duplicate key for frontend use
     content?: string;
-    attachments: string[]; // URLs or filenames of uploaded media
+    attachments: Picture[]; // URLs or filenames of uploaded media
     imageUrls?: string[]; // URLs or filenames of uploaded media
     availability: Availability;
     allowComments: AllowComments;
@@ -71,16 +72,42 @@ export interface IFreezeUnfreezeResponse {
 
 
 export interface ICreatePost {
-  availability?: Availability;
+  availability: Availability;
+  allowCommentsEnum: AllowComments ,
   content?: string;
   attachments?: File[];
   tags?: string[];
 }
 
 export interface IUpdatePost {
+  availability: Availability;
+  allowCommentsEnum: AllowComments ,
   content?: string;
   attachments?: File[];
   removedAttachments?: string[];
   tags?: string[];
   removedTags?: string[];
+}
+
+export interface FormPost {
+  availability: Availability;
+  allowComments: AllowComments ,
+  content?: string;
+  attachments?: File[];
+  removedAttachments?: string[];
+  tags?: string[];
+  removedTags?: string[];
+}
+
+export interface IUpdatePostContent {
+  availability: Availability;
+  allowComments: AllowComments ,
+  content?: string;
+  addToTags?: string[];
+  removeFromTags?: string[];
+}
+
+export interface IUpdatePostAttachments {
+  addToAttachments?: File[];
+  removeFromAttachments?: string[];
 }

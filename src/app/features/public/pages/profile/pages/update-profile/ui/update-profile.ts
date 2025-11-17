@@ -56,14 +56,14 @@ template: `
               class="w-full"
             />
 
-            @if(coverImages() && coverImages().length > 0) {
+
               <main class="w-full">
                 <app-cover-image 
                   [isNavHide]="true"
-                  [coverImages]="coverImages()"
+                  [coverImage]="coverImage()"
                 />
               </main>
-            }
+            
           </section>
 
           <!-- Section Edit Profile Picture -->
@@ -122,9 +122,7 @@ userProfileService = inject(UserProfileService);
 userAbout = computed(() => 
 this.userProfileService.userAbout().filter(item => item.title !== 'profile.about.email'));
 
-coverImages = computed(() => 
-this.userProfileService.userProfile()?.coverImages || []
-);
+coverImage = computed(() => this.userProfileService.userProfile()?.coverImage!);
 
 editType = toSignal<ProfileEditTypes>(this.#route.queryParamMap.pipe(
 map((queryMap) => queryMap.get('edit') as 'cover-images' | 'picture' | 'info')
@@ -135,9 +133,5 @@ userId = toSignal<string , string>(
 this.#route.paramMap.pipe(map((paramMap) => paramMap.get('userId') || '')),
 { initialValue: '' } 
 );
-
-
-
-
 
 }

@@ -20,9 +20,10 @@ import { LikeToggle } from "../../../like-toggle/like-toggle";
       <!-- Comments -->
       <button 
         (click)="openPostComments()"
-        title="comments"
+        [title]="post()?.allowComments === 'deny' ? 'Disabled comments' : 'Comments'"
         type="button"
-        class="flex items-center gap-1 ngBtnIcon">
+        [disabled]="post()?.allowComments === 'deny'"
+        class="flex items-center gap-1 ngBtnIcon disabled:text-gray-600 disabled:cursor-not-allowed">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none"
           viewBox="0 0 24 24" stroke-width="1.5"
           stroke="currentColor" class="size-6">
@@ -40,7 +41,6 @@ import { LikeToggle } from "../../../like-toggle/like-toggle";
 })
 export class PostActions {
   #postService = inject(PostService);
-
   #router = inject(Router);
 
   post = input<IPost | null>(null);

@@ -1,6 +1,6 @@
 import { Component, effect, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
+import { ActivatedRoute, RouterOutlet } from '@angular/router';
 import { UserProfileService } from './services/user-profile.service';
 import { combineLatest, map, startWith } from 'rxjs';
 
@@ -8,7 +8,7 @@ import { combineLatest, map, startWith } from 'rxjs';
 
 @Component({
 selector: 'app-profile',
-imports: [ RouterOutlet],
+imports: [RouterOutlet ],
 template: `
 
 <main>
@@ -20,7 +20,7 @@ template: `
 export class Profile {
 #userProfileService = inject(UserProfileService);
 #route = inject(ActivatedRoute);
-#router = inject(Router);
+
 
 userId = toSignal<string | null>(
     combineLatest([
@@ -51,7 +51,7 @@ if(userId) {
 this.#userProfileService.getUserProfileById(userId).subscribe();
 return
 }
-this.#router.navigateByUrl('/public/profile/not-founed');
+
 }
 
 

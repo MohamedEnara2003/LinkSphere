@@ -36,7 +36,7 @@ import { UserProfileService } from '../../../profile/services/user-profile.servi
             <!-- User Image -->
             <app-ng-image
               [options]="{
-                src: request.receiver.picture || '',
+                src: request.receiver.picture?.url || '',
                 alt: request.receiver.firstName + ' ' + request.receiver.lastName,
                 width: 64,
                 height: 64,

@@ -24,7 +24,7 @@ import { PostHeader } from "../components/post-header/post-header";
   <app-post-content
     [postId]="post()._id || ''"
     [content]="post().content || ''"
-    [attachments]=" post().imageUrls || []"
+    [attachments]=" post().attachments || []"
   />
   
   <!-- Post Actions (Like/Unlike - BtnComments)-->

@@ -21,7 +21,7 @@ template: `
       <app-ng-image  
         [routerLink]="userId() ? ['/public/profile/user', userId()] : []"
         [options]="{
-          src:  post()?.author?.picture || '' ,
+          src:  post()?.author?.picture?.url || '' ,
           placeholder: '/user-placeholder.webp',
           alt: 'Profile picture of ' + post()?.author?.userName || '',
           width:  60,
@@ -51,8 +51,8 @@ template: `
 </p>
 }
 </section>
-
 </address>
+
 
       <app-ng-menu-actions
       title="Post Menu"
@@ -80,9 +80,10 @@ export class PostHeader {
   
 
   menuActions = computed<IMenuAction[]>(() => [
-  { type: 'edit', label: 'Edit Comment', icon: 'edit', variant: 'info' },
-  { type: 'delete', label: 'Delete Comment', icon: 'delete', variant: 'danger' },
-  { type: this.post()?.isFreezed ? 'freeze' : 'unFreeze', 
+  {type: 'edit', label: 'Edit Comment', icon: 'edit', variant: 'info' },
+  {type: 'delete', label: 'Delete Comment', icon: 'delete', variant: 'danger' },
+  {
+  type: this.post()?.isFreezed ? 'unFreeze' : 'freeze', 
   label: this.post()?.isFreezed ? 'UnFreeze Post' : 'Freeze Post', 
   icon: 'freeze', variant: 'warning' 
   }, 
@@ -124,9 +125,9 @@ export class PostHeader {
   }
 
   deletePost() : void {
-  const postId = this.post()?._id;
+  const {_id : postId , availability} = this.post()!;
   if(postId){
-  this.#postService.deletePost(postId).subscribe();
+  this.#postService.deletePost(postId , availability).subscribe();
   }
   }
 

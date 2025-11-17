@@ -2,6 +2,7 @@ import { Component, input, signal } from '@angular/core';
 import { NgImage } from "../../../../../../../../shared/components/ng-image/ng-image";
 import { SharedModule } from '../../../../../../../../shared/modules/shared.module';
 import { ShowTextPipe } from '../../../../../../../../shared/pipes/show-text-pipe';
+import { Picture } from '../../../../../../../../core/models/picture';
 
 
 @Component({
@@ -15,12 +16,12 @@ template: `
     role="main"
     >
         @if(attachments() && attachments().length > 0){
-            <section class="w-full grid  gap-5 "
+            <section class="w-full grid  "
             [ngClass]="attachments().length === 1 ? 'grid-cols-1' : 'grid-cols-2'">
-                @for (attachment of attachments(); track attachment) {
+                @for (attachment of attachments(); track attachment.public_id) {
                     <app-ng-image
                         [options]="{
-                            src: attachment,
+                            src: attachment.url,
                             alt: 'Post attachment',
                             width:  300,
                             height: 300,
@@ -35,15 +36,15 @@ template: `
             </section>
         }
 
-        <p 
+        <p (click)="isShowContent.set(!isShowContent())"
         class="ngText capitalize text-sm  col-span-2">
         {{content() | showText : isShowContent()}}
         @if(content().length > 180){
-        <span (click)="isShowContent.set(!isShowContent())"
+        <span
         class="cursor-pointer hover:underline text-brand-color font-normal">
-        {{isShowContent() ? ' Show less' : ' Show more'}}
+        {{isShowContent() ? '' : ' Show more'}}
         </span>
-        }
+        } 
         </p>
 
     </main>
@@ -53,6 +54,6 @@ template: `
 export class PostContent {
     postId = input.required<string>();
     content = input<string>('');
-    attachments = input<string[]>([]);
+    attachments = input<Picture[]>([]);
     isShowContent = signal<boolean>(false);
 }

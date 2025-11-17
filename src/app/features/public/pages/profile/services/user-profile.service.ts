@@ -14,7 +14,8 @@ import {
 import { catchError, EMPTY, forkJoin, map, Observable, of, switchMap, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import { FriendRequestResponse, IFriendRequest, ReceivedFriendRequest, SentFriendRequest } from '../../../../../core/models/friends-requst.model';
-import { ImagesService, ImageType } from '../../../../../core/services/api/images.service';
+import { Picture } from '../../../../../core/models/picture';
+
 
 
 @Injectable({
@@ -24,19 +25,16 @@ import { ImagesService, ImageType } from '../../../../../core/services/api/image
 export class UserProfileService {
   
   #singleTonApi = inject(SingleTonApi);
-  #imagesService = inject(ImagesService);
   #routeName: string = "users";
-
   #router = inject(Router);
 
-  // User Profile Management
+  // User Profile State
 
   #user = signal<IUser | null>(null);
   #userProfile = signal<IUser | null>(null);
 
   #sentRequests = signal<SentFriendRequest[]>([]);
   #receivedRequests = signal<ReceivedFriendRequest[]>([]);
-
 
   placeHolderUser = signal<string>('user-placeholder.webp').asReadonly();
 
@@ -82,9 +80,10 @@ export class UserProfileService {
   public pictures = computed<string[]>(() => {
     const userProfile = this.userProfile();
     if(!userProfile) return [];
-    const {coverImages , picture} = userProfile;
-    if(!coverImages || !picture) return [] ;
-    const pictures = [picture , ...coverImages];
+    const {coverImage , picture} = userProfile;
+    if(!coverImage || !picture) return [] ;
+
+    const pictures = [picture.url , coverImage.url];
     return pictures ;
   });
 
@@ -135,89 +134,39 @@ export class UserProfileService {
   // 👤 User Profile
   // ==============================
 
-  // 🟢 Get user profile
+  #initUserImagePlaceholder(user : IUser): IUser {
+  if(user.picture) return user;
+  return {
+  ...user,
+  picture : {
+  url : this.placeHolderUser(),
+  public_id : ''
+  }
+  }
+  }
 
-  #prepareUser(user: IUser, imageType: ImageType): Observable<IUser> {
-  const { picture, coverImages = [], friends = [] } = user || {};
-
-  const picture$ = picture
-    ? this.#imagesService.getImages(picture, imageType).pipe(
-        map(({ url }) => url || ''),
-        catchError(() => of(''))
-      )
-    : of('');
-
-  const coverImages$ = coverImages.length
-    ? forkJoin(
-        coverImages.map((key) =>
-          this.#imagesService.getImages(key, imageType).pipe(
-            map(({ url }) => url),
-            catchError(() => of(null))
-          )
-        )
-      ).pipe(map((urls) => urls.filter(Boolean) as string[]))
-    : of<string[]>([]);
-
-  const friendImages$ = friends.length
-    ? forkJoin(
-        friends.map((friend) =>
-          this.#imagesService.getImages(friend.picture || '', imageType).pipe(
-            map((res) => ({
-              ...friend,
-              picture: res?.url || 'user-placeholder.webp ',
-            })),
-            catchError(() =>
-              of({
-                ...friend,
-                picture: 'user-placeholder.webp',
-              })
-            )
-          )
-        )
-      )
-    : of<IFriend[]>([]);
-
-  return forkJoin({
-    picture: picture$,
-    coverImages: coverImages$,
-    friends: friendImages$,
-  }).pipe(
-    map(({ picture, coverImages, friends }) => ({
-      ...user,
-      picture,
-      coverImages,
-      friends,
-    }))
-  );
-}
-
-
-  // 🟢 جلب المستخدم من الـ API
-
-  getUserProfile(): Observable<IUser> {
+  getUserProfile(): Observable<UserProfile> {
   if(this.#user()) return EMPTY;
   return this.#singleTonApi.find<UserProfile>(`${this.#routeName}/profile`).pipe(
-  switchMap(({data : {user}}) => {
-  return this.#prepareUser(user , 'profile')
+  tap(({data : {user}}) => {
+  const userWithPlaceholder = this.#initUserImagePlaceholder(user);
+  this.#user.set(userWithPlaceholder);
   }),
-  tap((user) => {
-  this.#user.set(user);
-  })
   )
   }
 
   
 // ✅ جلب بروفايل مستخدم آخر
-getUserProfileById(userId: string): Observable<IUser> {
+getUserProfileById(userId: string): Observable<{data : IUser}> {
   if(this.#userProfile()?._id === userId) return EMPTY;
   return this.#singleTonApi
-    .findById<{ data: IUser }>(`${this.#routeName}/user` , userId)
+    .findById<{data : IUser}>(`${this.#routeName}/user` , userId)
     .pipe(
-      switchMap(({ data }) => this.#prepareUser(data, 'user')),
-      tap((user) => {
-        this.#userProfile.set(user);
+      tap(({data : user}) => {
+        const userWithPlaceholder = this.#initUserImagePlaceholder(user);
+        this.#userProfile.set(userWithPlaceholder);
       }),
-      catchError(() => {
+        catchError(() => {
         this.#router.navigateByUrl('/public/profile/not-found');
         return EMPTY;
       })
@@ -225,9 +174,12 @@ getUserProfileById(userId: string): Observable<IUser> {
 }
 
   getUserById(userId : string): Observable<IUser> {
-  return this.#singleTonApi.findById<{ data: IUser }>(`${this.#routeName}/user` , userId).pipe(
-  switchMap(({ data }) => this.#prepareUser(data, 'user')),
-  )
+  return this.#singleTonApi.findById<{data : IUser}>(`${this.#routeName}/user` , userId).pipe(
+      map(({data : user}) => {
+        const userWithPlaceholder = this.#initUserImagePlaceholder(user);
+        return userWithPlaceholder
+      }),
+    )
   }
 
 
@@ -254,34 +206,47 @@ getUserProfileById(userId: string): Observable<IUser> {
   // 📸 Profile Picture (FormData)
   // ==============================
 
-  uploadProfilePicture(file: File): Observable<{ key: string }> {
-    return this.#singleTonApi.uploadImage<{ key: string }>(
+  uploadProfilePicture(file: File , url : string): Observable<{ data: Picture }> {
+    return this.#singleTonApi.uploadImage<{ data: Picture }>(
       `${this.#routeName}/profile-picture`,
       'image',
       [file] ,
+    ).pipe(
+    tap(({data : {public_id}}) => {
+    this.#user.update((user) => user ? ({...user , picture : {url , public_id} }) : user);
+    if(this.isMyProfile()){
+    this.#userProfile.update((user) => user ? ({...user , picture : {url , public_id} }) : user);
+    }
+    })
     );
   }
 
   deleteProfilePicture(): Observable<void> {
-    return this.#singleTonApi.deleteById<void>(`${this.#routeName}/profile-picture`, "");
+    return this.#singleTonApi.deleteById<void>(`${this.#routeName}/profile-picture`, "").pipe(
+    tap(() => {
+    this.#user.update((user) => user ? ({...user , picture : undefined }) : user);
+    if(this.isMyProfile()){
+    this.#userProfile.update((user) => user ? ({...user , picture : undefined }) : user);
+    }
+    })
+    );
   }
 
   // ==============================
   // 🖼️ Profile Cover Images (FormData)
   // ==============================
 
-  uploadProfileCoverImages(files: File[] , previews: string[]): Observable<{ keys: string[] }> {
-    return this.#singleTonApi.uploadImage<{ keys: string[] }>(
-      `${this.#routeName}/profile-cover-images`,
-      'images',
+  uploadProfileCoverImage(files: File[] , preview: string): Observable<{ data: Picture }> {
+    return this.#singleTonApi.uploadImage<{ data: Picture}>(
+      `${this.#routeName}/profile-cover`,
+      'image',
       files
     ).pipe(
-      tap(() => {
+      tap(({data : {public_id}}) => {
         const user = this.#user();
         const userProfile = this.#userProfile();
         if (!user || !userProfile ) return;
-        const prevCoverImages = user.coverImages || [];
-        const newUserData : IUser = { ...user, coverImages: [...prevCoverImages , ...previews] }
+        const newUserData : IUser = { ...user, coverImage: {url : preview , public_id} }
         this.#user.set(newUserData);
         if(this.isMyProfile()){
         this.#userProfile.set(newUserData);
@@ -291,15 +256,15 @@ getUserProfileById(userId: string): Observable<IUser> {
     );
   }
 
-  deleteProfileCoverImages(): Observable<void> {
-    return this.#singleTonApi.deleteById<void>(`${this.#routeName}/profile-cover-images`, "").pipe(
+  deleteProfileCoverImage(): Observable<void> {
+    return this.#singleTonApi.deleteById<void>(`${this.#routeName}/profile-cover-image`, "").pipe(
     tap(() => {
       const user = this.#user();
       const userProfile = this.#userProfile();
       if (!user || !userProfile ) return;
-      this.#user.set({ ...user, coverImages: [] });
+      this.#user.set({ ...user, coverImage: undefined});
       if(this.isMyProfile()){
-      this.#userProfile.set({ ...userProfile, coverImages: [] });
+      this.#userProfile.set({ ...userProfile, coverImage: undefined});
       }
       this.#router.navigate([] ,{ queryParams : {edit : null} , queryParamsHandling : 'merge'});
     })
@@ -360,6 +325,7 @@ getUserProfileById(userId: string): Observable<IUser> {
         // 📨 لو حصل Error في getUserById → رجّع null بدل ما يبوّظ الكل
         const safeGetUserById = (userId: string) =>
           this.getUserById(userId).pipe(
+            map((user) => user),
             catchError(() => {
               return of(null);
             })
@@ -418,7 +384,7 @@ acceptFriendRequest(requestId: string, sender: IUser): Observable<void> {
           firstName: sender.firstName,
           lastName: sender.lastName,
           email: sender.email,
-          picture: sender.picture,
+          picture: sender.picture
         };
 
         // 🧩 حذف الطلب من قائمة الطلبات المستلمة

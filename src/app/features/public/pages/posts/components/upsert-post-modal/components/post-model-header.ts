@@ -29,8 +29,6 @@ Post
 `,
 })
 export class PostModelHeader {
-
   title = input.required<string>();
   isValid = input.required<boolean>();
-
 }

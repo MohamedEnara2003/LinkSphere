@@ -2,6 +2,7 @@ import { Component, input } from '@angular/core';
 import { BackLink } from "../../../../../../../../shared/components/links/back-link";
 import { RouterModule } from '@angular/router';
 import { NgImage } from "../../../../../../../../shared/components/ng-image/ng-image";
+import { Picture } from '../../../../../../../../core/models/picture';
 
 
 @Component({
@@ -9,18 +10,18 @@ selector: 'app-cover-image',
 imports: [BackLink, RouterModule, NgImage],
 template: `
 
-<header class="relative w-full h-[30svh] sm:h-[45svh] md:h-[50svh] overflow-hidden rounded-b-2xl shadow-md">
+<header class="relative w-full h-[30svh] sm:h-[45svh] md:h-[50svh] overflow-hidden 
+rounded-b-2xl shadow-md">
 
 @if(!isNavHide()) {
-<nav class="w-full flex justify-between items-center absolute top-0 left-0  p-4 ">
+<nav class="w-full flex justify-between items-center absolute top-0 left-0  p-4 z-10 ">
 <app-back-link />
+
+  @if(isMyProfile()){
   <button 
     [routerLink]="['/public/profile/user' , userId() , 'update']"
     [queryParams]="{edit : 'cover-images'}"
-    class="cursor-pointer flex items-center gap-2
-    px-3 py-2 bg-white/80 backdrop-blur-md rounded-lg shadow-md
-    text-dark hover:bg-white transition-colors duration-300">
-    
+    class="ngBtn">
     <svg xmlns="http://www.w3.org/2000/svg" 
     viewBox="0 0 24 24" 
     fill="currentColor" 
@@ -42,13 +43,14 @@ template: `
     </svg>
     <span class="text-sm font-medium  hidden md:inline">Add cover photo </span>
   </button>
+  }
 </nav>
 }
 
-    @if(coverImages().length >= 1) {
+    @if(coverImage()) {
     <app-ng-image
         [options]="{
-        src : coverImages()[0] ,
+        src : coverImage()?.url || '' ,
         alt : 'Profile picture ' ,
         width  : 800,
         height : 800,
@@ -71,7 +73,8 @@ template: `
 `,  
 })
 export class coverImage {
-  coverImages = input<string[]>([]);
+  coverImage = input<Picture>();
   userId = input<string>('');
   isNavHide = input<boolean>(false);
+  isMyProfile = input<boolean>(false);
 }

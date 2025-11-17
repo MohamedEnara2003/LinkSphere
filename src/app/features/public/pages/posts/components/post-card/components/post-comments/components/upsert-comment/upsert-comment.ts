@@ -1,16 +1,18 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal, viewChild} from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { SharedModule } from '../../../../../../../../../../shared/modules/shared.module';
 import { NgControl } from '../../../../../../../../../../shared/components/ng-control/ng-control.';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { finalize, map, Observable } from 'rxjs';
 import { CommentService } from '../../../../../../services/comments.service';
-import { IUpdateComment } from '../../../../../../../../../../core/models/comments.model';
+import { ICreateComment, IUpdateComment } from '../../../../../../../../../../core/models/comments.model';
 import { ActivatedRoute, Router } from '@angular/router';
-import { UploadService } from '../../../../../../../../../../core/services/upload/upload.service';
-import { CustomValidators } from '../../../../../../../../../../core/validations/custom/custom-validations';
+
+
 import { TagFriends } from "../../../../../tag-friends/tag-friends";
 import { TagsService } from '../../../../../../../../../../core/services/tags.service';
+import { AttachmentsService } from '../../../../../../../../../../core/services/attachments.service';
+import { CustomValidators } from '../../../../../../../../../../core/validations/custom/custom-validations';
 
 
 
@@ -68,7 +70,7 @@ template: `
             hidden
             multiple
             accept="image/*"
-            (change)="onUpload($event)"
+            (change)="onUpload($event.target)"
           />
 
         </label>
@@ -117,9 +119,9 @@ template: `
       </div>
 
       <!-- Image Previews -->
-      @if (uploadService.previews().length) {
+      @if (attachmentsService.previews().length) {
         <ul class="flex flex-wrap gap-2 mt-1">
-        @for (p of uploadService.previews(); track p) {
+        @for (p of attachmentsService.previews(); let i = $index; track p) {
         <li
             class="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-300 dark:border-gray-700 shadow-sm"
           >
@@ -130,7 +132,7 @@ template: `
             />
             <button
               type="button"
-              (click)="removePreview(p.key)"
+              (click)="removePreview(i)"
               class="absolute top-0 right-0 m-1 bg-red-500 text-white rounded-full size-5 flex items-center justify-center hover:bg-red-600 transition"
             >
               &times;
@@ -186,7 +188,8 @@ template: `
 changeDetection : ChangeDetectionStrategy.OnPush
 })
 export class UpsertComment {
-  uploadService = inject(UploadService);
+  attachmentsService = inject(AttachmentsService);
+
   tagsService = inject(TagsService);
   #commentService = inject(CommentService);
 
@@ -223,109 +226,79 @@ export class UpsertComment {
     )
   );
 
-  commentForm: FormGroup = this.#fb.group({
-    content: [''],
-    image: [null],
-    tags: this.#fb.array<string>([]),
-    removedTags: [[] as string[]], // Add control for tracking removed tags
-    removeAttachment: [false], // Add control for tracking image removal
-  }, {
-    validators: CustomValidators.post('content', 'image')
-  });
+commentForm: FormGroup<{
+  content: FormControl<string | null>;
+  tags: FormArray<FormControl<string>>;
+  attachments: FormArray<FormControl<File>>;
+  removedTags: FormArray<FormControl<string>>;
+    removedAttachments: FormArray<FormControl<string>>;
+}> = this.#fb.group(
+  {
+    content: this.#fb.control('', [Validators.minLength(1),Validators.maxLength(50000)]),
+
+    tags: this.#fb.array<FormControl<string>>([]),
+    attachments: this.#fb.array<FormControl<File>>([]),
+    removedTags: this.#fb.array<FormControl<string>>([]),
+    removedAttachments: this.#fb.array<FormControl<string>>([]),
+  },
+  {
+  validators: CustomValidators.comment(this.existingComment()),
+  }
+);
 
 
   isTagging = signal<boolean>(false);
   
   constructor() {
-    // ... existing effects ...
-    // Update form when editing existing comment
-    effect(() => {
+  effect(() =>  this.#initExistingComment())
+  }
+  ngOnInit(): void {
+  this.attachmentsService.initAttachmentsForm(this.commentForm);
+  this.tagsService.initForm(this.commentForm);
+  }
+  
+  
+  #initExistingComment() : void {
       if (this.commentId() && this.type() === 'edit') {
         const comment = this.existingComment();
         if (!comment) return;
 
-        // Reset form first
-        this.commentForm.reset();
-        
-        // Patch existing values
-        this.commentForm.patchValue({
+          this.commentForm.patchValue({
           content: comment.content || '',
           tags: comment.tags || [],
-          removedTags: [], // Initialize empty removed tags array
-          removeAttachment: false // Initialize attachment removal flag
+          removedTags: [], 
+          removedAttachments: [] 
         });
 
-        // If comment has existing attachment, show it in preview
-        if (comment.attachment) {
-          this.uploadService.setPreviews = [{
-            key: 'existing',
-            url: comment.attachment
-          }];
+        const image = comment.attachment;
+        if (image) {
+        this.attachmentsService.initExistingAttachments([image]);
         }
       }
-    
-    });
-      
-  }
-
-  ngOnInit(): void {
-  this.tagsService.initForm(this.commentForm)
   }
 
 
- removeQueries() : void {
+  removeQueries() : void {
     this.#router.navigate([], {
     queryParams : {
       type : null ,
       commentId : null ,
-    }, queryParamsHandling : 'merge'
+    }, 
+    queryParamsHandling : 'merge'
     });
     this.commentForm.reset();
-    this.uploadService.clear();
     this.isTagging.set(false);
+    this.attachmentsService.clearAttachments();
   }
 
-  async onUpload(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    if(!input) return;
-    await this.uploadService.uploadAttachments(input, 1);
-    
-    // Set the image in form after upload
-    const files = this.uploadService.files();
-    this.commentForm.patchValue({
-      image: files.length ? files[0] : null
-    });
+  async onUpload(input: HTMLInputElement): Promise<void> {
+  this.attachmentsService.uploadAttachments(input , 1);
   }
 
-  removePreview(key: string): void {
-    const previews = this.uploadService.previews();
-    
-    // If removing existing attachment
-    if (key === 'existing') {
-      this.uploadService.setPreviews = [];
-      this.uploadService.setFiles = [];
-      this.commentForm.patchValue({ 
-        removeAttachment: true,
-        image: null 
-      });
-      return;
-    }
-
-    // Handle new uploaded files
-    const idx = previews.findIndex(p => p.key === key);
-    if (idx === -1) return;
-
-    const newPreviews = previews.filter((_, i) => i !== idx);
-    const files = this.uploadService.files();
-    const newFiles = files.filter((_, i) => i !== idx);
-
-    this.uploadService.setPreviews = newPreviews;
-    this.uploadService.setFiles = newFiles;
-    this.commentForm.patchValue({ 
-      image: newFiles.length ? newFiles[0] : null 
-    });
+  removePreview(index: number): void {
+  const isExisitngComment = Boolean(this.existingComment());
+  this.attachmentsService.onRemoveAttachment(index , isExisitngComment);
   }
-
 
    onSubmit(): void {
     if (!this.commentForm.valid) return;
@@ -337,37 +310,40 @@ export class UpsertComment {
     if (!postId) return;
 
     // Get preview image URL for optimistic updates
-    const previewImage = this.uploadService.previews()[0]?.url;
+    const previewImage = this.attachmentsService.previews()[0];
 
     // Get form data and ensure image is included
-    const formData = {
-      ...this.commentForm.getRawValue(),
-      image: this.uploadService.files()[0] || null
-    };
+    const formData  =  this.commentForm.getRawValue();
+    if(!formData) return;
 
     let action$: Observable<unknown>;
 
-    if (type === 'edit' && commentId) {
-      const updateData: IUpdateComment = {
-        content: formData.content,
-        image: formData.image,
-        tags: formData.tags,
-        removedTags: formData.removedTags,
-        removeAttachment: formData.removeAttachment
+        const updateData: IUpdateComment = {
+        ...formData!,
+        content: formData.content ?? undefined,
+        image: formData.attachments[0]!,
+        removedTags: formData.removedTags || [],
+        removeAttachment: formData.removedAttachments.length >= 1,
       };
+
+      const createData: ICreateComment = {
+        ...formData!,
+        content: formData.content ?? undefined,
+        image: formData.attachments[0]!,
+      };
+
+    if (type === 'edit' && commentId) {
       action$ = this.#commentService.updateComment(postId, commentId, updateData, previewImage);
     } else if (type === 'reply' && commentId) {
-      action$ = this.#commentService.replyComment(postId, commentId, formData, previewImage);
+      action$ = this.#commentService.replyComment(postId, commentId, createData);
     } else {
-      action$ = this.#commentService.createComment(postId, formData, previewImage);
+      action$ = this.#commentService.createComment(postId, createData);
     }
 
     action$.pipe(
-      finalize(() => {
-        this.removeQueries();
-        this.uploadService.clear();
-      })
+    finalize(() => this.removeQueries())
     ).subscribe();
   }
   
+
 }

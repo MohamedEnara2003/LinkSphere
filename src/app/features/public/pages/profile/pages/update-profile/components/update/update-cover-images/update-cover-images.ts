@@ -1,24 +1,23 @@
-import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { NgImage } from "../../../../../../../../../shared/components/ng-image/ng-image";
 import { UploadService } from '../../../../../../../../../core/services/upload/upload.service';
 import { UserProfileService } from '../../../../../services/user-profile.service';
 import { tap } from 'rxjs';
-import { IUser } from '../../../../../../../../../core/models/user.model';
+import { Picture } from '../../../../../../../../../core/models/picture';
+
 
 @Component({
   selector: 'app-update-cover-images',
-  imports: [CommonModule, NgImage],
+  imports: [NgImage],
   template: `
     <section class="w-full flex flex-col gap-5" aria-labelledby="cover-images-title">
-    @let coverImages = userProfileService.user()?.coverImages || [] ;
-
+  
     
     <header class="flex justify-between items-center">
     <h2 id="cover-images-title" class="text-xl font-semibold text-base-content">
       Update Cover Images
     </h2>
-    @if(coverImages.length > 0){
+    @if(coverImage()){
     <button
           title="Remove cover images "
           role="button"
@@ -37,12 +36,11 @@ import { IUser } from '../../../../../../../../../core/models/user.model';
 
   
       <!-- Current Covers -->
-      <article class="grid gap-4" 
-      [ngClass]="coverImages.length <= 1 ? 'grid-cols-1' : 'grid-cols-2'">
-        @for (cover of coverImages || []; let i = $index ; track cover) {
+      <article class="grid gap-4" >
+        @if(coverImage()){
           <app-ng-image
             [options]="{
-              src: cover,
+              src: coverImage().url,
               alt: 'Current cover image',
               width:  200,
               height: 200,
@@ -50,7 +48,8 @@ import { IUser } from '../../../../../../../../../core/models/user.model';
             }"
             [isPreview]="true"
           />
-        } @empty {
+          }
+        @else  {
         <p class="text-gray-500">No cover images uploaded yet.</p>
         }
       </article>
@@ -71,13 +70,11 @@ import { IUser } from '../../../../../../../../../core/models/user.model';
       @if (uploadService.previews().length > 0) {
         <article class="flex flex-col gap-4 items-center w-full">
           <span class="text-sm text-gray-500">Preview:</span>
-          <div class="grid gap-4 w-full" 
-          [ngClass]="uploadService.previews().length <= 1 ? 'grid-cols-1' : 'grid-cols-2'">
-            @for (preview of uploadService.previews(); track preview) {
+          <div class="grid gap-4 w-full" >
               <figure class="relative group">
                 <app-ng-image
                   [options]="{
-                    src: preview.url ,
+                    src:  uploadService.previews()[0].url || '' ,
                     alt: 'Cover preview',
                     width: 200,
                     height: 200,
@@ -89,7 +86,7 @@ import { IUser } from '../../../../../../../../../core/models/user.model';
                 <button
                   type="button"
                   class="absolute top-2 right-2 bg-black/60 text-white btn btn-xs btn-circle opacity-0 group-hover:opacity-100 transition"
-                  (click)="removePreview(preview.url)"
+                  (click)="removePreview(uploadService.previews()[0].url)"
                   aria-label="Remove cover image">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -97,7 +94,7 @@ import { IUser } from '../../../../../../../../../core/models/user.model';
                 </button>
 
               </figure>
-            }
+            
           </div>
 
           <div class="flex gap-3">
@@ -113,6 +110,7 @@ export class UpdateCoverImagesComponent {
   uploadService = inject(UploadService);
   userProfileService = inject(UserProfileService);
 
+  coverImage = computed<Picture>(() => this.userProfileService.user()?.coverImage!);
 
   onFileSelected(input: HTMLInputElement) : void {
     this.uploadService.uploadAttachments(input , 1 , 0.75 , 1280 , 720);
@@ -136,13 +134,18 @@ export class UpdateCoverImagesComponent {
     const files = this.uploadService.files();
     const previews = this.uploadService.previews().map((c) => c.url);
     if (!Array.isArray(files) || files.length === 0 ) return;
-    this.userProfileService.uploadProfileCoverImages(files , previews).subscribe()
+    this.userProfileService.uploadProfileCoverImage(files , previews[0]).pipe(
+    tap(() =>  this.uploadService.clear())
+    ).subscribe()
   }
 
   removeAllCoverImage () : void {
-  this.userProfileService.deleteProfileCoverImages().pipe(
+  const picture = this.userProfileService.user()?.picture!;
+  if(picture){
+  this.userProfileService.deleteProfileCoverImage().pipe(
   tap(() =>  this.uploadService.clear())
   ).subscribe();
+  }
   }
 
   ngOnDestroy(): void {

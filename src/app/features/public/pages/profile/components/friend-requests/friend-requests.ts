@@ -28,7 +28,8 @@ import { IUser } from '../../../../../../core/models/user.model';
         <app-ng-image
         [routerLink]="['/public/profile/user' , request.sender._id]"
         [options]="{
-        src :  request.sender.picture ||  '/user-placeholder.jpg',
+        src :  request.sender.picture?.url || '',
+        placeholder : 'user-placeholder.jpg',
         alt : request.sender.userName + ' profile picture',
         width  : 200,
         height : 200,

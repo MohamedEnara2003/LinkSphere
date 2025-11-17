@@ -15,7 +15,7 @@ template: `
         <app-ng-image
         [routerLink]="path() || null"
         [options]="{
-        src :  userProfileService.user()?.picture || '',
+        src :  userProfileService.user()?.picture?.url || '',
         placeholder : userProfileService.placeHolderUser() ,
         alt : 'Profile picture ' + userProfileService.user()?.userName || '',
         width  : 200,

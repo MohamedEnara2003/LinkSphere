@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { isMyProfileGuard } from '../../../../core/guards/is-my-profile.guard';
 
 export const profileRoutes: Routes = [
 
@@ -13,16 +14,12 @@ export const profileRoutes: Routes = [
                 },
                 
                 {
+                canMatch : [isMyProfileGuard],
                 path: 'user/:userId/update',
                 loadComponent: () =>import('./pages/update-profile/ui/update-profile')
                 .then((c) => c.UpdateProfile),
                 },  
                 
-                {
-                path: ':userId/update',
-                loadComponent: () =>import('./pages/update-profile/ui/update-profile')
-                .then((c) => c.UpdateProfile),
-                },
                 
                 {
                 path: 'not-found',

@@ -3,18 +3,13 @@ import { inject } from '@angular/core';
 import { UserProfileService } from '../../features/public/pages/profile/services/user-profile.service';
 import { catchError, map, of } from 'rxjs';
 
-export const isAuthGuard: CanActivateFn = (route, state) => {
+export const isAuthGuard: CanActivateFn = () => {
   const userService = inject(UserProfileService);
   const router = inject(Router);
 
   const redirectToLogin = () => router.createUrlTree(['/auth/login']);
 
 
-  // if (state.url.startsWith('/auth')) {
-  //   return of(true);
-  // }
-
-  
   return userService.getUserProfile().pipe(
     map(user => {
       if (user) return true;

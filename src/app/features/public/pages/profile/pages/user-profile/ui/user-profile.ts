@@ -29,15 +29,16 @@ imports: [
 ],
 template: `
 <section 
-  class="relative w-full flex flex-col gap-6 p-2 xl:p-10 xl:px-20 animate-up"
+  class="relative w-full flex flex-col gap-6 p-2 xl:p-10 xl:px-20 animate-up "
   aria-labelledby="profile-section-title"
 >
 
   <!-- Cover Image -->
   <app-cover-image
-    [coverImages]="userProfileService.userProfile()?.coverImages || []"
-    [userId]="userId()"
-    aria-label="User cover image"
+  [coverImage]="userProfileService.userProfile()?.coverImage"
+  [userId]="userId()"
+  [isMyProfile]="userProfileService.isMyProfile()"
+  aria-label="User cover image"
   />
 
   <!-- Profile Info -->
@@ -51,7 +52,7 @@ template: `
 
   <!-- Navigation Tabs -->
   <nav
-    class="md:sticky top-0 md:top-[10svh] z-40 ngCard md:h-[12svh]
+    class="md:sticky top-0 md:top-[10svh] z-20 ngCard md:h-[12svh]
     flex flex-col md:flex-row justify-between items-center gap-4 p-2"
     aria-label="Profile navigation"
   >

@@ -54,7 +54,7 @@ Confirm
 <!-- ✅ Desktop Dropdown Menu -->
 <nav
   class="hidden md:flex absolute top-full mt-2 w-full bg-card-light dark:bg-card-dark rounded-2xl shadow-lg 
-  border border-base-200 dark:border-base-content/20 flex-col gap-1 py-2 animate-opacity z-50"
+  border border-base-200 dark:border-base-content/20 flex-col gap-1 py-2 animate-opacity z-40"
   role="menu"
   aria-label="Friend actions"
   (click)="$event.stopPropagation()"
@@ -104,7 +104,7 @@ Confirm
 
 <!-- ✅ Mobile Bottom Sheet -->
 <section
-  class="fixed inset-0 bg-black/40 z-50 flex items-end md:hidden"
+  class="fixed inset-0 bg-black/40 z-30 flex items-end md:hidden"
   role="dialog"
   aria-modal="true"
   aria-labelledby="friendOptionsTitle"
@@ -205,7 +205,6 @@ onUserAction() : void {
     #cancelRequest() : void {
     const  {_id : userProfileId} = this.#userProfileService.userProfile()!;
     if(!userProfileId) return ;
-    
     // this.#userProfileService.cancelFriendRequest(sentRequests?.requestId || '').subscribe()
     }
     
