@@ -51,7 +51,7 @@ export class PostService {
 
 
   #closeUpsertModelPost(availability : Availability) : void {
-  this.#router.navigate(['/public'] , {queryParams : {state : availability }})
+  this.#router.navigate([''] , {queryParams : {state : availability }})
   }
 
 

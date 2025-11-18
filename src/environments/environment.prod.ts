@@ -1,5 +1,5 @@
 export const environment = {
-  production: false,
+  production: true,
   apiUrl: "https://eeaeb815feda.ngrok-free.app/",
   firebase: {
     apiKey: "AIzaSyB4YcTKG4WqFYdJYtLolotx4ablG4TeHic",

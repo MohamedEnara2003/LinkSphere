@@ -1,12 +1,15 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { SingleTonApi } from '../../../core/services/api/single-ton-api.service';
-import { EMPTY, Observable, switchMap, tap } from 'rxjs';
-import { AuthToken, ChangeForgetPassword, LoginBody, LoginType, logoutFlag, SignUp, VerifyOtp } from '../../../core/models/auth.model';
+import { catchError, EMPTY, from, Observable, switchMap, tap, throwError } from 'rxjs';
+import { AuthToken, ChangeForgetPassword, LoginBody, LoginType, logoutFlag, SignUp, Token, VerifyOtp } from '../../../core/models/auth.model';
 
 import { Router } from '@angular/router';
 import { StorageService } from '../../../core/services/locale-storage.service';
 
 import { UserProfileService } from '../../public/pages/profile/services/user-profile.service';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { firebaseAuth } from '../../../../environments/firebase.config';
+import { DomService } from '../../../core/services/dom.service';
 
 
 interface Respons {
@@ -21,6 +24,7 @@ interface Respons {
 
 export class AuthService {
   #router = inject(Router)
+  #domService = inject(DomService);
   #singleTonApi = inject(SingleTonApi);
 
   #storageService = inject(StorageService);
@@ -34,13 +38,47 @@ export class AuthService {
 // ____________________________________
 
 
+// 🟢 Store Tokens 🟢
+#storeTokens({access_token , refresh_token } : Token) : void {
+   this.#storageService.setItem<AuthToken>('auth', {
+        access_token: access_token,
+        refresh_token:refresh_token
+      });
+    this.#router.navigate(['/public'])
+}
 
 //🟢 Create Account 🟢
+signInWithGoogleFirebase(): Observable<LoginBody> {
 
-signWithGoggle(idToken: string): Observable<void> {
-  return this.#singleTonApi.create(
+    if(!this.#domService.isBrowser()){
+    return throwError(() => new Error('Google Sign-In only works on browser'));
+    }
+
+    const provider = new GoogleAuthProvider();
+    return from(signInWithPopup(firebaseAuth, provider)).pipe(
+      switchMap(result => {
+
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        const idToken = credential?.idToken;
+
+        if (!idToken) {
+          return throwError(() => new Error('No Google ID token found'));
+        }
+        return this.#signWithGoggle(idToken)
+      })
+    );
+}
+
+
+
+#signWithGoggle(idToken: string): Observable<LoginBody> {
+  return this.#singleTonApi.create<LoginBody>(
   `${this.#routeName}/signup-with-gmail`,
   { idToken }
+  ).pipe(
+  tap(({data : {credentials}}) => {
+  this.#storeTokens(credentials);
+  })
   );
   }
 
@@ -81,12 +119,8 @@ return this.#singleTonApi.create(`${this.#routeName}/re-send-confirm-email-otp`,
 // 🟢 Login
 login(data: LoginType): Observable<LoginBody> {
   return this.#singleTonApi.create<LoginBody>(`${this.#routeName}/login`, data).pipe(
-    tap((res: LoginBody) => {
-      this.#storageService.setItem<AuthToken>('auth', {
-        access_token: res.data.credentials.access_token,
-        refresh_token: res.data.credentials.refresh_token
-      });
-      this.#router.navigate(['/public'])
+    tap(({data : {credentials}}) => {
+      this.#storeTokens(credentials);
     })
   );
 }

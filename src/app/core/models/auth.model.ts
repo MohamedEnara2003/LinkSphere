@@ -18,12 +18,14 @@ export interface LoginType {
   email: string;
   password: string;
 }
-export interface LoginBody {
-    data: {
-    credentials: {
+
+export interface Token {
     access_token: string,
     refresh_token: string ,
-    }
+}
+export interface LoginBody {
+    data: {
+    credentials:  Token
     }
 }
 

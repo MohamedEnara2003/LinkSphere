@@ -12,6 +12,11 @@
   import { MessageAlertInterceptor } from './core/interceptors/message-alert.interceptor';
   import { LoadingInterceptor } from './core/interceptors/loading.interceptor';
 
+import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
+import { provideAuth, getAuth } from '@angular/fire/auth';
+import { environment } from '../environments/environment.development';
+import firebaseApp from '../environments/firebase.config';
+
 
   export const appConfig: ApplicationConfig = {
     providers: [
@@ -41,6 +46,8 @@
         lang: 'en'
       }),
 
+    provideFirebaseApp(() => initializeApp(firebaseApp.options)),
+    provideAuth(() => getAuth()),
 
     ]
   };

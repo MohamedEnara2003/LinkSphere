@@ -1,10 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { AuthService } from '../../service/auth.service';
 
 
 @Component({
   selector: 'app-sign-in-with-google',
   template: `
   <button 
+  (click)="loginWithGoogle()"
   title="Sign with goggle" 
   id="Sign-goggle" 
   type="button" 
@@ -20,4 +22,11 @@ import { Component } from '@angular/core';
 })
 export class SignInWithGoogle {
 
+  #authService = inject(AuthService);
+
+
+  loginWithGoogle(): void {
+  this.#authService.signInWithGoogleFirebase().subscribe();
+  }
 }
+

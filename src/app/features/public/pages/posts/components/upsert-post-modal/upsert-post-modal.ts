@@ -270,9 +270,6 @@ export class UpsertPostModel implements  OnDestroy{
   existingPost ? 
   this.#updatePost(post  , existingPost._id) :
   this.#postService.createPost(post).subscribe();
-
-  console.log(post);
-  
   }
 
 
