@@ -23,19 +23,27 @@ interface Respons {
 })
 
 export class AuthService {
-  #router = inject(Router)
-  #domService = inject(DomService);
-  #singleTonApi = inject(SingleTonApi);
-
-  #storageService = inject(StorageService);
-  #userProfileService = inject(UserProfileService);
-
-
   #routeName: string = "auth";
 
+  #singleTonApi = inject(SingleTonApi);
+  #router = inject(Router);
+  #domService = inject(DomService);
+  #storageService = inject(StorageService);
+  #userProfileService = inject(UserProfileService);
   #loginData = signal<LoginType | null>(null);
 
+
+  credentials = signal<AuthToken | null>(null);
 // ____________________________________
+
+initAuth() {
+  const storageService = inject(StorageService);
+  const auth = storageService.getItem<AuthToken>('auth');
+
+  if (auth?.access_token) {
+  this.credentials.set(auth); 
+  }
+}
 
 
 // 🟢 Store Tokens 🟢

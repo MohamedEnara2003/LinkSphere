@@ -141,7 +141,7 @@ body {
 }
 
 .ng-input {
-@apply w-full input input-sm sm:input-md input-info bg-card-light  dark:bg-card-dark 
+@apply w-full input input sm:input-md 2xl:input-lg  input-info bg-card-light  dark:bg-card-dark 
 text-text-light dark:text-text-dark  ;
 }
 .ng-checkbox {

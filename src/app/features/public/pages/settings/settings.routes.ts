@@ -11,9 +11,9 @@ export const settingsRoutes: Routes = [
                 import('./pages/account-setting/account-setting').then((c) => c.AccountSetting),
             },
             {
-                path: 'freeze-posts',
+                path: 'archived-posts',
                 loadComponent: () =>
-                import('./pages/freeze-posts/freeze-posts').then((c) => c.FreezePosts),
+                import('./pages/archived-posts/archived-posts').then((c) => c.ArchivedPosts),
             },
             {
                 path: 'update-email',

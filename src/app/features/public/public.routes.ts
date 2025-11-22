@@ -1,11 +1,10 @@
 import { Routes } from '@angular/router';
-import { isAuthGuard } from '../../core/guards/is-auth.guard';
+
 
 
 export const publicRoutes: Routes = [
   {
     path: '',
-    canActivate : [isAuthGuard],
     loadComponent: () => import('./public').then(c => c.Public),
     children: [
       {
@@ -33,6 +32,10 @@ export const publicRoutes: Routes = [
         path: 'settings',
         data: { isHide: true },
         loadChildren: () => import('./pages/settings/settings.routes').then(r => r.settingsRoutes),
+      },
+      {
+        path: 'search',
+        loadChildren: () => import('./pages/search/search.routes').then(r => r.searchRoutes),
       },
       {
         path: 'chats',

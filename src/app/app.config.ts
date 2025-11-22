@@ -11,44 +11,38 @@
   import { ErrorInterceptor } from './core/interceptors/error.interceptor';
   import { MessageAlertInterceptor } from './core/interceptors/message-alert.interceptor';
   import { LoadingInterceptor } from './core/interceptors/loading.interceptor';
-
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { provideAuth, getAuth } from '@angular/fire/auth';
-import { environment } from '../environments/environment.development';
 import firebaseApp from '../environments/firebase.config';
 
+  const Interceptors = [
+  AuthInterceptor , ErrorInterceptor , MessageAlertInterceptor , LoadingInterceptor ,
+  ]
 
-  export const appConfig: ApplicationConfig = {
-    providers: [
-      provideBrowserGlobalErrorListeners(),
-      provideZonelessChangeDetection(),
-      provideRouter(routes),
-      
-      provideClientHydration(
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideZonelessChangeDetection(),
+    provideRouter(routes),
+    provideClientHydration(
       withEventReplay(),
-      withHttpTransferCacheOptions({
-        includePostRequests: false
-      }),
+      withHttpTransferCacheOptions({ includePostRequests: false }),
+    ),
+    provideHttpClient(
+      withInterceptors(Interceptors),
+      withFetch(),
     ),
 
-      provideHttpClient(
-        withFetch(),
-        withInterceptors([AuthInterceptor , ErrorInterceptor , MessageAlertInterceptor , LoadingInterceptor])
-      ),
-
-
-      
-      provideTranslateService({
-        loader: provideTranslateHttpLoader({
+    provideTranslateService({
+      loader: provideTranslateHttpLoader({
         prefix: '/i18n/',
         suffix: '.json'
-        }),
-        lang: 'en'
       }),
+      lang: 'en'
+    }),
 
     provideFirebaseApp(() => initializeApp(firebaseApp.options)),
     provideAuth(() => getAuth()),
-
-    ]
-  };
+  ]
+};
 

@@ -34,7 +34,7 @@ import { LikeToggle } from "../../../like-toggle/like-toggle";
             5.969 0 0 0 6 21c1.282 0 2.47-.402
             3.445-1.087.81.22 1.668.337 2.555.337Z" />
         </svg>
-        0
+        {{post()?.commentsCount || 0}}
       </button>
     </nav>
   `
@@ -50,6 +50,7 @@ export class PostActions {
     if (post) {
       this.#router.navigate(['/public', { outlets: { model: ['comments'] } }], {
         queryParams: { postId: post._id || '' },
+        queryParamsHandling :'merge'
       });
       this.#postService.setPost(post);
     }

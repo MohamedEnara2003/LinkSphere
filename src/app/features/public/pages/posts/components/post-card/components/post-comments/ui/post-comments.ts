@@ -53,7 +53,7 @@ import { LoadingComment } from "../../../../loading/loading-comment/loading-comm
     <app-comments-header />
 
     <!-- Comments List -->
-    <section class="w-full h-full flex-1 overflow-y-auto p-2   grid grid-cols-1 "
+    <section class="w-full h-full flex-1 overflow-y-auto p-2 flex flex-col "
     style="scrollbar-width: none;">
 
       <ul class="size-full list flex flex-col gap-4">
@@ -71,15 +71,18 @@ import { LoadingComment } from "../../../../loading/loading-comment/loading-comm
         }@empty {
       <app-empty-comments class="size-full"/>
       }
+
+      @if(commentService.hasMoreComments()){
+      <li >
+      <app-feed-auto-loader
+      loadingType="comment"
+      (loadData)="loadMore()"
+      aria-label="Load more comments"
+      />
+      </li>
+      }
       </ul>
   
-  @if(commentService.hasMoreComments()){
-  <app-feed-auto-loader
-  loadingType="comment"
-  (loadData)="loadMore()"
-  aria-label="Load more comments"
-  />
-  }
 
   </section>
 
@@ -133,9 +136,14 @@ export class PostComments implements OnDestroy{
       }
     }
     
-    closeComments() : void {
-    this.#router.navigate(['/public' ,{ outlets: { 'model': null } }]);
+  closeComments(): void {
+  this.#router.navigate(
+    ['/public', { outlets: { model: null }}],
+    {
+      queryParamsHandling: 'merge'
     }
+  );
+}
 
     loadMore() : void {
     this.#getComments();

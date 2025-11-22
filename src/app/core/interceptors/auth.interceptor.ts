@@ -11,15 +11,13 @@ export const AuthInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: 
 
   const auth = storageService.getItem<AuthToken>('auth');
   let authReq = req;
-
+  
   // Attach token headers
   if (req.url.includes('/auth/refresh-token') && auth?.refresh_token) {
     authReq = req.clone({
       setHeaders: { Authorization: `Bearer ${auth.refresh_token}` }
     });
   } else if (auth?.access_token) {
-
-    
     authReq = req.clone({
       setHeaders: { Authorization: `Bearer ${auth.access_token}` }
     });
@@ -34,15 +32,14 @@ export const AuthInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: 
     const errorMessage = (backendError?.error_message || '').toLowerCase();
     const isExpired = errorName === 'tokenexpirederror' || errorMessage.includes('jwt expired');
 
-
-    
     const tokenError = isExpired  && auth?.refresh_token;
       
-      // Try refreshing token
+      // Refresh token
       if (tokenError && !req.url.includes('/auth/refresh-token')) {
+
         return authService.refreshToken().pipe(
           switchMap(({ data: { credentials } }) => {
-         
+            
             // Save new credentials
             storageService.setItem('auth', credentials);
 
@@ -59,6 +56,7 @@ export const AuthInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: 
             return throwError(() => new Error('Session expired. Please log in again.'));
           })
         );
+
       }
 
       return throwError(() => error);

@@ -59,9 +59,24 @@ export const MessageAlertInterceptor: HttpInterceptorFn = (req, next) => {
   const backendError = error as { name?: string; error_message?: string } | null;
 
   const errorMessage = (backendError?.error_message || '').toLowerCase();
+
   if(method === 'post' || method === 'put' || method === 'delete' || method === 'patch') {
-  initAlert('alert-warning' ,  (errorMessage.length <= 40 ? errorMessage : '' ) || 'Something went wrong' , 3000)
+
+  const unMessages = [
+  "no matched request",
+  ];
+
+
+  const message = 
+  ((errorMessage.length <= 40 ) ? errorMessage : '' ) 
+  || 'Something went wrong';
+
+  if(unMessages.includes(message)){
+  initAlert('alert-warning' ,  message , 3000)
   }
+
+  }
+
   return throwError(() => error)
   })
   );

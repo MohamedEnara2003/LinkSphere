@@ -12,7 +12,7 @@ import { UserProfileService } from '../../../services/user-profile.service';
 import { userProfileHeader } from "../components/user-profile-header/user-profile-header";
 import { UserPictures } from "../components/user-pictures/user-pictures";
 import { PostService } from '../../../../posts/services/post.service';
-import { UserPosts } from "../components/user-posts/user-posts";
+import { UserProfilePosts } from "../components/user-posts/user-posts";
 
 
 @Component({
@@ -25,7 +25,7 @@ imports: [
     SharedModule,
     userProfileHeader,
     UserPictures,
-    UserPosts
+    UserProfilePosts
 ],
 template: `
 <section 
@@ -103,7 +103,7 @@ template: `
     }
     @default {
     <!-- Posts Section -->
-    <app-user-posts 
+    <app-user-profile-posts
     [userId]="userId()"
     />
     }

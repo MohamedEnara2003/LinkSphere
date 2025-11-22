@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  apiUrl: "https://eeaeb815feda.ngrok-free.app/",
+  apiUrl: "http://localhost:3000/",
   firebase: {
     apiKey: "AIzaSyB4YcTKG4WqFYdJYtLolotx4ablG4TeHic",
     authDomain: "link-sphere-31f4e.firebaseapp.com",

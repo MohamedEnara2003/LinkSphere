@@ -1,89 +1,92 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { afterRenderEffect, Component, DestroyRef, inject, signal } from '@angular/core';
 import { Logo } from "../../../../shared/components/logo/logo";
-import { SharedModule } from '../../../../shared/modules/shared.module';
 import { MainLinks } from "../navigations/main-links";
 import { ResponsiveNavLinks } from "../navigations/responsive-nav-links/responsive-nav-links";
 import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { UserPicture } from "../../pages/profile/components/user-picture/user-picture";
-import { UserProfileService } from '../../pages/profile/services/user-profile.service';
-import { TranslateModule } from '@ngx-translate/core';
+import { LinkUserProfile } from "../navigations/link-user-profile/link-user-profile";
+import { fromEvent, map, pairwise, tap } from 'rxjs';
+import { SharedModule } from '../../../../shared/modules/shared.module';
+import { SearchService } from '../../pages/search/service/search.service';
+import { SearchForm } from "../../pages/search/components/search-form/search-form";
+
+
 
 @Component({
   selector: 'app-header',
-  imports: [Logo, SharedModule, TranslateModule, MainLinks, ResponsiveNavLinks, UserPicture],
+  imports: [Logo, MainLinks, ResponsiveNavLinks, LinkUserProfile, SharedModule, SearchForm],
   template: `
 
-@if(!isHide()){ 
-<header  
-class="relative w-full h-[10svh] ngCard rounded-none  px-4  grid grid-cols-2 md:grid-cols-3  
-items-center z-50 border-b border-b-brand-color/10
-md:sticky md:top-0 ">
 
-  <nav class="w-full">
-    <app-logo />
+@if(!isHide()){ 
+  
+<header aria-label="Header" role="heading"
+class="w-full h-[8svh] sm:h-[10svh] ngCard rounded-none  px-4  grid   md:grid-cols-3
+items-center z-50 border-b border-b-brand-color/10 sticky top-0  "
+[ngClass]="!searchService.isFocusSearch() ? 'grid-cols-2 md:grid-cols-3 ' : ''"
+>
+
+
+  <nav  role="navigation" class="w-full"
+  [ngClass]="searchService.isFocusSearch() ? 'hidden lg:inline-block' : ''">
+  <app-logo />
   </nav>
 
-  <nav class="w-full  hidden md:block ">
+  <nav  role="navigation" class="w-full  hidden md:block "
+  [ngClass]="searchService.isFocusSearch() ? 'hidden lg:inline-block' : ''">
   <app-main-links />
   </nav>
+ 
 
-<nav class="w-full flex justify-end"> 
-    <a 
-        [title]=""
-        [href]="profileLink()" 
-        [routerLink]="profileLink()" 
-        class="flex items-center gap-2 ngText text-sm font-normal
-        hover:bg-brand-color/20 rounded-2xl hover:text-brand-color 
-        duration-300 transition-all p-1">
-        <app-user-picture styleClass="size-8 object-cover rounded-full" />
+<nav  role="navigation" class="w-full flex justify-end   gap-2   "> 
 
-        <span class="text-xs text-brand-color hidden sm:inline">
-        {{ 'navigation.hello' | translate }}
-        </span> 
+  @if(!searchService.isFocusSearch()){
+    <button type="button" aria-label="Button search page" class="ngBtnIcon lg:hidden"
+    (click)="searchService.isFocusSearch.set(true)">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+    </svg>
+    </button>
+  }
 
-        <span class="text-sm font-semibold ">
-        {{userProfileService.user()?.firstName || 'User'}} 
-        </span> 
+  <app-search-form
+  class="duration-300 transition-all relative animate-opacity lg:animate-none "
+  [ngClass]="searchService.isFocusSearch() ? 'w-full' : 'hidden lg:inline-block lg:w-[70%]'"
+  />
 
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" 
-        class="size-4 duration-300 transition-transform"
-        [ngClass]="isProfile() ? 'rotate-180' : ''">
-          <path fill-rule="evenodd" 
-          d="M11.47 7.72a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 1 1-1.06 1.06L12 9.31l-6.97 6.97a.75.75 0 0 1-1.06-1.06l7.5-7.5Z" 
-          clip-rule="evenodd" />
-        </svg>
 
-      </a>
-  </nav>
+  <app-link-user-profile [isProfile]="isProfile()"  
+  [ngClass]="searchService.isFocusSearch() ? 'hidden lg:inline-block' : ''"
+  />
+  
+
+</nav>
+
+
 </header>
+@if(isScroll()){
+<app-responsive-nav-links  class="md:hidden"
+/>
+}
 
-<app-responsive-nav-links  class="md:hidden"/>
 }
   `,
 
 })
 export class Header {
-userProfileService = inject(UserProfileService);
-
-isProfile = signal<boolean>(false);
-
-profileLink = computed(() => {
-  const userId = this.userProfileService.user()?._id || '' ;
-
-  return (!this.isProfile() && userId)
-    ? '/public/profile/user/' + userId
-    : '/public';     
-});
-
-
-  isHide = signal<boolean>(false);
+  searchService = inject(SearchService);
+  #destroyRef = inject(DestroyRef);
   #router = inject(Router);
   #route = inject(ActivatedRoute);
   
 
+
+  isProfile = signal<boolean>(false);
+  isHide = signal<boolean>(false);
+  isScroll = signal(true);
 constructor(){
 this.getRouteChildData();
+  this.handleScrolling();
 }
 
 private getRouteChildData(): void {
@@ -99,5 +102,16 @@ private getRouteChildData(): void {
 }
 
 
+
+  private handleScrolling() : void {
+  afterRenderEffect(() => {
+  fromEvent(window , 'scroll').pipe(
+  map(() => window.scrollY),
+  pairwise(),
+  tap(([a , b]) => this.isScroll.set(a > b || a < 50 && b < 50 ? true : false)),
+  takeUntilDestroyed(this.#destroyRef)
+  ).subscribe();
+  })
+  }
 
 }

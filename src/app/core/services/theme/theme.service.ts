@@ -18,15 +18,15 @@ export class ThemeService {
 
   isDarkMode = signal(true);
 
-  constructor() {
-    // فقط شغّل التهيئة في المتصفح
-    if (isPlatformBrowser(this.#platformId)) {
-      this.initializeTheme();
-      this.setupThemeEffect();
-    }
-  }
 
-  private initializeTheme(): void {
+    initializeTheme() : void {
+    if (isPlatformBrowser(this.#platformId)) {
+    this.#initializeTheme();
+    this.#setupThemeEffect();
+    }
+    }
+
+  #initializeTheme(): void {
     this.#html = this.#document.documentElement;
 
     const savedTheme: DarkMode | null = this.#storageService.getItem('theme');
@@ -37,10 +37,9 @@ export class ThemeService {
       this.isDarkMode.set(true);
     }
 
-    this.applyTheme();
-  }
+  }    
 
-  private setupThemeEffect(): void {
+  #setupThemeEffect(): void {
     effect(() => {
       this.applyTheme();
     });

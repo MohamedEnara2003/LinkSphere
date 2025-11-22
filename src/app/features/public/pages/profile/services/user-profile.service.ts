@@ -1,6 +1,7 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { SingleTonApi } from '../../../../../core/services/api/single-ton-api.service';
 import { 
+  Author,
   ChangePasswordDto, 
   FriendRequestEnum, 
   IFriend, 
@@ -11,9 +12,9 @@ import {
   UnfreezePayload, 
   UserProfile
 } from '../../../../../core/models/user.model';
-import { catchError, EMPTY, forkJoin, map, Observable, of, switchMap, tap } from 'rxjs';
+import { catchError, EMPTY, map, Observable, of, tap } from 'rxjs';
 import { Router } from '@angular/router';
-import { FriendRequestResponse, IFriendRequest, ReceivedFriendRequest, SentFriendRequest } from '../../../../../core/models/friends-requst.model';
+import { FriendRequestResponse, ReceivedFriendRequest, SentFriendRequest } from '../../../../../core/models/friends-requst.model';
 import { Picture } from '../../../../../core/models/picture';
 
 
@@ -24,12 +25,13 @@ import { Picture } from '../../../../../core/models/picture';
 
 export class UserProfileService {
   
-  #singleTonApi = inject(SingleTonApi);
-  #routeName: string = "users";
-  #router = inject(Router);
+  readonly #singleTonApi = inject(SingleTonApi);
+  readonly #router = inject(Router);
+
+  readonly routeName: string = "users";
+
 
   // User Profile State
-
   #user = signal<IUser | null>(null);
   #userProfile = signal<IUser | null>(null);
 
@@ -50,14 +52,10 @@ export class UserProfileService {
   });
 
   
-  
   public relationshipState = computed<RelationshipState>(() => {
-  
   const user =  this.#user();
   const userProfile =  this.#userProfile();
-  
   if(!user || !userProfile) return 'myProfile'
-
   const {_id : userId} = user;
   const {_id : userProfileId} = userProfile;
 
@@ -70,7 +68,10 @@ export class UserProfileService {
   // Not Friend
   if(userId !== userProfileId && !userProfile.isFriend && !userProfile.friendRequest) return 'notFriend';
   
+  // Request Sent
   if(userProfile.friendRequest ===  FriendRequestEnum.sent) return 'requestSent';
+
+  // Request Received
   if(userProfile.friendRequest ===  FriendRequestEnum.resaved) return 'requestReceived';
 
   return 'myProfile';
@@ -134,23 +135,23 @@ export class UserProfileService {
   // 👤 User Profile
   // ==============================
 
-  #initUserImagePlaceholder(user : IUser): IUser {
-  if(user.picture) return user;
+  #checkUserImage(picture : Picture ): Picture {
+  if(picture) return picture;
   return {
-  ...user,
-  picture : {
   url : this.placeHolderUser(),
   public_id : ''
-  }
+
   }
   }
 
   getUserProfile(): Observable<UserProfile> {
-  if(this.#user()) return EMPTY;
-  return this.#singleTonApi.find<UserProfile>(`${this.#routeName}/profile`).pipe(
+  if(this.#user()) return of({ data: { user: this.#user() as IUser } } as UserProfile);
+  return this.#singleTonApi.find<UserProfile>(`${this.routeName}/profile`).pipe(
   tap(({data : {user}}) => {
-  const userWithPlaceholder = this.#initUserImagePlaceholder(user);
-  this.#user.set(userWithPlaceholder);
+  const picture = this.#checkUserImage(user.picture!);
+  const friends : IFriend[] = 
+  (user.friends || []).map((f) => ({...f , picture : this.#checkUserImage(f.picture!)}));
+  this.#user.set({...user , picture , friends});
   }),
   )
   }
@@ -160,11 +161,13 @@ export class UserProfileService {
 getUserProfileById(userId: string): Observable<{data : IUser}> {
   if(this.#userProfile()?._id === userId) return EMPTY;
   return this.#singleTonApi
-    .findById<{data : IUser}>(`${this.#routeName}/user` , userId)
+    .findById<{data : IUser}>(`${this.routeName}/user` , userId)
     .pipe(
       tap(({data : user}) => {
-        const userWithPlaceholder = this.#initUserImagePlaceholder(user);
-        this.#userProfile.set(userWithPlaceholder);
+      const picture = this.#checkUserImage(user.picture!);
+      const friends : IFriend[] = 
+      (user.friends || []).map((f) => ({...f , picture : this.#checkUserImage(f.picture!)}));
+      this.#userProfile.set({...user , picture , friends});
       }),
         catchError(() => {
         this.#router.navigateByUrl('/public/profile/not-found');
@@ -174,10 +177,12 @@ getUserProfileById(userId: string): Observable<{data : IUser}> {
 }
 
   getUserById(userId : string): Observable<IUser> {
-  return this.#singleTonApi.findById<{data : IUser}>(`${this.#routeName}/user` , userId).pipe(
+  return this.#singleTonApi.findById<{data : IUser}>(`${this.routeName}/user` , userId).pipe(
       map(({data : user}) => {
-        const userWithPlaceholder = this.#initUserImagePlaceholder(user);
-        return userWithPlaceholder
+      const picture = this.#checkUserImage(user.picture!);
+      const friends : IFriend[] = 
+      (user.friends || []).map((f) => ({...f , picture : this.#checkUserImage(f.picture!)}));
+      return {...user , picture , friends}
       }),
     )
   }
@@ -185,7 +190,7 @@ getUserProfileById(userId: string): Observable<{data : IUser}> {
 
   // 🟢 Update user profile (JSON)
   updateUserProfile(data: Partial<IUser>, userId: string): Observable<IUser> {
-    return this.#singleTonApi.update<IUser>(`${this.#routeName}/profile`, data, userId);
+    return this.#singleTonApi.update<IUser>(`${this.routeName}/profile`, data, userId);
   }
   // ==============================
   // ❄️ Account Freeze / Unfreeze
@@ -194,12 +199,12 @@ getUserProfileById(userId: string): Observable<{data : IUser}> {
   // 🟢 Freeze account
   freezeAccount(userId?: string): Observable<void> {
     const id = userId || "me";
-    return this.#singleTonApi.deleteById<void>(`${this.#routeName}/freeze`, id);
+    return this.#singleTonApi.deleteById<void>(`${this.routeName}/freeze`, id);
   }
 
   // 🟢 Unfreeze account (JSON)
   unfreezeAccount(data: UnfreezePayload): Observable<void> {
-    return this.#singleTonApi.patch<void>(`${this.#routeName}/un-freeze/me`, data);
+    return this.#singleTonApi.patch<void>(`${this.routeName}/un-freeze/me`, data);
   }
 
   // ==============================
@@ -208,7 +213,7 @@ getUserProfileById(userId: string): Observable<{data : IUser}> {
 
   uploadProfilePicture(file: File , url : string): Observable<{ data: Picture }> {
     return this.#singleTonApi.uploadImage<{ data: Picture }>(
-      `${this.#routeName}/profile-picture`,
+      `${this.routeName}/profile-picture`,
       'image',
       [file] ,
     ).pipe(
@@ -222,7 +227,7 @@ getUserProfileById(userId: string): Observable<{data : IUser}> {
   }
 
   deleteProfilePicture(): Observable<void> {
-    return this.#singleTonApi.deleteById<void>(`${this.#routeName}/profile-picture`, "").pipe(
+    return this.#singleTonApi.deleteById<void>(`${this.routeName}/profile-picture`, "").pipe(
     tap(() => {
     this.#user.update((user) => user ? ({...user , picture : undefined }) : user);
     if(this.isMyProfile()){
@@ -238,7 +243,7 @@ getUserProfileById(userId: string): Observable<{data : IUser}> {
 
   uploadProfileCoverImage(files: File[] , preview: string): Observable<{ data: Picture }> {
     return this.#singleTonApi.uploadImage<{ data: Picture}>(
-      `${this.#routeName}/profile-cover`,
+      `${this.routeName}/profile-cover`,
       'image',
       files
     ).pipe(
@@ -257,7 +262,7 @@ getUserProfileById(userId: string): Observable<{data : IUser}> {
   }
 
   deleteProfileCoverImage(): Observable<void> {
-    return this.#singleTonApi.deleteById<void>(`${this.#routeName}/profile-cover-image`, "").pipe(
+    return this.#singleTonApi.deleteById<void>(`${this.routeName}/profile-cover-image`, "").pipe(
     tap(() => {
       const user = this.#user();
       const userProfile = this.#userProfile();
@@ -275,21 +280,32 @@ getUserProfileById(userId: string): Observable<{data : IUser}> {
   // 👥 Friends
   // ==============================
 
-  sendFriendRequest(receiver : IUser): Observable<FriendRequestResponse> {
+
+
+  sendFriendRequest(userReceiver : IUser): Observable<FriendRequestResponse> {
     return this.#singleTonApi.create<FriendRequestResponse>(
-      `${this.#routeName}/friend-request/${receiver._id}`).pipe(
+      `${this.routeName}/friend-request/${userReceiver._id}`).pipe(
       
         tap(({ data:  {RequestId}  }) => {
-    
+          
+        const sendBy = (this.#user()?._id || '');
+        const receiver : Author = { ...userReceiver , id : userReceiver._id}  ;
+
         const newRequests : SentFriendRequest = {
-        requestId : RequestId,
+        _id : RequestId,
+        sendBy ,
+        sendTo : receiver._id,
         createdAt : new Date().toISOString(),
-        receiver 
+        updatedAt : new Date().toISOString(),
+        __v  :0,
+        receiver
         }
+
         this.#userProfile.update((u) => u ?
         (u._id === receiver._id) ? ({...u  , friendRequest : FriendRequestEnum.sent}) : u 
         : null
         )
+
         this.#sentRequests.update((prevRequests) => [newRequests , ...prevRequests])
         
         })
@@ -297,102 +313,68 @@ getUserProfileById(userId: string): Observable<{data : IUser}> {
   }
 
 
- getFriendsRequests(): Observable<{
-  sender: SentFriendRequest[];
-  receiver: ReceivedFriendRequest[];
-}> {
+  getReceivedFriendRequests(): Observable<{data: {requests: ReceivedFriendRequest[] }}> {
+  return this.#singleTonApi.find<{ data: {requests: ReceivedFriendRequest[] } }>(
+  `${this.routeName}/received-friend-requests`).pipe(
+  tap(({data : {requests}}) => {
+    
+      const receivedRequests : ReceivedFriendRequest[] = requests.map((request) => 
+      ({...request,
+      sender : {
+      ...request.sender,
+      picture : request.sender.picture ? request.sender.picture : 
+      { url : '/user-placeholder.webp' , public_id :''}
+      }
+      })
+      );
+
+    this.#receivedRequests.set(receivedRequests)
+  })
+  )
+  }
+
+getSentFriendRequests(): Observable<{
+  data : {requests: SentFriendRequest[] }
+}>{
   return this.#singleTonApi
-    .find<{ data: { requests: IFriendRequest[] } }>(
-      `${this.#routeName}/friend-requests`
+    .find<{ data: { requests: SentFriendRequest[] } }>(
+    `${this.routeName}/sent-friend-requests`
     )
-    .pipe(
-      switchMap(({ data: { requests } }) => {
-        if (!requests?.length) return of({ sender: [], receiver: [] });
+    .pipe(  
+    tap(({data : {requests}}) => {
 
-        const currentUserId = this.#user()?._id;
-        if (!currentUserId) return of({ sender: [], receiver: [] });
+      const sentRequests : SentFriendRequest[] = requests.map((request) => 
+      ({...request,
+      receiver : {
+      ...request.receiver,
+      picture : request.receiver.picture ? request.receiver.picture : { url : '/user-placeholder.webp' , public_id :''}
+      }
+      })
+      );
 
-        const friends = (this.#user()?.friends || []).map((f) => f._id);
-
-        const sentRequests = requests.filter(
-          (req) => req.sendBy === currentUserId && !friends.includes(req.sendTo)
-        );
-
-        const receivedRequests = requests.filter(
-          (req) => req.sendTo === currentUserId && !friends.includes(req.sendBy)
-        );
-
-        // 📨 لو حصل Error في getUserById → رجّع null بدل ما يبوّظ الكل
-        const safeGetUserById = (userId: string) =>
-          this.getUserById(userId).pipe(
-            map((user) => user),
-            catchError(() => {
-              return of(null);
-            })
-          );
-
-        const sentRequests$ = sentRequests.map((req) =>
-          safeGetUserById(req.sendTo).pipe(
-            map(
-              (user) =>
-                ({
-                  requestId: req._id,
-                  createdAt: req.createdAt,
-                  receiver: user,
-                } as SentFriendRequest)
-            )
-          )
-        );
-
-        const receivedRequests$ = receivedRequests.map((req) =>
-          safeGetUserById(req.sendBy).pipe(
-            map(
-              (user) =>
-                ({
-                  requestId: req._id,
-                  createdAt: req.createdAt,
-                  sender: user,
-                } as ReceivedFriendRequest)
-            )
-          )
-        );
-
-        return forkJoin({
-          sender: sentRequests$.length ? forkJoin(sentRequests$) : of([]),
-          receiver: receivedRequests$.length ? forkJoin(receivedRequests$) : of([]),
-        });
-      }),
-      map(({ sender, receiver }) => ({
-        sender: sender.filter((r) => r.receiver !== null),
-        receiver: receiver.filter((r) => r.sender !== null),
-      })),
-      tap(({ sender, receiver }) => {
-        this.#sentRequests.set(sender);
-        this.#receivedRequests.set(receiver);
-      }),
+      this.#sentRequests.set(sentRequests);
+    })
     );
 }
 
-acceptFriendRequest(requestId: string, sender: IUser): Observable<void> {
+acceptFriendRequest(requestId: string, sender: Author): Observable<void> {
   return this.#singleTonApi
-    .patch<void>(`${this.#routeName}/accept-friend-request/${requestId}`)
+    .patch<void>(`${this.routeName}/accept-friend-request/${requestId}`)
     .pipe(
       tap(() => {
+        
         const newFriend: IFriend = {
           _id: sender._id,
           userName: sender.userName,
           firstName: sender.firstName,
           lastName: sender.lastName,
-          email: sender.email,
+          email : '',
           picture: sender.picture
         };
 
-        // 🧩 حذف الطلب من قائمة الطلبات المستلمة
-        this.#receivedRequests.update((requests) =>
-          requests.filter((r) => r.requestId !== requestId)
-        );
+        this.#receivedRequests.update((requests) =>requests.filter((r) => r._id !== requestId));
 
-        // 🧩 تحديث قائمة الأصدقاء للمستخدم الحالي
+        // Add New friend
         this.#user.update((user) => {
           if (!user) return user;
           return {
@@ -401,7 +383,6 @@ acceptFriendRequest(requestId: string, sender: IUser): Observable<void> {
           };
         });
 
-        // 🧩 تحديث بروفايل المستخدم اللي تم قبول صداقته
         const userProfile = this.#userProfile();
         if (userProfile && String(userProfile._id) === String(sender._id)) {
           this.#userProfile.update((user) => {
@@ -418,17 +399,30 @@ acceptFriendRequest(requestId: string, sender: IUser): Observable<void> {
 }
 
 
-  cancelFriendRequest(RequestId: string): Observable<void> {
-  return this.#singleTonApi.deleteById<void>(`${this.#routeName}/cancel-friend-request`, RequestId).pipe(
-  tap(() => {
-  this.#receivedRequests.update((r) => r.filter((r) => r.requestId !== RequestId));
+
+  #handleLogicCancelFriendRequest(RequestId: string , receiverId : string) : void {
+  this.#receivedRequests.update((r) => r.filter((r) => r._id !== RequestId));
+  this.#sentRequests.update((r) => r.filter((r) => r._id !== RequestId));
+
+  this.#userProfile.update((u) => u ?
+  (u._id === receiverId) ? ({...u  , friendRequest : null}) : u 
+  : null
+  )
+  }
+  cancelFriendRequest(RequestId: string , receiverId : string): Observable<void> {
+  return this.#singleTonApi.deleteById<void>(`${this.routeName}/cancel-friend-request`, RequestId).pipe(
+  tap(() =>  this.#handleLogicCancelFriendRequest(RequestId , receiverId)),
+  catchError(() => {
+  this.#handleLogicCancelFriendRequest(RequestId , receiverId);
+  return EMPTY;
   })
   );
   }
 
+
 unFriend(friendId: string): Observable<void> {
   return this.#singleTonApi
-    .deleteById<void>(`${this.#routeName}/remove-friend`, friendId)
+    .deleteById<void>(`${this.routeName}/remove-friend`, friendId)
     .pipe(
       tap(() => {
         const currentUser = this.#user();
@@ -458,7 +452,7 @@ unFriend(friendId: string): Observable<void> {
   // ==============================
 
   updateBasicInfo(data: IUpdateBasicInfo): Observable<IUser> {
-    return this.#singleTonApi.patch<IUser>(`${this.#routeName}/update-basic-info` , data).pipe(
+    return this.#singleTonApi.patch<IUser>(`${this.routeName}/update-basic-info` , data).pipe(
       tap(() => {
         this.#user.update((currentUser) => currentUser ? ({...currentUser , ...data}) : null);
         console.log(this.#user());
@@ -469,19 +463,19 @@ unFriend(friendId: string): Observable<void> {
 
 
   updateEmail(data: IUpdateEmail): Observable<void> {
-    return this.#singleTonApi.patch<void>(`${this.#routeName}/update-email`, data).pipe(
+    return this.#singleTonApi.patch<void>(`${this.routeName}/update-email`, data).pipe(
     tap(() => this.#router.navigate(['/auth/confirm-email'] , {queryParams : {state : 'update'}}))
     );
   }
 
   confirmUpdateEmail(OTP: string): Observable<void> {
-    return this.#singleTonApi.patch<void>(`${this.#routeName}/confirm-update-email`, {OTP}).pipe(
+    return this.#singleTonApi.patch<void>(`${this.routeName}/confirm-update-email`, {OTP}).pipe(
     tap(() => this.#router.navigateByUrl('/'))
     );
   }
 
   changePassword(data: ChangePasswordDto): Observable<void> {
-  return this.#singleTonApi.patch<void>(`${this.#routeName}/change-password`, data).pipe(
+  return this.#singleTonApi.patch<void>(`${this.routeName}/change-password`, data).pipe(
   tap(() => this.#router.navigateByUrl('/'))
   );
   }

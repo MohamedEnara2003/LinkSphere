@@ -21,13 +21,21 @@ import { LoadingPost } from "../../../pages/posts/components/loading/loading-pos
     <app-loading-comment class="w-full" />
     }@else if (loadingType() === 'post') {
     <app-loading-post class="w-full h-60"/>
+    }@else if((loadingType() === 'users')){
+            <div class="w-full flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full ng-skeleton"></div>
+            <div class="flex-1">
+            <div class="h-4 ng-skeleton rounded w-32 mb-2"></div>
+            <div class="h-3 ng-skeleton rounded w-20"></div>
+            </div>
+        </div>
     }
     </nav>
   `,
   imports: [LoadingComment, LoadingPost],
 })
 export class FeedAutoLoader  implements OnDestroy {
-  loadingType = input<'comment' | 'post' | 'chat'>();
+  loadingType = input<'comment' | 'post' | 'chat' | 'users'>();
   
   loadData = output<void>();
   isInView = signal(false);

@@ -3,7 +3,7 @@ import { PostCard } from "../../components/post-card/ui/post-card";
 import { PostService } from '../../services/post.service';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { map, switchMap } from 'rxjs';
+import { EMPTY, map, switchMap } from 'rxjs';
 import { Availability, IPost} from '../../../../../../core/models/posts.model';
 import { FeedAutoLoader } from "../../../../components/navigations/feed-auto-loader/feed-auto-loader";
 import { LoadingPost } from "../../components/loading/loading-post/loading-post";
@@ -11,7 +11,7 @@ import { EmptyPosts } from "../../components/empty-posts/empty-posts";
 
 
 @Component({
-  selector: 'app-posts',
+  selector: 'app-posts-feed',
   imports: [PostCard, RouterModule, FeedAutoLoader, LoadingPost, EmptyPosts],
   template: `
   
@@ -25,7 +25,7 @@ import { EmptyPosts } from "../../components/empty-posts/empty-posts";
 }
 </article>
 }@empty {
-<app-empty-posts />
+<app-empty-posts class="size-full min-h-100" />
 } 
 
 
@@ -41,7 +41,7 @@ aria-label="Load more posts"
 `,
 })
 
-export class Posts {
+export class PostsFeed {
     #postService = inject(PostService);
     #route = inject(ActivatedRoute);
 
@@ -66,20 +66,18 @@ export class Posts {
       .pipe(
         switchMap((state) => {
           const currentState = state || 'public';
-          // const cached = this.#postService.getPostsByState()[currentState]?.posts ?? [];
-          // if (cached.length > 0) return EMPTY;
+          const cached = this.#postService.getPostsByState()[currentState]?.posts ?? [];
+          if (cached.length > 0) return EMPTY;
           return this.#postService.getPosts(currentState);
         }),
         takeUntilDestroyed()
       )
       .subscribe();
-
     }
     
-
     loadMore() {
     const currentState = this.postsState() || 'public';
     this.#postService.getPosts(currentState ).subscribe();
     }
-    
+
 }

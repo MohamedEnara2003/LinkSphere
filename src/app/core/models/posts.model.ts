@@ -29,7 +29,6 @@ export interface ICreatedBy{
     id: string;  // duplicate key for frontend use
     content?: string;
     attachments: Picture[]; // URLs or filenames of uploaded media
-    imageUrls?: string[]; // URLs or filenames of uploaded media
     availability: Availability;
     allowComments: AllowComments;
     tags: string[];
@@ -37,9 +36,10 @@ export interface ICreatedBy{
     createdBy: string ; // userId
     author: IUser ; // user data
     assetsFolderId?: string;
-    only: string[]; // visible only to these users
-    except: string[]; // hidden from these users
-    lastComment: IComment, 
+    only?: string[]; // visible only to these users
+    except?: string[]; // hidden from these users
+    lastComment?: IComment, 
+    commentsCount: number , 
     isFreezed? : boolean ,
     createdAt: string; // ISO date
     updatedAt: string; // ISO date

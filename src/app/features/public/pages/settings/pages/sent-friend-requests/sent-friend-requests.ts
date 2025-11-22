@@ -27,30 +27,35 @@ import { UserProfileService } from '../../../profile/services/user-profile.servi
         role="list"
         aria-label="List of sent friend requests"
       >
-        @for (request of userService.sentRequests(); track request.requestId) {
-          <li 
-            class="flex flex-col items-center p-3 rounded-xl shadow-md bg-card-light dark:bg-card-dark hover:scale-[1.03] transition-transform duration-200"
-            role="listitem"
-            aria-label="Sent friend request"
-          >
-            <!-- User Image -->
-            <app-ng-image
-              [options]="{
-                src: request.receiver.picture?.url || '',
-                alt: request.receiver.firstName + ' ' + request.receiver.lastName,
-                width: 64,
-                height: 64,
-                class: 'size-16 rounded-full object-cover border-2 border-brand-color mb-2'
-              }"
-            />
-            <!-- Username -->
+        @for (request of userService.sentRequests(); track request._id) {
+        @if(request.receiver){
+        <li 
+        class="w-full  flex items-center justify-between  p-3 ngCard hover:opacity-90 transition-opacity duration-200"
+        role="listitem"
+        aria-label="Sent friend request"
+        >
+        @defer (on viewport) {
+        <!-- User Image -->
+        <figure class="flex items-center gap-3">
+        <app-ng-image
+        [routerLink]="['/public/profile/user' , request.receiver._id]"
+        [options]="{
+        src :  request.receiver.picture?.url || '',
+        alt : request.receiver.userName + ' profile picture',
+        width  : 200,
+        height : 200,
+        class : 'w-12 h-12 rounded-full object-cover',
+        }"
+        />
+        
+
+        <figcaption class="flex flex-col">
             <span 
               class="text-sm text-text-light dark:text-text-dark font-medium"
               aria-label="Username"
             >
               {{ request.receiver.userName }}
             </span>
-            <!-- Sent Date -->
             <time 
               class="text-xs text-gray-500 dark:text-gray-400 mt-1"
               [attr.datetime]="request.createdAt"
@@ -58,9 +63,33 @@ import { UserProfileService } from '../../../profile/services/user-profile.servi
             >
               {{ request.createdAt | date:'mediumDate' }}
             </time>
-          </li>
+        </figcaption>
+        </figure>
+
+        <!-- Button Cancel Requet-->
+        <button (click)="cancelRequet((request._id) , (request.receiver._id))"
+        type="button" 
+        title="Cancel Requet" 
+        aria-label="Button Cancel Requet" 
+        class="ngBtnIcon hover:text-error">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" 
+        stroke="currentColor" class="size-6">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+        </svg>
+        </button>
+
+        }@placeholder {
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full ng-skeleton"></div>
+            <div class="flex-1">
+              <div class="h-4 ng-skeleton rounded w-32 mb-2"></div>
+              <div class="h-3 ng-skeleton rounded w-20"></div>
+            </div>
+          </div>
+        }
+        </li>
+        }
         }@empty {
-      
         <div class="flex flex-col items-center justify-center py-12 text-center">
         <!-- HeroIcon: Newspaper -->
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
@@ -83,5 +112,11 @@ import { UserProfileService } from '../../../profile/services/user-profile.servi
 })
 export class SentFriendRequests{
   userService = inject(UserProfileService);
+
+
+
+  public cancelRequet(requestId : string , receiverId : string ) : void {
+  this.userService.cancelFriendRequest(requestId , receiverId).subscribe()
+  }
 
 }

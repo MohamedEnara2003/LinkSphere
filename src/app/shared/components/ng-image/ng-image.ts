@@ -27,6 +27,7 @@ export interface ImageOption {
   template: `
 
       <!-- Normal Image -->
+      @if(options().src){ 
       <img
         [src]="options().src"
         [srcset]="options().srcset || ''"
@@ -44,7 +45,9 @@ export interface ImageOption {
         (error)="onError()"
         [class]="(isPreview() && !isError() )? 'cursor-zoom-in' : '' "
       />
-    
+    }@else {
+    <div [ngClass]="options().class" class="ng-skeleton"></div>
+    }
     <!-- Fullscreen Preview -->
   @if (preview()) {
   <section

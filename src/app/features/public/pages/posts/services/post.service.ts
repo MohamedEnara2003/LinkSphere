@@ -18,25 +18,21 @@ export class PostService {
 
   #router = inject(Router);
 
-  #routeName: string = "posts";
+  readonly routeName: string = "posts";
 
-  // Post Management
-
+  // Posts State
   #postsStateMap = signal<Record<Availability, { posts: IPost[]; page: number , hasMorePosts : boolean}>>({
     public: { posts: [], page: 1   , hasMorePosts : false},
     friends: { posts: [], page: 1  , hasMorePosts : false},
     'only-me': { posts: [], page: 1, hasMorePosts : false},
   });
 
-
-
-  getPostsByState = computed(() => this.#postsStateMap())
-
   #userProfilePosts = signal<IPost[]>([]);
   #userFreezedPosts = signal<IPost[]>([]);
   #post = signal<IPost | null>(null);
-  
 
+  
+  getPostsByState = computed(() => this.#postsStateMap())
   userProfilePosts = computed(() => this.#userProfilePosts());
   userFreezedPosts = computed(() => this.#userFreezedPosts());
   post = computed(() => this.#post());
@@ -93,7 +89,7 @@ export class PostService {
 
     // 🚀 إرسال الطلب
     return this.#singleTonApi.create<{data : {postId : string , attachments : Picture[]} }>
-    (`${this.#routeName}/create-post`, formData).pipe(
+    (`${this.routeName}/create-post`, formData).pipe(
     tap(({data : {postId , attachments }}) => {
 
     const availability = data.availability || 'public';
@@ -169,7 +165,7 @@ export class PostService {
     }
 
     return this.#singleTonApi.patch<{ data: { postId: string } }>(
-    `${this.#routeName}/update-content/${postId}`,
+    `${this.routeName}/update-content/${postId}`,
     payload
     ).pipe(
     
@@ -216,6 +212,9 @@ export class PostService {
     );
   }
 
+  
+
+
   updatePostAttachments(postId: string, data : FormPost )
   : Observable<{ data: { post :IPost} }> {
 
@@ -249,7 +248,7 @@ export class PostService {
       });
     }
     return this.#singleTonApi.patch<{ data: { post: IPost } }>(
-    `${this.#routeName}/update-attachments/${postId}`,
+    `${this.routeName}/update-attachments/${postId}`,
     formData
     ).pipe(
     tap(({data : {post}}) => {
@@ -279,65 +278,88 @@ export class PostService {
 
 // 🟢 Delete Post
 private removePostFromState(postId: string, availability: Availability) {
+  const filteringPosts = (posts : IPost[]) : IPost[] => posts.filter((p) => p._id !== postId);
+
   this.#postsStateMap.update((state) => {
     const target = state[availability];
     return {
       ...state,
       [availability]: {
         ...target,
-        posts: target.posts.filter((p) => p._id !== postId),
+        posts: filteringPosts(target.posts),
       },
     };
   });
+
+  if(this.#userProfilePosts().length > 0){
+  this.#userProfilePosts.update((posts) => filteringPosts(posts))
+  }
 }
 
 deletePost(postId: string, availability: Availability): Observable<void> {
-  return this.#singleTonApi.deleteById<void>(this.#routeName, postId).pipe(
+  return this.#singleTonApi.deleteById<void>(this.routeName, postId).pipe(
   tap(() => this.removePostFromState(postId, availability)),
   );
 }
 
-
+// ________________________________________________________________
 
 // 🟢 Get Posts (paginated)
-getPosts(
-availability: Availability ,
-): Observable<{ data: IPaginatedPostsResponse }> {
+getPosts(availability: Availability): Observable<{ data: IPaginatedPostsResponse }> {
 
-  if(this.#postsStateMap()[availability].hasMorePosts) return EMPTY;
+  const state = this.#postsStateMap()[availability];
+  if (state.hasMorePosts) return EMPTY;
 
-  const page = this.#postsStateMap()[availability].page;
-  return this.#singleTonApi.find<{data: IPaginatedPostsResponse }>(
-  `${this.#routeName}?page=${page}&limit=${5}`).pipe(
-
-tap(({ data: { posts : newPosts} }) => {
-if (!newPosts || newPosts.length === 0) {
-  this.#postsStateMap.update((state) => ({
-    ...state,
-    [availability]: {
-      ...state[availability],
-      hasMorePosts: true, 
-    },
-  }));
-  return;
-}
-
-  const filteredPosts = newPosts.filter(p => p.availability === availability)
-  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-  this.#postsStateMap.update((map) => ({
-    ...map,
-    [availability]: {
-      posts: [...map[availability].posts, ...filteredPosts], 
-      page: map[availability].page + 1,
-      hasMorePosts : false 
-    },
-  }));
+  return this.#singleTonApi
+    .find<{ data: IPaginatedPostsResponse }>(
+      `${this.routeName}?page=${state.page}&limit=5`
+    )
+    .pipe(
+      tap(({ data: { posts: fetchedPosts } }) => {
 
   
-    }),
-  );
+        const filtered = fetchedPosts.filter(
+          (p) => p.availability === availability
+        );
+
+        if (filtered.length === 0) {
+          this.#postsStateMap.update((prev) => ({
+            ...prev,
+            [availability]: {
+              ...prev[availability],
+              hasMorePosts: true,
+            },
+          }));
+          return;
+        }
+
+        const merged = [...state.posts, ...filtered];
+
+        const uniqueById = merged.reduce((acc, post) => {
+          acc.set(post._id, post);
+          return acc;
+        }, new Map<string, IPost>());
+
+        const finalPosts = Array.from(uniqueById.values()).sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() -
+            new Date(a.createdAt).getTime()
+        );
+
+        this.#postsStateMap.update((prev) => ({
+          ...prev,
+          [availability]: {
+            ...prev[availability],
+            posts: finalPosts,
+            page: prev[availability].page + 1,
+            hasMorePosts: false,
+          },
+        }));
+
+      })
+    );
 }
+
 
 
   getUserPosts(
@@ -352,7 +374,7 @@ if (!newPosts || newPosts.length === 0) {
   if (cachedPosts.length > 0)  return EMPTY
   
   return this.#singleTonApi.find<{data :IPaginatedPostsResponse}>
-  (`${this.#routeName}/user/${userId}?page=${page}&limit=${5} `).pipe(
+  (`${this.routeName}/user/${userId}?page=${page}&limit=${limit} `).pipe(
   tap(({data : {posts}}) => {
   this.#userProfilePosts.set(posts);
   })
@@ -368,7 +390,7 @@ if (!newPosts || newPosts.length === 0) {
     if (cachedPosts.length > 0) return EMPTY
 
     return this.#singleTonApi.find<{data : IPaginatedPostsResponse}>(`
-    ${this.#routeName}/freezed?page=${page}&limit=${5}`) .pipe(
+    ${this.routeName}/freezed?page=${page}&limit=${5}`) .pipe(
     tap(({data : {posts}}) => {
     this.#userFreezedPosts.set(posts.map((p) => ({...p , isFreezed : true})))
     })
@@ -404,7 +426,7 @@ toggleLikePost(postId: string, userId: string): Observable<void> {
   this.#userProfilePosts.update((posts) => updateLikes(posts));
 
   return this.#singleTonApi
-    .create<void>(`${this.#routeName}/like/${postId}`)
+    .create<void>(`${this.routeName}/like/${postId}`)
     .pipe(
       catchError(() => {
         this.#postsStateMap.set(prevMap);
@@ -418,7 +440,7 @@ toggleLikePost(postId: string, userId: string): Observable<void> {
 
   // 🟢 Freeze Post
 freezePost(postId: string, post: IPost): Observable<void> {
-  return this.#singleTonApi.deleteById<void>(`${this.#routeName}/freeze`, postId).pipe(
+  return this.#singleTonApi.deleteById<void>(`${this.routeName}/freeze`, postId).pipe(
     tap(() => {
       const availability = post.availability || 'public';
 
@@ -443,7 +465,7 @@ freezePost(postId: string, post: IPost): Observable<void> {
 
   // 🟢 Unfreeze Post
 unfreezePost(postId: string, post: IPost): Observable<void> {
-  return this.#singleTonApi.patch<void>(`${this.#routeName}/unfreeze/${postId}`).pipe(
+  return this.#singleTonApi.patch<void>(`${this.routeName}/unfreeze/${postId}`).pipe(
     tap(() => {
       const availability = post.availability || 'public';
 

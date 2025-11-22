@@ -11,7 +11,6 @@ import { RouterOutlet } from '@angular/router';
   <router-outlet />
   </main>
   `,
-  providers : []
 })
 export class Authentication {
 

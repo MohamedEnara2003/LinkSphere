@@ -1,21 +1,18 @@
 import { Component, input } from '@angular/core';
-import { SharedModule } from '../../modules/shared.module';
+import { CommonModule } from '@angular/common';
 
 
 @Component({
   selector: 'app-logo',
-  imports: [SharedModule],
+  imports: [CommonModule],
   template: `
-  <h1 aria-label="Logo">
-    
-  <span routerLink="/"    
+  <a 
+  aria-label="Logo" title="Logo" routerLink="/"  
   class="text-brand-color  cursor-pointer  italic font-bold
   hover:text-brand-color/50 duration-300 transition-all"
-  [ngClass]="styleClass() || 'text-lg'"> 
+  [ngClass]="styleClass() || 'text-lg'">
   Link Sphere
-  </span>
-
-  </h1>
+  </a>
   `,
 })
 export class Logo {

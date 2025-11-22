@@ -2,6 +2,7 @@ import { Component, computed, inject, signal} from '@angular/core';
 
 import { SharedModule } from '../../../../../../../../shared/modules/shared.module';
 import { UserProfileService } from '../../../../services/user-profile.service';
+import { SentFriendRequest } from '../../../../../../../../core/models/friends-requst.model';
 
 @Component({
 selector: 'app-friend-action-button',
@@ -197,26 +198,31 @@ onUserAction() : void {
 
     
     #sendFriendRequest() : void {
-      const  userProfile = this.#userProfileService.userProfile()!;
-      if(!userProfile) return ;
-      this.#userProfileService.sendFriendRequest(userProfile).subscribe();
+    const userProfile = this.#userProfileService.userProfile()!;
+    if(!userProfile) return ;
+    this.#userProfileService.sendFriendRequest(userProfile).subscribe();
     }
     
     #cancelRequest() : void {
     const  {_id : userProfileId} = this.#userProfileService.userProfile()!;
     if(!userProfileId) return ;
-    // this.#userProfileService.cancelFriendRequest(sentRequests?.requestId || '').subscribe()
+
+    const sentRequest : SentFriendRequest = 
+    this.#userProfileService.sentRequests().find(({receiver}) => (receiver._id || '') === userProfileId)!
+    if(!sentRequest) return;
+    const {_id : requestId , receiver : {_id : receiverId}} = sentRequest;
+    this.#userProfileService.cancelFriendRequest(requestId , receiverId).subscribe()
     }
     
     #accepRequest() : void {
     const  {_id : userProfileId} = this.#userProfileService.userProfile()!;
     if(!userProfileId) return ;
     
-    const sentRequests = this.#userProfileService.receivedRequests().find((s) => s.sender._id === userProfileId);
-    console.log(sentRequests);
-    
+    const sentRequests = 
+    this.#userProfileService.receivedRequests().find((s) => s.sender._id === userProfileId);
+
     if(sentRequests){
-    this.#userProfileService.acceptFriendRequest(sentRequests.requestId || '' , sentRequests.sender).subscribe()
+    this.#userProfileService.acceptFriendRequest(sentRequests._id || '' , sentRequests.sender).subscribe()
     }
     }
 }

@@ -1,34 +1,29 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { UserProfileService } from '../../../../services/user-profile.service';
-import { PostService } from '../../../../../posts/services/post.service';
 
 import { btnOpenModelUpsertPost } from '../../../../../posts/components/btn-open-model-upsert-post/btn-open-model-upsert-post';
 import { profileTitleAction } from '../profile-title-action/profile-title-action';
 import { UserFriends } from '../user-friends/user-friends';
 import { SharedModule } from '../../../../../../../../shared/modules/shared.module';
-import { PostCard } from '../../../../../posts/components/post-card/ui/post-card';
 import { NgImage } from '../../../../../../../../shared/components/ng-image/ng-image';
-import { EmptyPosts } from '../../../../../posts/components/empty-posts/empty-posts';
-import { LoadingPost } from "../../../../../posts/components/loading/loading-post/loading-post";
+import { UserPosts } from "../../../../../posts/ui/user-posts/user-posts";
 
 
 @Component({
-selector: 'app-user-posts',
+selector: 'app-user-profile-posts',
 imports: [
     btnOpenModelUpsertPost,
     profileTitleAction,
     UserFriends,
     SharedModule,
-    PostCard,
     NgImage,
-    EmptyPosts,
-    LoadingPost
+    UserPosts
 ],
 template: `
 
     <!-- Posts Section -->
     <article
-        class="w-full grid grid-cols-1 md:grid-cols-2 gap-8"
+        class="w-full min-h-[80svh]  grid grid-cols-1 md:grid-cols-2 gap-8"
         aria-labelledby="user-posts-title"
     >
         <!-- Sidebar -->
@@ -38,7 +33,6 @@ template: `
         >
 
         <section class="w-full h-full ngCard  p-2 flex flex-col gap-5">
-
         <app-profile-title-action
         [title]="'profile.actions.photos' | translate"
         query="Photos"
@@ -74,11 +68,10 @@ template: `
         />
         }
         </section>
-
         </aside>
 
-        <!-- Main Posts -->
-        <section class="flex flex-col gap-6">
+    <!-- Main Posts -->
+    <section class="flex flex-col gap-6">
         <header class="flex flex-col gap-4">
             <app-btn-open-model-upsert-post />
             <h2
@@ -89,29 +82,17 @@ template: `
             </h2>
         </header>
 
-        <main class="grid grid-cols-1 gap-5">
-            @for (post of postService.userProfilePosts(); track post.id) {
-            <article class="w-full min-h-60">
-                @defer (on viewport) {
-                <app-post-card [post]="post" />
-                } @placeholder {
-                <app-loading-post class="size-full"/>
-                }
-            </article>
-            } @empty {
-            <app-empty-posts [isCreatePost]="userProfileService.isMyProfile()" />
-            }
-        </main>
-        </section>
+    <app-user-posts [userId]="userId() || ''" />
+    </section>
+
+        
     </article>
 `,
 changeDetection : ChangeDetectionStrategy.OnPush ,
 })
 
-export class UserPosts {
+export class UserProfilePosts {
 userProfileService = inject(UserProfileService);
-postService = inject(PostService);
-
 
 
 friends = computed(() => 
@@ -132,17 +113,7 @@ return picturesList.filter((_, index) => index < chunkSize);
 
 userId = input<string>();
 
-  constructor(){
-  effect(() => {
-  const id = this.userId();
-  if (!id) return;
-  untracked(() => this.#getUserPosts(id));
-  });
-  }
 
-  #getUserPosts (userId : string) : void {
-  this.postService.getUserPosts(userId).subscribe();
-  }
 
 
 }

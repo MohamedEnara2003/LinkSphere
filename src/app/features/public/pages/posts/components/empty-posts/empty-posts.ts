@@ -6,16 +6,20 @@ import { UserProfileService } from '../../../profile/services/user-profile.servi
 selector: 'app-empty-posts',
 imports: [RouterModule],
 template: `
-  <section
-      class="w-full h-100 flex flex-col items-center justify-center gap-4  ngCard text-center animate-opacity"
+    <section
+      role="alert"
+      aria-labelledby="no-users-title"
+      aria-describedby="no-users-description"
+      class="size-full flex flex-col items-center justify-center py-12 text-center"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        class="size-16 text-info"
+        class="size-12 md:size-16 mb-4 text-brand-color"
         fill="none"
         viewBox="0 0 24 24"
         stroke-width="1.5"
         stroke="currentColor"
+        
       >
         <path
           stroke-linecap="round"
@@ -27,7 +31,7 @@ template: `
     No posts yet
     </h2>
 
-    <p class="text-sm text-gray-500 dark:text-gray-400">
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
     Be the first to share something with your friends!
     </p>
     
