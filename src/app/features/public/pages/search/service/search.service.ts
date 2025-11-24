@@ -43,6 +43,8 @@ public searchResult = toSignal<searchResult>(
   ),
 );
 
+cachSearchValue = signal<string>('');
+
 #usersRouteName = computed(() => this.#userProfileService.routeName);
 #postsRouteName = computed(() => this.#postsService.routeName);
 
@@ -72,8 +74,7 @@ isPostsLoading = computed(() => this.#isPostsLoading());
 
 // Posts Pagination
 postsPage = signal<number>(1);
-hasMorePost= signal<boolean>(false);
-
+hasMorePost= signal<boolean | null>(false);
 //______________________________
 
 // Search all State
@@ -101,23 +102,20 @@ recentSearches = computed(() => this.#recentSearches());
   const page = this.postsPage();
   this.#isPostsLoading.set(false);
 
-  // merge without duplicates (append behavior)
   this.#posts.update(prev => this.#removeDuplicates(prev, newPosts));
-
+  this.cachSearchValue.set(this.searchValue());
   if (page < totalPages) {
     this.hasMorePost.set(true);
     this.postsPage.update(p => p + 1);
-  } else {
-    this.hasMorePost.set(false);
+  } else if(page === totalPages){
+    this.hasMorePost.set(null);
   }
 }
 
 #updateSearchUsersState(newUsers: IUser[], totalPages: number): void {
   const page = this.usersPage();
   this.#isUsersLoading.set(false);
-
   this.#users.update(prev => this.#removeDuplicates(prev, newUsers));
-
   if (page < totalPages) {
     this.hasMoreUser.set(true);
     this.usersPage.update(p => p + 1);
@@ -134,7 +132,6 @@ public searchForUsers(limit: number = 3)
 
   const key = this.searchValue();
   if(!key)  return of(null);;
-
 
   const page = this.usersPage();
   
@@ -161,7 +158,7 @@ public searchForUsers(limit: number = 3)
 
 
 // Search For Posts
-public searchForPosts(author: string = '', limit: number = 1)
+public searchForPosts(author: string = '', limit: number = 5)
   : Observable<{ data: { posts: IPost[]; pagination: Pagination } } | null> {
 
   const key = this.searchValue();
@@ -173,7 +170,7 @@ public searchForPosts(author: string = '', limit: number = 1)
   const page = this.postsPage();
 
   if (page === 1) {
-    this.#isPostsLoading.set(true);
+  this.#isPostsLoading.set(true);
   }
 
   return this.#singleTonApi
@@ -193,7 +190,7 @@ public searchForPosts(author: string = '', limit: number = 1)
 }
 
 // Search For All
-searchForAll(limit: number = 10): Observable<ISearch | null> {
+searchForAll(): Observable<ISearch | null> {
   this.#isAllLoading.set(true);
 
   const key = this.searchValue();
@@ -207,7 +204,7 @@ searchForAll(limit: number = 10): Observable<ISearch | null> {
   this.#isPostsLoading.set(true);
 
   const users_limit = 3;
-  const posts_limit = 10;
+  const posts_limit = 5;
   const users_page = 1;
   const posts_page = 1;
 
@@ -215,6 +212,7 @@ searchForAll(limit: number = 10): Observable<ISearch | null> {
 
   return this.#singleTonApi.find<ISearch>(`${this.routeName}?${queries}`).pipe(
     tap((res) => {
+
       this.#isAllLoading.set(false);
       if (!res) return;
 

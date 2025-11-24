@@ -7,7 +7,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { LinkUserProfile } from "../navigations/link-user-profile/link-user-profile";
 import { fromEvent, map, pairwise, tap } from 'rxjs';
 import { SharedModule } from '../../../../shared/modules/shared.module';
-import { SearchService } from '../../pages/search/service/search.service';
+
 
 
 
@@ -21,7 +21,7 @@ import { SearchService } from '../../pages/search/service/search.service';
 @if(!isHide()){ 
   
 <header aria-label="Header" role="heading"
-class="w-full h-[8svh] sm:h-[10svh] ngCard rounded-none  px-4  grid  grid-cols-2 md:grid-cols-3
+class="w-full h-[10svh] ngCard rounded-none  px-4  grid  grid-cols-2 md:grid-cols-3
 items-center z-50 border-b border-b-brand-color/10 sticky top-0 ">
 
 
@@ -34,17 +34,17 @@ items-center z-50 border-b border-b-brand-color/10 sticky top-0 ">
   </nav>
  
 
-<nav  role="navigation" class="w-full flex justify-end   gap-4 "> 
+<nav  role="navigation" class="w-full flex justify-end    gap-4 "> 
     <button 
     routerLink="/public/search"
+    routerLinkActive="text-brand-color"
     type="button" aria-label="Button search page" class="ngBtnIcon">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
     <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
     </svg>
     </button>
 
-  <app-link-user-profile [isProfile]="isProfile()" 
-  />
+  <app-link-user-profile [isProfile]="isProfile()" />
   
 
 </nav>

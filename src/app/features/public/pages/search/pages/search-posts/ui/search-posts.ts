@@ -18,6 +18,7 @@ template : `
     }@else {
     <app-list-search-posts />
     }
+{{searchService.hasMorePost() === null ? "null" : ""}} 
 </section>
 `
 })
@@ -25,7 +26,10 @@ export class SearchPosts {
     readonly searchService = inject(SearchService);
 
     ngOnInit(): void {
+    const hasMorePost = this.searchService.hasMorePost();
+    if(hasMorePost !== null){
     this.#loadPosts();
+    }
     }
 
     #loadPosts() : void {

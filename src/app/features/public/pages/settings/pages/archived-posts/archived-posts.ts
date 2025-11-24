@@ -17,10 +17,9 @@ import { FreezedPosts } from "../../../posts/ui/freezed-posts/freezed-posts";
       </h1>
       <p class="text-sm text-gray-400">{{ 'settings.posts.subtitle' | translate }}</p>
       </header>
-      
-  <main class="size-full grid grid-cols-1 gap-5">
+
   <app-freezed-posts />
-  </main>
+
 
   </article>
   `,

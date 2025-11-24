@@ -74,10 +74,10 @@ export interface UserProfile {
 
 export interface Author {
     id: string;
+    _id: string;
     firstName: string;
     lastName: string;
     userName: string;
-    _id: string;
     picture? : Picture;
 }
 

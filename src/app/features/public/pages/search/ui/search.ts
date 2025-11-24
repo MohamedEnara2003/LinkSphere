@@ -27,10 +27,10 @@ template : `
 <section 
 aria-label="Search Page" 
 role="region" 
-class="w-full min-h-svh lg:px-30 xl:px-50  ">
+class="w-full min-h-[90svh] lg:px-30 xl:px-50  ">
 
 <main 
-class="w-full min-h-svh ngCard rounded-none   mx-auto 
+class="w-full min-h-[90svh] ngCard rounded-none   mx-auto 
 flex flex-col gap-5 "
 role="main"
 aria-labelledby="search-page-title"
@@ -38,7 +38,7 @@ aria-labelledby="search-page-title"
 
 
 
-<section class="sticky top-0  flex flex-col gap-4 p-2 ngCard z-10 rounded-none ">
+<section class="sticky top-[10svh]  flex flex-col gap-4 p-2 ngCard z-10 rounded-none ">
     
 <app-search-form
 class="duration-300 transition-all relative animate-opacity lg:animate-none"

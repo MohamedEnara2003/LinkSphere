@@ -80,22 +80,19 @@ See all posts results
 export class SearchAll {
 readonly searchService = inject(SearchService);
 
-
-
 constructor(){
 toObservable(this.searchService.searchValue).pipe(
 tap((querySearch) => {
-if(querySearch){
+const hasMorePost  = this.searchService.hasMorePost();
+const cachSearchValue = this.searchService.cachSearchValue();
+
+if(!querySearch || cachSearchValue === querySearch && hasMorePost === null) return;
 this.searchService.searchForAll().subscribe();
-}
 }),
 takeUntilDestroyed()
 ).subscribe()
 }
 
-#loadUsers() : void {
-this.searchService.searchForAll().subscribe();
-}
 
 }
 

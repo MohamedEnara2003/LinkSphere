@@ -3,6 +3,7 @@ import { IPaginatedPostsResponse, IPost } from "../../../../../../core/models/po
 import { EMPTY, Observable, tap } from "rxjs";
 import { AppPostsService } from "../app/app-posts.service";
 import { PostsStateService } from "../state/posts-state.service";
+import { Author } from "../../../../../../core/models/user.model";
 
 
 @Injectable()
@@ -36,7 +37,12 @@ unfreezePost(postId: string, post: IPost): Observable<void> {
 
     return this.#appPostsService.singleTonApi.find<{data : IPaginatedPostsResponse}>
     (`${this.#appPostsService.routeName}/freezed?page=${page}&limit=${5}`) .pipe(
-    tap(({data : {posts}}) => this.#postsStateService.addFreezePosts(posts))
+    tap(({data : {posts}}) => {
+    const user  = this.#appPostsService.userService.user();
+    if(!user) return;
+    const freezePosts : IPost[] = posts.map((post) => ({...post ,author : user}))
+    this.#postsStateService.addFreezePosts(freezePosts)
+    })
     )
     }
 }

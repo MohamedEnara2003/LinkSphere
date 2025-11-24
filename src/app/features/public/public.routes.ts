@@ -35,7 +35,6 @@ export const publicRoutes: Routes = [
       },
       {
         path: 'search',
-        data: { isHide: true },
         loadComponent: () => import('./pages/search/ui/search').then(c => c.SearchCompoent),
       },
       {

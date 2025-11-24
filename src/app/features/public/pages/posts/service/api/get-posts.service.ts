@@ -21,17 +21,15 @@ getPosts(
 availability: Availability ,
 ): Observable<{ data: IPaginatedPostsResponse }> {
 
-  if(this.#postsStateService.getPostsByState()[availability].hasMorePosts) return EMPTY;
+const page = this.#postsStateService.getPostsByState()[availability].page;
+return this.#appPostsService.singleTonApi.find<{data: IPaginatedPostsResponse }>(
+`${this.#appPostsService.routeName}?page=${page}&limit=${5}`).pipe(
 
-  const page = this.#postsStateService.getPostsByState()[availability].page;
-  return this.#appPostsService.singleTonApi.find<{data: IPaginatedPostsResponse }>(
-  `${this.#appPostsService.routeName}?page=${page}&limit=${5}`).pipe(
-
-tap(({ data: { posts : newPosts} }) => {
-  const filteredPosts = newPosts.filter(p => p.availability === availability);
-  this.#postsStateService.addPosts(filteredPosts , availability );
+tap(({ data: { posts : newPosts , pagination} }) => {
+const filteredPosts = newPosts.filter(p => p.availability === availability);
+this.#postsStateService.addPosts(filteredPosts , availability , pagination.totalPages);
 }),
-  );
+);
 }
 
 

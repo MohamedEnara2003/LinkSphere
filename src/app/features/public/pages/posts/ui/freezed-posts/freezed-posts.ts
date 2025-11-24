@@ -4,26 +4,24 @@ import { PostCard } from "../../components/post-card/ui/post-card";
 import { SharedModule } from '../../../../../../shared/modules/shared.module';
 import { FreezePostService } from '../../service/api/freeze-posts.service';
 import { PostsStateService } from '../../service/state/posts-state.service';
+import { LoadingPost } from "../../components/loading/loading-post/loading-post";
 
 
 @Component({
   selector: 'app-freezed-posts',
-  imports: [PostCard , SharedModule],
+  imports: [PostCard, SharedModule, LoadingPost],
   template: `
+<ul class="w-full grid grid-cols-1 gap-5">
 @for (post of freezePosts(); track post._id) {
-
-<article class="w-full min-h-60">
-
+<li class="w-full min-h-60">
 @defer (on viewport) {
 <app-post-card [post]="post" class="size-full"/>
 }@placeholder {
-<div class="size-full bg-neutral-300 animate-pulse ngCard"></div>
+<app-loading-post/>
 }
-
-</article>
+</li>
 }@empty {
-  <!-- Empty State Section -->
-  <div class="flex flex-col items-center justify-center py-12 text-center">
+  <li class="flex flex-col items-center justify-center py-12 text-center">
         <svg xmlns="http://www.w3.org/2000/svg" 
         fill="none" viewBox="0 0 24 24" 
         stroke-width="1.5" stroke="currentColor" 
@@ -38,9 +36,10 @@ import { PostsStateService } from '../../service/state/posts-state.service';
         <p class="text-gray-500 mt-2">
         {{ 'settings.posts.you_have_not_frozen_any_posts' | translate }}
         </p>
-</div>
+</li>
 
 }
+</ul>
 
 `,
 providers : [

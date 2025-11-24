@@ -329,7 +329,7 @@ getUserProfileById(userId: string): Observable<{data : IUser}> {
       );
 
     this.#receivedRequests.set(receivedRequests)
-  })
+  }), catchError(() => of({data : {requests : []}}))
   )
   }
 
@@ -353,7 +353,7 @@ getSentFriendRequests(): Observable<{
       );
 
       this.#sentRequests.set(sentRequests);
-    })
+    }) , catchError(() => of({data : {requests : []}}))
     );
 }
 

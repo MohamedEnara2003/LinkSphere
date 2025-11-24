@@ -30,7 +30,7 @@ import { GetPostsService } from '../../service/api/get-posts.service';
 } 
 
 
-@if(!hasMorePosts()){ 
+@if(hasMorePosts()){ 
 <app-feed-auto-loader 
 loadingType="post"
 (loadData)="loadMore()"
@@ -80,7 +80,7 @@ export class PostsFeed {
       .subscribe();
     }
     
-    loadMore() {
+    loadMore() {  
     const currentState = this.postsState() || 'public';
     this.#getPostsService.getPosts(currentState ).subscribe();
     }

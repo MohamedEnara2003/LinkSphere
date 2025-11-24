@@ -1,14 +1,12 @@
 import { Component, inject } from '@angular/core';
-import { Router, RouterOutlet } from '@angular/router';
+import { RouterOutlet } from '@angular/router';
 import { Header } from "./components/header/header";
 import { Footer } from "./components/footer/footer";
 import { UserProfileService } from './pages/profile/services/user-profile.service';
 import { Logo } from "../../shared/components/logo/logo";
 import { LoadingService } from '../../core/services/loading.service';
-import { catchError, EMPTY, tap } from 'rxjs';
-import { AuthToken } from '../../core/models/auth.model';
-import { StorageService } from '../../core/services/locale-storage.service';
-import { DomService } from '../../core/services/dom.service';
+import { tap } from 'rxjs';
+import { MetaService } from '../../core/services/meta/meta.service';
 
 
 @Component({
@@ -37,10 +35,8 @@ import { DomService } from '../../core/services/dom.service';
 })
 
 export class Public {
-#router = inject(Router);
 #userProfileService = inject(UserProfileService);
-#domService = inject(DomService);
-#storageService = inject(StorageService);
+#metaService = inject(MetaService);
 loadingService = inject(LoadingService);
 
 
@@ -51,26 +47,19 @@ this.#userProfileService.getSentFriendRequests().subscribe();
 }
 
   #getUserProfile() : void {
-  if (!this.#domService.isBrowser()) return;
-  
-  const auth = this.#storageService.getItem<AuthToken>('auth');
-  if (!auth?.access_token) {
-  this.#redirectToLogin();
-  return;
+  this.#userProfileService.getUserProfile().pipe(
+  tap(({data : {user}}) => {
+    this.#metaService.setFullSeo({
+      title: `${user.firstName} ${user.lastName} (@${user.userName}) • Profile`,
+      description: `View ${user.firstName} ${user.lastName}'s profile and social activity.`,
+      user,
+      url: `/public/profile/user/${user._id}`,
+      image: user.picture?.url || '',
+    });
+  })
+  ).subscribe();
   }
 
-  this.#userProfileService.getUserProfile()
-    .pipe(
-    tap(({data : {user}}) => !user ? this.#redirectToLogin() : user),
-    catchError(() => {
-    this.#redirectToLogin();
-    return EMPTY
-    })
-    ).subscribe();
-  }
 
-  #redirectToLogin  () {
-  this.#router.navigate(['/auth/login']);
-  }
 
 }

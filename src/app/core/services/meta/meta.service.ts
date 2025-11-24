@@ -1,152 +1,125 @@
-import { Injectable, inject, DOCUMENT } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
+import { DomService } from '../dom.service';
+import { IUser } from '../../models/user.model';
+import { environment } from '../../../../environments/environment.development';
 
-export interface MetaData {
-  // 🧠 Basic SEO
-  title?: string;
-  description?: string;
-  keywords?: string;
-  author?: string;
-  robots?: string;
-  canonical?: string;
-
-  // 🟩 Open Graph (Facebook / LinkedIn)
-  ogTitle?: string;
-  ogDescription?: string;
-  ogImage?: string;
-  ogUrl?: string;
-  ogType?: 'website' | 'article' | 'profile' | 'video.other';
-  ogLocale?: string;
-  ogSiteName?: string;
-
-  // 🐦 Twitter Card
-  twitterCard?: 'summary' | 'summary_large_image' | 'app' | 'player';
-  twitterTitle?: string;
-  twitterDescription?: string;
-  twitterImage?: string;
-  twitterSite?: string;
-  twitterCreator?: string;
-
-  // 📱 App & Theme
-  themeColor?: string;
-  mobileAppTitle?: string;
-  appleTouchIcon?: string;
-  manifest?: string;
-
-  // ⚙️ Extra
-  refresh?: string;
-  viewport?: string;
-  charset?: string;
-
-  // 🧩 Schema.org / JSON-LD
-  schemaType?: string;
-  schemaData?: Record<string, any>;
+export interface MetaConfig {
+  title: string;
+  description: string;
+  user: IUser;
+  image: string;
+  url: string;
+  type?: string; 
 }
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class MetaService {
-  #meta = inject(Meta);
+  #dom = inject(DomService);
   #title = inject(Title);
-  #document = inject(DOCUMENT);
+  #meta = inject(Meta);
 
-  /**
-   * 🧩 تعيين كل الميتا مرة واحدة
-   */
-  
-  setMetaTags(meta: MetaData): void {
-    // 🧠 تحديث العنوان
-    if (meta.title) this.#title.setTitle(meta.title);
+  // ------------------------------
+  // Basic internal helpers
+  // ------------------------------
 
-    // 🧩 Basic meta
-    this.#updateTag('description', meta.description);
-    this.#updateTag('keywords', meta.keywords);
-    this.#updateTag('author', meta.author);
-    this.#updateTag('robots', meta.robots);
-
-    // 🧩 Canonical
-    if (meta.canonical) this.#setCanonical(meta.canonical);
-
-    // 🟩 Open Graph
-    this.#updateProperty('og:title', meta.ogTitle || meta.title);
-    this.#updateProperty('og:description', meta.ogDescription || meta.description);
-    this.#updateProperty('og:type', meta.ogType || 'website');
-    this.#updateProperty('og:url', meta.ogUrl || this.#document.URL);
-    this.#updateProperty('og:image', meta.ogImage || '/assets/default-og.png');
-    this.#updateProperty('og:locale', meta.ogLocale || 'en_US');
-    this.#updateProperty('og:site_name', meta.ogSiteName || meta.title);
-
-    // 🐦 Twitter Card
-    this.#updateProperty('twitter:card', meta.twitterCard || 'summary_large_image');
-    this.#updateProperty('twitter:title', meta.twitterTitle || meta.title);
-    this.#updateProperty('twitter:description', meta.twitterDescription || meta.description);
-    this.#updateProperty('twitter:image', meta.twitterImage || '/assets/default-og.png');
-    this.#updateProperty('twitter:site', meta.twitterSite);
-    this.#updateProperty('twitter:creator', meta.twitterCreator);
-
-    // 📱 Theme & App
-    this.#updateTag('theme-color', meta.themeColor);
-    this.#updateTag('apple-mobile-web-app-title', meta.mobileAppTitle || meta.title);
-    this.#updateTag('apple-touch-icon', meta.appleTouchIcon);
-    this.#updateTag('manifest', meta.manifest);
-    this.#updateTag('viewport', meta.viewport || 'width=device-width, initial-scale=1');
-    this.#updateTag('charset', meta.charset || 'UTF-8');
-    this.#updateTag('refresh', meta.refresh);
-
-    // 🧩 Schema.org (Structured Data)
-    if (meta.schemaType && meta.schemaData) {
-      this.#addJsonLd(meta.schemaType, meta.schemaData);
-    }
-  }
-
-  /**
-   * 🟢 تحديث العنوان فقط
-   */
-  setTitle(title: string): void {
+  #setTitle(title: string) {
     this.#title.setTitle(title);
   }
 
-  /**
-   * 🟠 تحديث meta tag عادي
-   */
-  #updateTag(name: string, content?: string): void {
-    if (!content) return;
-    this.#meta.updateTag({ name, content });
+  #setDescription(desc: string) {
+    this.#meta.updateTag({ name: 'description', content: desc });
   }
 
-  /**
-   * 🔵 تحديث meta tag خاص بالـ property
-   */
-  #updateProperty(property: string, content?: string): void {
-    if (!content) return;
-    this.#meta.updateTag({ property, content });
+  #setMetaTags(tags: { name?: string; property?: string; content: string }[]) {
+    tags.forEach(tag => this.#meta.updateTag(tag));
   }
 
-  /**
-   * 🔗 تعيين canonical link tag
-   */
-  #setCanonical(url: string): void {
-    let link: HTMLLinkElement | null = this.#document.querySelector("link[rel='canonical']");
+  #setCanonicalURL(url: string) {
+    let link = this.#dom.document.querySelector("link[rel='canonical']") as HTMLLinkElement;
+
     if (!link) {
-      link = this.#document.createElement('link');
-      link.setAttribute('rel', 'canonical');
-      this.#document.head.appendChild(link);
+      link = this.#dom.document.createElement('link');
+      link.rel = 'canonical';
+      this.#dom.document.head.appendChild(link);
     }
-    link.setAttribute('href', url);
+
+    link.href = url;
   }
 
-  /**
-   * 🧱 إضافة بيانات JSON-LD (Structured Data)
-   */
-  #addJsonLd(type: string, data: Record<string, any>): void {
-    const script = this.#document.createElement('script');
-    script.type = 'application/ld+json';
-    script.text = JSON.stringify({
-      '@context': 'https://schema.org',
-      '@type': type,
-      ...data,
+  #setJsonLD(schema: any) {
+    let script = this.#dom.document.querySelector('#json-ld-script') as HTMLScriptElement;
+
+    if (!script) {
+      script = this.#dom.document.createElement('script');
+      script.id = 'json-ld-script';
+      script.type = 'application/ld+json';
+      this.#dom.document.head.appendChild(script);
+    }
+
+    script.textContent = JSON.stringify(schema);
+  }
+
+
+  // PUBLIC: Main SEO Function
+
+
+  public setFullSeo(config: MetaConfig) {
+    const {
+      title,
+      description,
+      url,
+      image,
+      user,
+      type = 'website'
+    } = config;
+
+    // 1️⃣ Title
+    this.#setTitle(title);
+
+    // 2️⃣ Description
+    this.#setDescription(description);
+
+    // 3️⃣ Canonical
+    this.#setCanonicalURL(url);
+
+    // 4️⃣ Open Graph
+    this.#setMetaTags([
+      { property: 'og:title', content: title },
+      { property: 'og:description', content: description },
+      { property: 'og:type', content: type },
+      { property: 'og:url', content: url },
+      { property: 'og:image', content: image },
+    ]);
+
+    // 5️⃣ Twitter
+    this.#setMetaTags([
+      { name: 'twitter:card', content: 'summary_large_image' },
+      { name: 'twitter:title', content: title },
+      { name: 'twitter:description', content: description },
+      { name: 'twitter:image', content: image },
+    ]);
+
+    // 6️⃣ Main Meta
+    this.#setMetaTags([
+      { name: 'robots', content: 'index, follow' },
+      { name: 'author', content: `${user.firstName} ${user.lastName}` },
+    ]);
+
+    // 7️⃣ JSON-LD Schema
+    this.#setJsonLD({
+      "@context": "https://schema.org",
+      "@type": "Person",
+
+      "name": `${user.firstName} ${user.lastName}`,
+      "alternateName": user.userName,
+      "url": `${environment.appUrl}/${url}`,
+      "image": user.picture?.url || "/user-placeholder.webp",
+
+      "gender": user.gender,
+      "jobTitle": user.role,
+
+      "sameAs": [],
     });
-    this.#document.head.appendChild(script);
   }
 }

@@ -1,4 +1,4 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { Availability, IPost, IUpdatePostContent } from '../../../../../../core/models/posts.model';
 import { Picture } from '../../../../../../core/models/picture';
 import { UserProfileService } from '../../../profile/services/user-profile.service';
@@ -33,6 +33,12 @@ public post = computed(() => this.#post());
 
 //_____________________________________________________________________
 
+constructor(){
+  effect(() => {
+  console.log(this.#postsStateMap());
+  
+  })
+}
 
 // Update post state
 
@@ -44,37 +50,44 @@ public post = computed(() => this.#post());
   this.#userFreezedPosts.set(posts.map((p) => ({...p , isFreezed : true})))
   }
 
-  addPosts(filteredPosts : IPost[] , availability : Availability ) : void {
-  if (!filteredPosts || filteredPosts.length === 0) {
-  this.#postsStateMap.update((state) => ({
-    ...state,
-    [availability]: {
-      ...state[availability],
-      hasMorePosts: true, 
-    },
-  }));
-  return;
+addPosts(filteredPosts: IPost[], availability: Availability, totalPages: number): void {
+  const state = this.#postsStateMap();
+  const currentPage = state[availability].page;
+
+  const reachedLastPage = currentPage === totalPages;
+
+  if (!filteredPosts || filteredPosts.length === 0 || reachedLastPage) {
+    this.#postsStateMap.update((map) => ({
+      ...map,
+      [availability]: {
+        ...map[availability],
+        hasMorePosts: false
+      }
+    }));
+    return;
+  }
+
+  this.#postsStateMap.update((map) => {
+    const oldPosts = map[availability].posts;
+
+    // Merge then unique by id
+    const mergedPosts = [...oldPosts, ...filteredPosts];
+
+    const uniquePosts = Array.from(
+      new Map(mergedPosts.map(p => [p.id, p])).values()
+    );
+
+    return {
+      ...map,
+      [availability]: {
+        posts: uniquePosts,
+        page: map[availability].page + 1,
+        hasMorePosts: true
+      }
+    };
+  });
 }
 
-  
-  this.#postsStateMap.update((map) => {
-  const oldPosts = map[availability].posts;
-
-  const uniquePostsSet = new Set([...oldPosts, ...filteredPosts]);
-  const uniqueSortedPosts = Array.from(uniquePostsSet).sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
-
-  return {
-    ...map,
-    [availability]: {
-      posts: uniqueSortedPosts,
-      page: map[availability].page + 1,
-      hasMorePosts: false,
-    },
-  };
-});
-  }
 
   addUserPosts(posts : IPost[]) : void {
   this.#userProfilePosts.set(posts);
@@ -206,19 +219,31 @@ this.#userProfilePosts.update((posts) =>
   // ---------------------------
   // 🔥 UNFREEZE
   // ---------------------------
-  unfreezePostLocally(postId: string, post: IPost) {
-    const av = post.availability;
+unfreezePostLocally(postId: string, unFreezePost: IPost) {
+  const availability = unFreezePost.availability;
 
-    this.#userFreezedPosts.update(p => p.filter(x => x._id !== postId));
+  this.#userFreezedPosts.update((freezedPosts) =>
+    freezedPosts.filter(post => post._id !== postId)
+  );
+  
+  this.#postsStateMap.update((state) => {
+    const group = state[availability];
 
-    this.#postsStateMap.update((s) => ({
-      ...s,
-      [av]: {
-        ...s[av],
-        posts: [{ ...post, isFreezed: false }, ...s[av].posts]
+    const filtered = group.posts.filter(p => p._id !== postId);
+
+    return {
+      ...state,
+      [availability]: {
+        ...group,
+        posts: [
+          { ...unFreezePost, isFreezed: false },
+          ...filtered,
+        ]
       }
-    }));
-  }
+    };
+  });
+}
+
 
   // 🔥 UPDATE POST LIKES
 updatePostLikes(postId: string, userId: string): void {

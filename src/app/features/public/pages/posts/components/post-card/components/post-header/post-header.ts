@@ -62,7 +62,7 @@ template: `
       (action)="handleCommentMenu($event)"
       [userId]="post()?.author?._id || ''"
       />
-
+  
   </header>
     
 `,

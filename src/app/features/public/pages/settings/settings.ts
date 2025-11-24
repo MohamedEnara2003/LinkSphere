@@ -13,11 +13,13 @@ import { BackLink } from "../../../../shared/components/links/back-link";
 
   <app-settings-side-bar />
   
-  <main class="w-full min-h-svh flex flex-col gap-2  p-2 ">
+  <main class="w-full min-h-svh flex flex-col  gap-2  p-2 ">
   <header class="w-full flex p-2 ">
   <app-back-link path="/" />
   </header>
+
   <router-outlet />
+
   </main>
 
   </section>
