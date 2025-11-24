@@ -7,7 +7,7 @@ import { NonNullableFormBuilder, Validators, FormsModule, ReactiveFormsModule, F
 import { PostModelHeader } from "./components/post-model-header";
 import { CreateByPostInfo } from "./components/create-by-post-info";
 import { AllowComments, Availability, FormPost, IPost} from '../../../../../../core/models/posts.model';
-import { PostService } from '../../services/post.service';
+
 import { CustomValidators } from '../../../../../../core/validations/custom/custom-validations';
 import { PostAttachments } from "./components/post-attachments";
 import { NgControl } from "../../../../../../shared/components/ng-control/ng-control.";
@@ -15,6 +15,9 @@ import { SharedModule } from '../../../../../../shared/modules/shared.module';
 import { TagFriends } from "../tag-friends/tag-friends";
 import { TagsService } from '../../../../../../core/services/tags.service';
 import { AttachmentsService } from '../../../../../../core/services/attachments.service';
+import { CreatePostService } from '../../service/api/create-posts.service';
+import { PostsStateService } from '../../service/state/posts-state.service';
+import { UpdatePostService } from '../../service/api/update-posts.service';
 
 
 @Component({
@@ -156,10 +159,20 @@ import { AttachmentsService } from '../../../../../../core/services/attachments.
     </article>
   </section>
 `,
+providers :[
+CreatePostService,
+UpdatePostService
+],
 changeDetection : ChangeDetectionStrategy.OnPush
 })
 export class UpsertPostModel implements  OnDestroy{
   readonly contentPlaceHolder : string = `What's on your mind? ✍️` ;
+
+    #createPostService = inject(CreatePostService);
+    #updatePostService = inject(UpdatePostService);
+    #postState= inject(PostsStateService);
+
+
 
   isOpenTagModel = signal<boolean>(false);
 
@@ -168,8 +181,7 @@ export class UpsertPostModel implements  OnDestroy{
   #domService = inject(DomService);
   #fb = inject(NonNullableFormBuilder);
 
-  #postService = inject(PostService);
-  existingPost = computed<IPost | null>( () => this.#postService.post());
+  existingPost = computed<IPost | null>( () => this.#postState.post());
 
   postForm: FormGroup<{
     content: FormControl<string>;
@@ -252,14 +264,15 @@ export class UpsertPostModel implements  OnDestroy{
     (post.removedAttachments?.length ?? 0) > 0;
 
   if (updateContent) {
-    this.#postService.updatePostContent(postId, post).subscribe();
+    this.#updatePostService.updatePostContent(postId, post).subscribe();
   }
 
   if (updateAttachments) {
-    this.#postService.updatePostAttachments(postId, post).subscribe();
+    this.#updatePostService.updatePostAttachments(postId, post).subscribe();
   }
 
 }
+
 
   onSubmitPost(): void {
   if (!this.postForm.valid) return;
@@ -269,7 +282,7 @@ export class UpsertPostModel implements  OnDestroy{
   
   existingPost ? 
   this.#updatePost(post  , existingPost._id) :
-  this.#postService.createPost(post).subscribe();
+  this.#createPostService.createPost(post).subscribe();
   }
 
 
@@ -277,7 +290,7 @@ export class UpsertPostModel implements  OnDestroy{
   this.postForm.controls.content.setValue('');
   this.postForm.controls.tags.clear()
   this.postForm.controls.removedTags.clear();
-  this.#postService.setPost(null);
+  this.#postState.setPost(null);
   this.#tagsService.clearForm();
   this.#domService.setBodyOverflow('auto');
   

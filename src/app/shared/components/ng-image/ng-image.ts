@@ -48,7 +48,8 @@ export interface ImageOption {
     }@else {
     <div [ngClass]="options().class" class="ng-skeleton"></div>
     }
-    <!-- Fullscreen Preview -->
+
+  <!-- Fullscreen Preview -->
   @if (preview()) {
   <section
   class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm
@@ -58,7 +59,7 @@ export interface ImageOption {
   aria-labelledby="image-preview-title"
   (click)="closePreview()"
 >
-  <!-- الخلفية الداكنة -->
+  
   <div
     class="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-300 ease-out"
     aria-hidden="true"
@@ -69,10 +70,9 @@ export interface ImageOption {
     class="relative z-50 p-4 flex items-center justify-center max-h-[95vh] max-w-[95vw]"
     (click)="$event.stopPropagation()"
   >
-    <!-- عنوان للـ screen readers -->
+
     <h2 id="image-preview-title" class="sr-only">Image preview</h2>
 
-    <!-- زر الإغلاق -->
     <button
       type="button"
       (click)="closePreview()"
@@ -92,7 +92,7 @@ export interface ImageOption {
       </svg>
     </button>
 
-    <!-- الصورة -->
+    
     <img
       [src]="options().src"
       [alt]="options().alt || 'Preview image'"

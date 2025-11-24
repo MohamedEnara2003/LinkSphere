@@ -1,14 +1,15 @@
 import { inject, Injectable } from '@angular/core';
 import { UserProfileService } from '../../features/public/pages/profile/services/user-profile.service';
 import { FormArray, FormGroup, NonNullableFormBuilder } from '@angular/forms';
-import { PostService } from '../../features/public/pages/posts/services/post.service';
+import { PostsStateService } from '../../features/public/pages/posts/service/state/posts-state.service';
+
 
 @Injectable({
   providedIn: 'root',
 })
 export class TagsService {
 
-  #postService = inject(PostService);
+  #postsStateService = inject(PostsStateService);
   #userService = inject(UserProfileService);
   #fb = inject(NonNullableFormBuilder);
 
@@ -22,20 +23,9 @@ get tags(): FormArray {
   return this.form.get('tags') as FormArray;
 }
 
- removeTag(index: number): void {
-    if (index < 0 || index >= this.tags.length) return;
-
-    // const userId = this.tags.at(index).value;
-    this.tags.removeAt(index);
-
-    // const existing: string[] = this.form.get('existingTags')?.value || [];
-    // if (existing.includes(userId)) {
-    //   const removedCtrl = this.form.get('removedTags');
-    //   const current = removedCtrl?.value || [];
-    //   if (!current.includes(userId)) {
-    //     removedCtrl?.setValue([...current, userId]);
-    //   }
-    // }
+  removeTag(index: number): void {
+  if (index < 0 || index >= this.tags.length) return;
+  this.tags.removeAt(index);
   }
 
   isUserTagged(userId: string): boolean {
@@ -64,7 +54,7 @@ get tags(): FormArray {
     if (!tagsArray) return; // Guard: ensure FormArray exists
 
     const id = String(userId);
-    const existingPost = this.#postService.post();
+    const existingPost = this.#postsStateService.post();
 
 
     if (checked && !tagsArray.value.includes(id)) {

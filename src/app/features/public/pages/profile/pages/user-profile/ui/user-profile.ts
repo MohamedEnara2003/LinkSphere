@@ -11,8 +11,8 @@ import { SharedModule } from '../../../../../../../shared/modules/shared.module'
 import { UserProfileService } from '../../../services/user-profile.service';
 import { userProfileHeader } from "../components/user-profile-header/user-profile-header";
 import { UserPictures } from "../components/user-pictures/user-pictures";
-import { PostService } from '../../../../posts/services/post.service';
 import { UserProfilePosts } from "../components/user-posts/user-posts";
+
 
 
 @Component({
@@ -117,7 +117,7 @@ changeDetection : ChangeDetectionStrategy.OnPush ,
 
 export class UserProfile {
 userProfileService = inject(UserProfileService);
-postService = inject(PostService);
+
 
 #route = inject(ActivatedRoute);
 

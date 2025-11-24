@@ -1,7 +1,8 @@
 import { Component, inject } from '@angular/core';
 import { NgImage } from "../../../../../../../shared/components/ng-image/ng-image";
-import { PostService } from '../../../services/post.service';
+
 import { AttachmentsService } from '../../../../../../../core/services/attachments.service';
+import { PostsStateService } from '../../../service/state/posts-state.service';
 
 @Component({
 selector: 'app-post-attachments',
@@ -63,7 +64,7 @@ template: `
 export class PostAttachments {
 
   attachmentsService = inject(AttachmentsService);
-  #postService = inject(PostService);
+  #postsStateService = inject(PostsStateService);
 
   
   async uploadAttachments(input: HTMLInputElement): Promise<void> {
@@ -71,7 +72,7 @@ export class PostAttachments {
   }
 
   removeAttachment(index: number): void {
-  const isExisitngPost = this.#postService.post() ? true : false;
+  const isExisitngPost = this.#postsStateService.post() ? true : false;
   this.attachmentsService.onRemoveAttachment(index , isExisitngPost)
   }
 

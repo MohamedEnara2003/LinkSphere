@@ -20,87 +20,91 @@ import { tap } from 'rxjs';
     SignInWithGoogle
 ],
   template: `
-  <section class="w-full min-h-svh flex items-center justify-center p-5">
+  <section class="w-full min-h-svh flex items-center justify-center p-2">
     <form 
       [formGroup]="registerForm"  
       (ngSubmit)="onRegisterSubmit()"
-      class="w-full sm:w-xl md:w-2xl lg:w-3xl ngCard border-brand-color/10 border rounded-box p-5">
+      class="w-full sm:w-xl md:w-2xl lg:w-3xl ngCard border-brand-color/10 border rounded-box p-2">
 
-      <fieldset class="w-full fieldset p-2 grid grid-cols-1 md:grid-cols-2 gap-5 space-y-2">
-        <legend class="fieldset-legend col-span-1 md:col-span-2">{{ 'auth.register.title' | translate }}</legend>
+     <fieldset
+        class="fieldset p-4 grid grid-cols-1 md:grid-cols-2 gap-6"
+      >
+        <legend class="fieldset-legend col-span-full">
+          {{ 'auth.register.title' | translate }}
+        </legend>
 
-        <!-- UserName -->
-          <app-ng-control
+        <!-- USERNAME -->
+        <app-ng-control
+          class="col-span-full"
+          [form]="registerForm"
           [option]="{
-              type : 'text',
-              name : 'UserName',
-              formControlName : 'userName',
-              label : 'auth.register.username',
-              id : 'UserName',
-              autocomplete : 'name',
-              isRequired : true
-            }"
-            [form]="registerForm" 
-            class="col-span-2"
-            />
+            type: 'text',
+            name: 'UserName',
+            formControlName: 'userName',
+            label: 'auth.register.username',
+            id: 'UserName',
+            autocomplete: 'name',
+            isRequired: true
+          }"
+        />
 
-        <!-- Email -->
-        <div>
+        <!-- EMAIL -->
+        <div class="col-span-full">
           <app-ng-email [emailForm]="registerForm" />
         </div>
 
-        <!-- Gender -->
-        <div>
-          <app-ng-control
-            [option]="{
-              type : 'select',
-              name : 'gender',
-              formControlName : 'gender',
-              label : 'auth.register.gender',
-              id : 'gender',
-              selectOptions : ['male' , 'female'] ,
-              textForTranslate : 'auth.register.',
-              isRequired : true,
-              autocomplete : 'sex'
-            }"
-            [form]="registerForm" />
-        </div>
+        <!-- GENDER -->
+        <!-- <app-ng-control
+          class=""
+          [form]="registerForm"
+          [option]="{
+            type: 'select',
+            name: 'gender',
+            formControlName: 'gender',
+            label: 'auth.register.gender',
+            id: 'gender',
+            selectOptions: ['male', 'female'],
+            textForTranslate: 'auth.register.',
+            isRequired: true,
+            autocomplete: 'sex'
+          }"
+        /> -->
 
-        <!-- Password -->
-        <div>
-          <app-ng-control
-            [option]="{
-              type : 'password',
-              name : 'Password',
-              formControlName : 'password',
-              label : 'auth.register.password',
-              id : 'Password',
-              autocomplete : 'new-password',
-              isRequired : true
-            }"
-            [form]="registerForm" />
-        </div>
+        <!-- PASSWORD -->
+        <app-ng-control
+          [form]="registerForm"
+          [option]="{
+            type: 'password',
+            name: 'Password',
+            formControlName: 'password',
+            label: 'auth.register.password',
+            id: 'Password',
+            autocomplete: 'new-password',
+            isRequired: true
+          }"
+        />
 
-        <!-- Confirm Password -->
-        <div>
-          <app-ng-control
-            [option]="{
-              type : 'password',
-              name : 'confirmPassword',
-              formControlName : 'confirmPassword',
-              label : 'auth.register.confirm_password',
-              id : 'confirmPassword',
-              autocomplete : 'new-password',
-              isRequired : true
-            }"
-            [form]="registerForm" />
-        </div>
+        <!-- CONFIRM PASSWORD -->
+        <app-ng-control
+          [form]="registerForm"
+          [option]="{
+            type: 'password',
+            name: 'confirmPassword',
+            formControlName: 'confirmPassword',
+            label: 'auth.register.confirm_password',
+            id: 'confirmPassword',
+            autocomplete: 'new-password',
+            isRequired: true
+          }"
+        />
 
-        <!-- Google + Submit -->
-        <div class="col-span-1 md:col-span-2">
-          <app-sign-in-with-google/>
-          <button type="submit"
-            class="w-full btn btn-neutral btn-sm sm:btn-md bg-dark hover:bg-neutral mt-4 ">
+        <!-- GOOGLE SIGN-IN + SUBMIT -->
+        <div class="col-span-full flex flex-col gap-4">
+          <app-sign-in-with-google />
+          <button 
+            type="submit"
+            class="btn btn-neutral btn-sm sm:btn-md bg-dark hover:bg-neutral w-full"
+          >
             {{ 'auth.register.register_button' | translate }}
           </button>
         </div>
@@ -154,13 +158,15 @@ export class Register implements OnInit  {
           Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?!.*\s).+$/)
         ]
       ],
-      gender: [
-        '', 
-        [
-          Validators.required,
-          Validators.pattern(/^(male|female)$/i) 
-        ]
-      ]
+
+      // gender: [
+      //   '', 
+      //   [
+      //     Validators.required,
+      //     Validators.pattern(/^(male|female)$/i) 
+      //   ]
+      // ]
+
     }, { 
       validators : CustomValidators.confirmPassword('password' , 'confirmPassword')
     });
@@ -174,6 +180,7 @@ export class Register implements OnInit  {
       ).subscribe();
       return;
     }
+    
     this.registerForm.markAllAsTouched();
   }
 }

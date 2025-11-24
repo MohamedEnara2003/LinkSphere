@@ -1,6 +1,6 @@
 import { inject, Injectable } from "@angular/core";
-import { IPost } from "../../../../../../core/models/posts.model";
-import { Observable, tap } from "rxjs";
+import { IPaginatedPostsResponse, IPost } from "../../../../../../core/models/posts.model";
+import { EMPTY, Observable, tap } from "rxjs";
 import { AppPostsService } from "../app/app-posts.service";
 import { PostsStateService } from "../state/posts-state.service";
 
@@ -26,4 +26,17 @@ unfreezePost(postId: string, post: IPost): Observable<void> {
   );
 }
 
+  getFreezedPosts(
+    page: number = 1,
+    limit: number = 10
+  ) : Observable<{data: IPaginatedPostsResponse }>{
+
+    const cachedPosts = this.#postsStateService.userFreezedPosts();
+    if (cachedPosts.length > 0) return EMPTY
+
+    return this.#appPostsService.singleTonApi.find<{data : IPaginatedPostsResponse}>
+    (`${this.#appPostsService.routeName}/freezed?page=${page}&limit=${5}`) .pipe(
+    tap(({data : {posts}}) => this.#postsStateService.addFreezePosts(posts))
+    )
+    }
 }

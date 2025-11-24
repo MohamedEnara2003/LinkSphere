@@ -1,6 +1,5 @@
 import { Component , computed, inject } from '@angular/core';
 import { PostCard } from "../../components/post-card/ui/post-card";
-import { PostService } from '../../services/post.service';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { EMPTY, map, switchMap } from 'rxjs';
@@ -8,6 +7,8 @@ import { Availability, IPost} from '../../../../../../core/models/posts.model';
 import { FeedAutoLoader } from "../../../../components/navigations/feed-auto-loader/feed-auto-loader";
 import { LoadingPost } from "../../components/loading/loading-post/loading-post";
 import { EmptyPosts } from "../../components/empty-posts/empty-posts";
+import { PostsStateService } from '../../service/state/posts-state.service';
+import { GetPostsService } from '../../service/api/get-posts.service';
 
 
 @Component({
@@ -39,10 +40,14 @@ aria-label="Load more posts"
 
 </main>
 `,
+providers : [GetPostsService]
 })
 
 export class PostsFeed {
-    #postService = inject(PostService);
+
+    #getPostsService = inject(GetPostsService);
+    #postState= inject(PostsStateService);
+
     #route = inject(ActivatedRoute);
 
     postsState = toSignal<Availability , Availability>(
@@ -51,24 +56,24 @@ export class PostsFeed {
     ) 
     , {initialValue : 'public'});
 
+    
     posts = computed<IPost[]>(() => 
-    this.#postService.getPostsByState()[this.postsState() || 'public'].posts ?? []
+    this.#postState.getPostsByState()[this.postsState() || 'public'].posts ?? []
     );
 
     hasMorePosts = computed<boolean>(() =>  
-    this.#postService.getPostsByState()[this.postsState() || 'public'].hasMorePosts
+    this.#postState.getPostsByState()[this.postsState() || 'public'].hasMorePosts
     );
 
 
   constructor(){
-
     toObservable(this.postsState)
       .pipe(
         switchMap((state) => {
           const currentState = state || 'public';
-          const cached = this.#postService.getPostsByState()[currentState]?.posts ?? [];
+          const cached = this.#postState.getPostsByState()[currentState]?.posts ?? [];
           if (cached.length > 0) return EMPTY;
-          return this.#postService.getPosts(currentState);
+          return this.#getPostsService.getPosts(currentState);
         }),
         takeUntilDestroyed()
       )
@@ -77,7 +82,7 @@ export class PostsFeed {
     
     loadMore() {
     const currentState = this.postsState() || 'public';
-    this.#postService.getPosts(currentState ).subscribe();
+    this.#getPostsService.getPosts(currentState ).subscribe();
     }
 
 }

@@ -35,7 +35,8 @@ export const publicRoutes: Routes = [
       },
       {
         path: 'search',
-        loadChildren: () => import('./pages/search/search.routes').then(r => r.searchRoutes),
+        data: { isHide: true },
+        loadComponent: () => import('./pages/search/ui/search').then(c => c.SearchCompoent),
       },
       {
         path: 'chats',

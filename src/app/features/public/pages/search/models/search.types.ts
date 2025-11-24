@@ -1,2 +1,2 @@
-export type searchType = "all" | "people" | "posts";
+export type searchResult = "all" | "people" | "posts";
 

@@ -1,14 +1,16 @@
-import { Component, inject} from '@angular/core';
-import { PostService } from '../../services/post.service';
+import { Component, computed, inject} from '@angular/core';
+
 import { PostCard } from "../../components/post-card/ui/post-card";
 import { SharedModule } from '../../../../../../shared/modules/shared.module';
+import { FreezePostService } from '../../service/api/freeze-posts.service';
+import { PostsStateService } from '../../service/state/posts-state.service';
 
 
 @Component({
   selector: 'app-freezed-posts',
   imports: [PostCard , SharedModule],
   template: `
-  @for (post of postService.userFreezedPosts(); track post._id) {
+@for (post of freezePosts(); track post._id) {
 
 <article class="w-full min-h-60">
 
@@ -40,16 +42,20 @@ import { SharedModule } from '../../../../../../shared/modules/shared.module';
 
 }
 
-  
 `,
+providers : [
+FreezePostService
+]
 })
 
 export class FreezedPosts {
-postService = inject(PostService)
+#freezedPosts = inject(FreezePostService);
+#postsState = inject(PostsStateService);
 
+freezePosts = computed(() => this.#postsState.userFreezedPosts())
 
-constructor(){
-this.postService.getFreezedPosts().subscribe()
+ngOnInit(): void {
+this.#freezedPosts.getFreezedPosts().subscribe();
 }
 
   

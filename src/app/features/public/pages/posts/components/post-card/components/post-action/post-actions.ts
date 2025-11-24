@@ -1,8 +1,8 @@
 import { Component, inject, input } from '@angular/core';
 import { IPost } from '../../../../../../../../core/models/posts.model';
 import { Router, RouterModule } from '@angular/router';
-import { PostService } from '../../../../services/post.service';
 import { LikeToggle } from "../../../like-toggle/like-toggle";
+import { PostsStateService } from '../../../../service/state/posts-state.service';
 
 
 @Component({
@@ -40,7 +40,8 @@ import { LikeToggle } from "../../../like-toggle/like-toggle";
   `
 })
 export class PostActions {
-  #postService = inject(PostService);
+
+  #postsStateService = inject(PostsStateService);
   #router = inject(Router);
 
   post = input<IPost | null>(null);
@@ -52,7 +53,7 @@ export class PostActions {
         queryParams: { postId: post._id || '' },
         queryParamsHandling :'merge'
       });
-      this.#postService.setPost(post);
+      this.#postsStateService.setPost(post);
     }
   }
 }

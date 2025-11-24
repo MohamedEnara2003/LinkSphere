@@ -9,7 +9,6 @@ import { catchError, EMPTY, tap } from 'rxjs';
 import { AuthToken } from '../../core/models/auth.model';
 import { StorageService } from '../../core/services/locale-storage.service';
 import { DomService } from '../../core/services/dom.service';
-import { SearchService } from './pages/search/service/search.service';
 
 
 @Component({
@@ -23,15 +22,6 @@ import { SearchService } from './pages/search/service/search.service';
   <section class="relative">
   <router-outlet />
   <router-outlet name="model"/>
-  @if(searchService.isFocusSearch()){
-      <!-- Backdrop -->
-      <div 
-      (click)="searchService.isFocusSearch.set(false)"
-        class="size-full bg-dark/50  absolute inset-0 z-40"
-        aria-hidden="true"
-        tabindex="-1">
-      </div>
-  }
   </section>
 
   <app-footer />
@@ -51,7 +41,6 @@ export class Public {
 #userProfileService = inject(UserProfileService);
 #domService = inject(DomService);
 #storageService = inject(StorageService);
-searchService = inject(SearchService);
 loadingService = inject(LoadingService);
 
 

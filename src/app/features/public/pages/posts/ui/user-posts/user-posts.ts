@@ -1,9 +1,10 @@
-import { Component, effect, inject, input, untracked} from '@angular/core';
-import { PostService } from '../../services/post.service';
+import { Component, computed, effect, inject, input, untracked} from '@angular/core';
 import { PostCard } from "../../components/post-card/ui/post-card";
 import { LoadingPost } from "../../components/loading/loading-post/loading-post";
 import { EmptyPosts } from "../../components/empty-posts/empty-posts";
 import { UserProfileService } from '../../../profile/services/user-profile.service';
+import { GetPostsService } from '../../service/api/get-posts.service';
+import { PostsStateService } from '../../service/state/posts-state.service';
 
 
 @Component({
@@ -12,7 +13,7 @@ import { UserProfileService } from '../../../profile/services/user-profile.servi
   template: `
   
       <main class="size-full grid grid-cols-1 gap-5">
-            @for (post of postService.userProfilePosts(); track post.id) {
+            @for (post of userPosts(); track post.id) {
             <article class="w-full min-h-60">
                 @defer (on viewport) {
                 <app-post-card [post]="post" />
@@ -25,11 +26,18 @@ import { UserProfileService } from '../../../profile/services/user-profile.servi
             }
         </main>
 `,
+providers : [
+GetPostsService
+]
 })
 
 export class UserPosts {
-readonly postService = inject(PostService);
+
+readonly #getPostsService = inject(GetPostsService);
+readonly #postsStateService = inject(PostsStateService);
 readonly userProfile = inject(UserProfileService);
+
+userPosts = computed(() => this.#postsStateService.userProfilePosts());
 
 userId = input<string>('');
 
@@ -42,7 +50,7 @@ untracked(() => this.#getUserPosts(id));
 }
 
 #getUserPosts (userId : string) : void {
-this.postService.getUserPosts(userId).subscribe();
+this.#getPostsService.getUserPosts(userId).subscribe();
 }
 
 }

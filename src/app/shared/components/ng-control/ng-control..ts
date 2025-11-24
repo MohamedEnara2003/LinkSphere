@@ -154,9 +154,11 @@ export class NgControl{
   }
 
 shouldShowValidation(): boolean {
-const control = this.form().controls[this.option().formControlName];
-return control ? (control.invalid && (control.touched || control.dirty)) : false;
+  const control = this.form().controls[this.option().formControlName];
+  if (!control) return false;
+  return control.invalid && (control.touched || control.dirty) 
 }
+
 
 shouldShowErrorsValidation(): string {
   const controlName = this.option().formControlName;

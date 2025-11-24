@@ -1,7 +1,7 @@
-import {computed, inject, Injectable, signal } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 
 import { EMPTY,Observable , tap } from 'rxjs';
-import { Availability, IPaginatedPostsResponse, IPost } from '../../../../../../core/models/posts.model';
+import { Availability, IPaginatedPostsResponse } from '../../../../../../core/models/posts.model';
 import { AppPostsService } from '../app/app-posts.service';
 import { PostsStateService } from '../state/posts-state.service';
 
@@ -10,7 +10,7 @@ import { PostsStateService } from '../state/posts-state.service';
 
 @Injectable()
 
-export class GetPostService {
+export class GetPostsService {
 #appPostsService = inject(AppPostsService);
 #postsStateService = inject(PostsStateService);
 

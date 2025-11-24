@@ -1,4 +1,5 @@
 
+import { Pagination } from "./pagination";
 import { IPost } from "./posts.model";
 import { IUser } from "./user.model";
 
@@ -6,16 +7,13 @@ export interface ISearch {
 data: { 
     users: {
     data : IUser[],
-    totalPages : number,
-    total: number ,
+    pagination : Pagination
     }; 
     posts: {
     data : IPost[],
-    totalPages : number,
-    total: number ,
+    pagination : Pagination
     }; 
-    page : number ,
-    limit : number ,
+
 } 
 
 }

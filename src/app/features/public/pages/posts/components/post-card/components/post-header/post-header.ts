@@ -1,12 +1,15 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { NgImage } from "../../../../../../../../shared/components/ng-image/ng-image";
 import { Router, RouterModule } from '@angular/router';
-import { PostService } from '../../../../services/post.service';
 import { IPost } from '../../../../../../../../core/models/posts.model';
 import { UserProfileService } from '../../../../../profile/services/user-profile.service';
 import { ActionType, IMenuAction, NgMenuActions } from "../../../../../../components/navigations/menu-actions/menu-actions";
 import { FormatDatePipe } from '../../../../../../../../shared/pipes/format-date-pipe';
 import { TagsService } from '../../../../../../../../core/services/tags.service';
+
+import { PostsStateService } from '../../../../service/state/posts-state.service';
+import { FreezePostService } from '../../../../service/api/freeze-posts.service';
+import { DeletePostService } from '../../../../service/api/delete-posts.service';
 
 
 @Component({
@@ -21,8 +24,7 @@ template: `
       <app-ng-image  
         [routerLink]="userId() ? ['/public/profile/user', userId()] : []"
         [options]="{
-          src:  post()?.author?.picture?.url || '' ,
-          placeholder: '/user-placeholder.webp',
+          src:  post()?.author?.picture?.url || 'user-placeholder.webp' ,
           alt: 'Profile picture of ' + post()?.author?.userName || '',
           width:  60,
           height: 60, 
@@ -64,12 +66,19 @@ template: `
   </header>
     
 `,
+providers :[
+FreezePostService,
+DeletePostService
+]
 })
 export class PostHeader {
   tag = inject(TagsService);
-  #postService = inject(PostService);
+
+  #freezePostService = inject(FreezePostService);
+  #deletePostService = inject(DeletePostService);
+  #postsState = inject(PostsStateService);
+
   #router = inject(Router);
-  
   userService = inject(UserProfileService);
 
 
@@ -106,28 +115,28 @@ export class PostHeader {
   const post = this.post();
   if(post){
   this.#router.navigate(['/public' ,{ outlets: { 'model': ['upsert-post'] } }])
-  this.#postService.setPost(post);
+  this.#postsState.setPost(post);
   }
   }
 
   freezPost() : void {
   const post = this.post();
   if(post){
-  this.#postService.freezePost(post._id , post).subscribe();
+  this.#freezePostService.freezePost(post._id , post).subscribe();
   }
   }
 
   unFreezPost() : void {
   const post = this.post();
   if(post){
-  this.#postService.unfreezePost(post._id , post).subscribe();
+  this.#freezePostService.unfreezePost(post._id , post).subscribe();
   }
   }
 
   deletePost() : void {
   const {_id : postId , availability} = this.post()!;
   if(postId){
-  this.#postService.deletePost(postId , availability).subscribe();
+  this.#deletePostService.deletePost(postId , availability).subscribe();
   }
   }
 

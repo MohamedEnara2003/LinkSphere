@@ -1,10 +1,10 @@
 import { Component, computed, DestroyRef, inject, input} from '@angular/core';
 import { SharedModule } from '../../../../../../shared/modules/shared.module';
 import { CommentService } from '../../services/comments.service';
-import { PostService } from '../../services/post.service';
 import { UserProfileService } from '../../../profile/services/user-profile.service';
 import { debounceTime, Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ToggleLikePost } from '../../service/api/like-toggle-post.service';
 
 
 @Component({
@@ -41,14 +41,18 @@ template: `
         }
         {{ existingLikes().length || 0 }}
     </button>
-
 `,
+providers : [
+ToggleLikePost,
+]
 })
 export class LikeToggle {
 
   #userService = inject(UserProfileService);
   #commentService = inject(CommentService);
-  #postService = inject(PostService);
+
+
+  #toggleLikePost = inject(ToggleLikePost);
   #destroyRef = inject(DestroyRef);
 
   
@@ -84,7 +88,7 @@ export class LikeToggle {
     if (commentId) {
       this.#commentService.likeComment(postId, commentId, userId).subscribe();
     } else {
-      this.#postService.toggleLikePost(postId, userId).subscribe();
+      this.#toggleLikePost.toggleLikePost(postId, userId).subscribe();
     }
   }
 

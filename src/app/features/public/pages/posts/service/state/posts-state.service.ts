@@ -11,7 +11,7 @@ providedIn: 'root'
 })
 
 export class PostsStateService{
-#userService = inject(UserProfileService)
+#userService = inject(UserProfileService);
 
 // Posts State:
 // Private 
@@ -36,11 +36,14 @@ public post = computed(() => this.#post());
 
 // Update post state
 
-
   // ---------------------------
-  // 🔥 Get POSTS
+  //  Get POSTS STATE
   // ---------------------------
   
+  addFreezePosts(posts : IPost[]) : void {
+  this.#userFreezedPosts.set(posts.map((p) => ({...p , isFreezed : true})))
+  }
+
   addPosts(filteredPosts : IPost[] , availability : Availability ) : void {
   if (!filteredPosts || filteredPosts.length === 0) {
   this.#postsStateMap.update((state) => ({
@@ -83,7 +86,7 @@ public post = computed(() => this.#post());
   }
 
   // ---------------------------
-  // 🔥 ADD NEW POST
+  // ADD NEW POST
   // ---------------------------
   addPost(post: IPost) {
     const a = post.availability;
@@ -102,7 +105,7 @@ public post = computed(() => this.#post());
   }
 
   // ---------------------------
-  // 🔥 REMOVE POST
+  // REMOVE POST
   // ---------------------------
   removePost(postId: string, availability: Availability) {
     this.#postsStateMap.update(state => ({
@@ -143,7 +146,6 @@ public post = computed(() => this.#post());
     );
   }
 
-// attachments – تحديث لو مش فاضي
 if (attachments?.length) {
 updatedPost.attachments = attachments;
 }
@@ -248,6 +250,26 @@ updatePostLikes(postId: string, userId: string): void {
 
   this.#userProfilePosts.update((posts) => updateLikes(posts));
   this.#post.update((p) => (p?._id === postId ? updateLikes([p])[0] : p));
+}
+
+
+removePostFromState(postId: string, availability: Availability) {
+const filteringPosts = (posts : IPost[]) : IPost[] => posts.filter((p) => p._id !== postId);
+
+  this.#postsStateMap.update((state) => {
+    const target = state[availability];
+    return {
+      ...state,
+      [availability]: {
+        ...target,
+        posts: filteringPosts(target.posts),
+      },
+    };
+  });
+
+  if(this.#userProfilePosts().length > 0){
+  this.#userProfilePosts.update((posts) => filteringPosts(posts))
+  }
 }
 
 }

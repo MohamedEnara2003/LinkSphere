@@ -4,7 +4,6 @@ import { SharedModule } from '../../../../../../../../../shared/modules/shared.m
 import { UpsertComment } from "../components/upsert-comment/upsert-comment";
 
 import { CommentService } from '../../../../../services/comments.service';
-import { PostService } from '../../../../../services/post.service';
 import { ActivatedRoute, Router } from '@angular/router';
 
 
@@ -17,6 +16,7 @@ import { CommentsHeader } from "../components/comments-header/comments-header";
 import { EmptyComments } from "../components/empty-comments/empty-comments";
 import { FeedAutoLoader } from "../../../../../../../components/navigations/feed-auto-loader/feed-auto-loader";
 import { LoadingComment } from "../../../../loading/loading-comment/loading-comment";
+import { PostsStateService } from '../../../../../service/state/posts-state.service';
 
 
 
@@ -109,7 +109,8 @@ import { LoadingComment } from "../../../../loading/loading-comment/loading-comm
 export class PostComments implements OnDestroy{
     commentService = inject(CommentService);
     loadingService = inject(LoadingService);
-    #postService = inject(PostService);
+
+    #postsState = inject(PostsStateService);
     #domService = inject(DomService);
 
     #router = inject(Router);
@@ -130,7 +131,7 @@ export class PostComments implements OnDestroy{
     
 
     #getComments(): void {
-      const post = this.#postService.post() ;
+      const post = this.#postsState.post() ;
       if (post && post._id) {
       this.commentService.getPostComment(post._id).subscribe();
       }
@@ -151,7 +152,7 @@ export class PostComments implements OnDestroy{
 
     ngOnDestroy(): void {
     this.#domService.setBodyOverflow('auto');
-    this.#postService.setPost(null);
+    this.#postsState.setPost(null);
     this.commentService.clearData();
     }
 

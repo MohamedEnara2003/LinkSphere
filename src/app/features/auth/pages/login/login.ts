@@ -23,10 +23,10 @@ import { tap } from 'rxjs';
 ],
   template: `
 
-<section class="w-full min-h-svh flex items-center justify-center p-5">
+  <section class="w-full min-h-svh flex items-center justify-center p-2">
 
 <form [formGroup]="loginForm" (ngSubmit)="onLoginSubmit()"
-class="w-full sm:w-xl md:w-2xl lg:w-3xl  ngCard  border-brand-color/10  border rounded-box p-5">
+  class="w-full sm:w-xl md:w-2xl lg:w-3xl ngCard border-brand-color/10 border rounded-box p-2">
 
 <fieldset class="w-full fieldset  p-2 gap-5  space-y-2 ">
 <legend class="fieldset-legend ">{{ 'auth.login.title' | translate }}</legend>
