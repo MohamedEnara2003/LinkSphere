@@ -9,7 +9,7 @@ import { LoadingPost } from "../../components/loading/loading-post/loading-post"
 import { EmptyPosts } from "../../components/empty-posts/empty-posts";
 import { PostsStateService } from '../../service/state/posts-state.service';
 import { GetPostsService } from '../../service/api/get-posts.service';
-import { LoadingService } from '../../../../../../core/services/loading.service';
+
 
 
 @Component({
@@ -18,6 +18,8 @@ import { LoadingService } from '../../../../../../core/services/loading.service'
   template: `
   
 <main class="size-full grid grid-cols-1 gap-5">
+
+
 @if(!isLoading()){ 
 @for (post of posts(); track post._id) {
 <article class="w-full min-h-60">
@@ -74,26 +76,35 @@ export class PostsFeed {
 
 
   constructor(){
-    this.isLoading.set(true);
-    toObservable(this.postsState)
-      .pipe(
-        switchMap((state) => {
-          const currentState = state || 'public';
-          const cached = this.#postState.getPostsByState()[currentState]?.posts ?? [];
-          if (cached.length > 0) return EMPTY;
-          return this.#getPostsService.getPosts(currentState);
-        }),
-        finalize(() => {
+  this.#getPosts(); 
+  }
+
+ #getPosts(): void {
+  toObservable(this.postsState)
+    .pipe(
+      switchMap((state) => {
+        const currentState = state || "public";
+        const stateData = this.#postState.getPostsByState()[currentState];
+
+        if (stateData.posts.length > 0) {
         this.isLoading.set(false);
-        }),
-        catchError(() => {
+        return EMPTY;
+        }
+
+        this.isLoading.set(true);
+        return this.#getPostsService.getPosts(currentState).pipe(
+        finalize(() => this.isLoading.set(false))
+      );
+      }),
+      catchError(() => {
         this.isLoading.set(false);
-        return EMPTY
-        }),
-        takeUntilDestroyed(),
-      )
-      .subscribe();
-    }
+        return EMPTY;
+      }),
+      takeUntilDestroyed()
+    )
+    .subscribe();
+}
+
     
     loadMore() {  
     const currentState = this.postsState() || 'public';
