@@ -1,15 +1,17 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { SingleTonApi } from '../../../core/services/api/single-ton-api.service';
-import { catchError, EMPTY, from, Observable, switchMap, tap, throwError } from 'rxjs';
+import { EMPTY, filter, from, Observable, switchMap, take, tap, throwError } from 'rxjs';
 import { AuthToken, ChangeForgetPassword, LoginBody, LoginType, logoutFlag, SignUp, Token, VerifyOtp } from '../../../core/models/auth.model';
 
 import { Router } from '@angular/router';
 import { StorageService } from '../../../core/services/locale-storage.service';
 
 import { UserProfileService } from '../../public/pages/profile/services/user-profile.service';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { firebaseAuth } from '../../../../environments/firebase.config';
 import { DomService } from '../../../core/services/dom.service';
+import { AuthService as Auth0Service } from '@auth0/auth0-angular';
+import { environment } from '../../../../environments/environment.development';
+
+
 
 
 interface Respons {
@@ -22,7 +24,7 @@ interface Respons {
   providedIn: 'root'
 })
 
-export class AuthService {
+export class AuthenticationService {
   #routeName: string = "auth";
 
   #singleTonApi = inject(SingleTonApi);
@@ -30,19 +32,15 @@ export class AuthService {
   #domService = inject(DomService);
   #storageService = inject(StorageService);
   #userProfileService = inject(UserProfileService);
-  #loginData = signal<LoginType | null>(null);
+  #auth0 = inject(Auth0Service, { optional: true });
+
+  #registerData = signal<{email : string} | null>(null);
 
 
-  credentials = signal<AuthToken | null>(null);
 // ____________________________________
 
-initAuth() {
-  const storageService = inject(StorageService);
-  const auth = storageService.getItem<AuthToken>('auth');
-
-  if (auth?.access_token) {
-  this.credentials.set(auth); 
-  }
+constructor() {
+this.#registerData.set(this.#storageService.getItem("register") || null);
 }
 
 
@@ -55,34 +53,48 @@ initAuth() {
     this.#router.navigate(['/public'])
 }
 
-//🟢 Create Account 🟢
-signInWithGoogleFirebase(): Observable<LoginBody> {
 
-    if(!this.#domService.isBrowser()){
+//🟢 Sign in with Google via Auth0 🟢
+signInWithGoogle(): Observable<LoginBody> {
+  if (!this.#domService.isBrowser()) {
     return throwError(() => new Error('Google Sign-In only works on browser'));
-    }
+  }
 
-    const provider = new GoogleAuthProvider();
-    return from(signInWithPopup(firebaseAuth, provider)).pipe(
-      switchMap(result => {
+  if (!this.#auth0) {
+    return throwError(() => new Error('Auth0 is not available on this platform'));
+  }
 
-        const credential = GoogleAuthProvider.credentialFromResult(result);
-        const idToken = credential?.idToken;
+  const connection = environment.auth0.googleConnection || 'google-oauth2';
 
-        if (!idToken) {
-          return throwError(() => new Error('No Google ID token found'));
-        }
-        return this.#signWithGoggle(idToken)
-      })
-    );
+  return from(
+    this.#auth0.loginWithPopup({
+      authorizationParams: {
+        connection,
+        prompt: 'select_account'
+      }
+    })
+  ).pipe(
+    switchMap(() =>
+      this.#auth0!.idTokenClaims$.pipe(
+        filter((claims): claims is { __raw: string; [key: string]: unknown } => !!claims?.__raw),
+        take(1)
+      )
+    ),
+    switchMap((claims) => {
+      const userName =
+        (claims['name'] as string | undefined) ||
+        (claims['nickname'] as string | undefined) ||
+        (claims['email'] as string | undefined) ||
+        '';
+      return this.#signWithGoggle(claims.__raw, userName);
+    })
+  );
 }
 
-
-
-#signWithGoggle(idToken: string): Observable<LoginBody> {
+#signWithGoggle(idToken: string , userName : string): Observable<LoginBody> {
   return this.#singleTonApi.create<LoginBody>(
   `${this.#routeName}/signup-with-gmail`,
-  { idToken }
+  { idToken , userName}
   ).pipe(
   tap(({data : {credentials}}) => {
   this.#storeTokens(credentials);
@@ -90,29 +102,33 @@ signInWithGoogleFirebase(): Observable<LoginBody> {
   );
   }
 
+//______________________________
+
 // 🟢 Sign Up 
 signUp(data: SignUp): Observable<Respons> {
-  this.#loginData.set({email : data.email , password : data.password})
+  const {email} = data
   return this.#singleTonApi.create<Respons>(`${this.#routeName}/signup`, data).pipe(
-  tap(() => this.#router.navigate(['/auth/confirm-email'] , {
-  queryParams : {email : data.email}
-  }))
-  );
+  tap(() => {
+  this.#router.navigate(['/auth/confirm-email'] , { queryParams : {email } });
+  this.#storageService.setItem("register" , JSON.stringify({email}));
+  }
+))
+
 }
 
-// 🟢 Confirm Email (Send OTP to Email) + Login مباشرة
+// 🟢 Confirm Email (Send OTP to Email) + Login 
 confirmEmail(OTP: string , email : string): Observable<LoginBody> {
   return this.#singleTonApi.patch(`${this.#routeName}/confirm-email`, {
   email,
   OTP,
   }).pipe(
   switchMap(() => {
-  const loginData = this.#loginData();
-  if(!loginData) {
+  const {email} = this.#registerData()!;
+  if(!email) {
   this.#router.navigate(['/auth/login'])
   return EMPTY;
   };
-  return this.login(loginData);
+  return this.login({email , password :''});
   })
   );
 }

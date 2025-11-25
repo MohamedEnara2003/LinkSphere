@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { AuthService } from '../../../../../auth/service/auth.service';
+import { AuthenticationService } from '../../../../../auth/service/auth.service';
 import { logoutFlag } from '../../../../../../core/models/auth.model';
 import { tap } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
@@ -71,12 +71,12 @@ import { TranslateModule } from '@ngx-translate/core';
 export class logOut {
     
     isLoading = signal<boolean>(false);
-    #authService = inject(AuthService);
+    #AuthenticationService = inject(AuthenticationService);
 
 
     logOut(logOutFlag : logoutFlag) : void {
     this.isLoading.set(true);
-    this.#authService.logout(logOutFlag).pipe(
+    this.#AuthenticationService.logout(logOutFlag).pipe(
     tap(() => this.isLoading.set(false))
     ).subscribe()
     }

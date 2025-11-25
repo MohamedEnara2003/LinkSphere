@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { ProfileCard } from "../../profile/components/profile-card/profile-card";
 
 import { btnOpenModelUpsertPost } from "../../posts/components/btn-open-model-upsert-post/btn-open-model-upsert-post";
@@ -6,11 +6,13 @@ import { FriendRequests } from "../../profile/components/friend-requests/friend-
 import { RouterModule } from '@angular/router';
 import { PostsFilterNavComponent } from "../../posts/components/posts-filter-nav/posts-filter-nav";
 import { PostsFeed } from "../../posts/ui/posts-feed/posts-feed";
+import { MetaService } from '../../../../../core/services/meta/meta.service';
+import { UserProfileService } from '../../profile/services/user-profile.service';
 
 
 
 @Component({
-  selector: 'app-home',
+  selector: 'app-feed',
   imports: [ProfileCard, btnOpenModelUpsertPost, FriendRequests, RouterModule, PostsFilterNavComponent, PostsFeed],
   template: `
   
@@ -28,7 +30,6 @@ import { PostsFeed } from "../../posts/ui/posts-feed/posts-feed";
   <app-btn-open-model-upsert-post />
   <app-posts-filter-nav />
   </section>
-
   <app-posts-feed class="size-full"/>
   </main>
   
@@ -41,6 +42,13 @@ import { PostsFeed } from "../../posts/ui/posts-feed/posts-feed";
 </section>
   `,
 })
-export class Home {
+export class FeedComponent {
+#userService = inject(UserProfileService);
+#metaService = inject(MetaService);
+
+ngOnInit() {
+
+}
+
 
 }

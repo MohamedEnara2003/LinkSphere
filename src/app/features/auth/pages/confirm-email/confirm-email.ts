@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { SharedModule } from '../../../../shared/modules/shared.module';
-import { AuthService } from '../../service/auth.service';
+import { AuthenticationService } from '../../service/auth.service';
 import { BtnResendOtp } from "../../components/btn-resend-otp/btn-resend-otp";
 import { ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -12,6 +12,7 @@ import { UserProfileService } from '../../../public/pages/profile/services/user-
   imports: [SharedModule, BtnResendOtp],
   template: `
 <section class="w-full min-h-svh flex items-center justify-center p-5">
+
   <form 
     class="w-full sm:w-xl md:w-2xl lg:w-3xl ngCard border-brand-color/10  
     border rounded-box p-5 space-y-5"
@@ -19,7 +20,7 @@ import { UserProfileService } from '../../../public/pages/profile/services/user-
     
     <header class="w-full flex flex-col items-center gap-2">
       <h1 class="text-brand-color font-bold text-xl md:text-2xl">Verify OTP</h1>
-      <p>Enter the 6-digit code sent to @user212</p>
+      <p>Enter the 6-digit code sent to {{email()}}</p>
     </header>
 
     <legend class="fieldset-legend sr-only">OTP</legend>
@@ -59,7 +60,7 @@ import { UserProfileService } from '../../../public/pages/profile/services/user-
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class confirmEmail {
-  #authService = inject(AuthService);
+  #AuthenticationService = inject(AuthenticationService);
   #uerService = inject(UserProfileService);
   #route = inject(ActivatedRoute);
 
@@ -127,7 +128,7 @@ export class confirmEmail {
 
     const email = this.email();
     if(!email) return ;
-    this.#authService.confirmEmail(code , email).subscribe();
+    this.#AuthenticationService.confirmEmail(code , email).subscribe();
     return
     }
 
@@ -138,7 +139,7 @@ export class confirmEmail {
   resendConfirmEmailOtp() : void {
   const email = this.email();
   if(!email) return ;
-  this.#authService.resendConfirmEmailOtp(email).subscribe();
+  this.#AuthenticationService.resendConfirmEmailOtp(email).subscribe();
   }
 
 }

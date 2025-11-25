@@ -2,27 +2,19 @@ import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpErrorResponse } from
 import { inject } from '@angular/core';
 import { StorageService } from '../services/locale-storage.service';
 import { AuthToken } from '../models/auth.model';
-import { AuthService } from '../../features/auth/service/auth.service';
+import { AuthenticationService } from '../../features/auth/service/auth.service';
 import { catchError, switchMap, throwError } from 'rxjs';
 import { Router } from '@angular/router';
 import { DomService } from '../services/dom.service';
 
 
-interface ErrorAuthorization {
-  cause : {
-  issus: {path: string , message: string}
-  },
-  error_message : string ,
-  error_stack : string ,
-  name : string ,
-  statusCode : number ,
-}
+
 
 export const AuthInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: HttpHandlerFn) => {
   const router = inject(Router);
   const domService = inject(DomService);
   const storageService = inject(StorageService);
-  const authService = inject(AuthService);
+  const authService = inject(AuthenticationService);
 
   const redirectToLogin  = () => {
   router.navigate(['/auth/login']);
@@ -43,7 +35,7 @@ export const AuthInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: 
   }
 
   return next(authReq).pipe(
-  catchError((error: unknown) => {
+  catchError((error: HttpErrorResponse) => {
 
     const backendError = error as { name?: string; error_message?: string } ;
 
@@ -77,10 +69,7 @@ export const AuthInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: 
       }
 
       // Authorization
-      const errorAuthorization = error as ErrorAuthorization | null;
-      const isNotAuth = errorAuthorization?.cause.issus.path === "authorization";
-
-      if(isNotAuth && domService.isBrowser()){
+      if(req.url.includes('/users/profile'))  { 
       redirectToLogin();
       }
       

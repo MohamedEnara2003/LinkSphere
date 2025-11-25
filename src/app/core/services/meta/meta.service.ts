@@ -24,7 +24,7 @@ export class MetaService {
   // ------------------------------
 
   #setTitle(title: string) {
-    this.#title.setTitle(title);
+  this.#title.setTitle(title);
   }
 
   #setDescription(desc: string) {

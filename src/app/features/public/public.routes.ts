@@ -8,8 +8,8 @@ export const publicRoutes: Routes = [
     loadComponent: () => import('./public').then(c => c.Public),
     children: [
       {
-        path: '',
-        loadComponent: () => import('./pages/home/ui/home').then(c => c.Home),
+        path: 'feed',
+        loadComponent: () => import('./pages/feed/ui/feed').then(c => c.FeedComponent),
       },
       {
         path: 'upsert-post',
@@ -47,7 +47,7 @@ export const publicRoutes: Routes = [
         data: { isHide: true },
         loadComponent: () => import('./pages/chats/ui/chats').then(c => c.Chats),
       },
-      { path: '', redirectTo: 'public', pathMatch: 'full' },
+      { path: '', redirectTo: 'feed', pathMatch: 'full' },
       { path: '**', redirectTo: '', pathMatch: 'full' },
     ],
   },

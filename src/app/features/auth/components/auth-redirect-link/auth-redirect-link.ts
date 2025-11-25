@@ -1,12 +1,11 @@
 import { Component, input } from '@angular/core';
-import { RouterModule } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { SharedModule } from '../../../../shared/modules/shared.module';
 
 
 
 @Component({
 selector: 'app-auth-redirect-link',
-imports: [RouterModule, TranslateModule],
+imports: [SharedModule],
 template: `
     @let redirect = isAccount() ? 'login' : 'register';
     <nav class="flex justify-center items-center gap-1 mt-2" 

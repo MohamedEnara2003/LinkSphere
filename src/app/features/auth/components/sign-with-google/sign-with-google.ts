@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { AuthService } from '../../service/auth.service';
+import { AuthenticationService } from '../../service/auth.service';
 
 
 @Component({
@@ -7,8 +7,8 @@ import { AuthService } from '../../service/auth.service';
   template: `
   <button 
   (click)="loginWithGoogle()"
-  title="Sign with goggle" 
-  id="Sign-goggle" 
+  title="Sign in with Google" 
+  id="Sign-google" 
   type="button" 
   class="w-full btn bg-light hover:bg-card-light text-dark duration-300 transition-color ">
   <img src="/google.webp" alt="Google-icon" class="size-6" 
@@ -16,17 +16,21 @@ import { AuthService } from '../../service/auth.service';
   decoding="sync"
   fetchpriority="high" 
   >
-  Continue with goggle
+  Continue with Google
   </button>
   `,
+
 })
 export class SignInWithGoogle {
 
-  #authService = inject(AuthService);
+  #authService = inject(AuthenticationService);
 
 
+  
   loginWithGoogle(): void {
-  this.#authService.signInWithGoogleFirebase().subscribe();
+  this.#authService.signInWithGoogle().subscribe({
+  error: (error) => console.error('Google sign-in failed', error)
+  });
   }
 }
 

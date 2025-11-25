@@ -4,7 +4,7 @@ import { SharedModule } from '../../../../shared/modules/shared.module';
 import { NgControl } from "../../../../shared/components/ng-control/ng-control.";
 import { NgEmail } from "../../components/ng-email/ng-email";
 import { AuthRedirectLink } from "../../components/auth-redirect-link/auth-redirect-link";
-import { AuthService } from '../../service/auth.service';
+import { AuthenticationService } from '../../service/auth.service';
 import { LoginType } from '../../../../core/models/auth.model';
 import { SignInWithGoogle } from "../../components/sign-with-google/sign-with-google";
 import { TranslateModule } from '@ngx-translate/core';
@@ -69,7 +69,7 @@ isRequired : true
 })
 export class Login implements OnInit  {
   #fb = inject(NonNullableFormBuilder);
-  #authService = inject(AuthService);
+  #AuthenticationService = inject(AuthenticationService);
   public loginForm!: FormGroup;
 
 
@@ -102,7 +102,7 @@ export class Login implements OnInit  {
   onLoginSubmit() {
   if(this.loginForm.valid){
   const user : LoginType = this.loginForm.getRawValue() ;
-  this.#authService.login(user).pipe(
+  this.#AuthenticationService.login(user).pipe(
   tap(() =>  this.loginForm.reset())
   ).subscribe()
   return

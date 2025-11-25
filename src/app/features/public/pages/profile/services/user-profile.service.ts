@@ -12,7 +12,7 @@ import {
   UnfreezePayload, 
   UserProfile
 } from '../../../../../core/models/user.model';
-import { catchError, EMPTY, map, Observable, of, tap } from 'rxjs';
+import { catchError, EMPTY, map, Observable, of, shareReplay, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import { FriendRequestResponse, ReceivedFriendRequest, SentFriendRequest } from '../../../../../core/models/friends-requst.model';
 import { Picture } from '../../../../../core/models/picture';
@@ -153,6 +153,7 @@ export class UserProfileService {
   (user.friends || []).map((f) => ({...f , picture : this.#checkUserImage(f.picture!)}));
   this.#user.set({...user , picture , friends});
   }),
+  shareReplay(1)
   )
   }
 

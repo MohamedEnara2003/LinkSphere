@@ -3,7 +3,7 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { SharedModule } from '../../../../shared/modules/shared.module';
 import { NgEmail } from "../../components/ng-email/ng-email";
 import { AuthRedirectLink } from "../../components/auth-redirect-link/auth-redirect-link";
-import { AuthService } from '../../service/auth.service';
+import { AuthenticationService } from '../../service/auth.service';
 import { TranslateModule } from '@ngx-translate/core';
 
 
@@ -40,7 +40,7 @@ mt-4 ">
 })
 export class ForgetPassword  {
 
-    #authService = inject(AuthService);
+    #authService = inject(AuthenticationService);
 
     public forgetPasswordForm = new FormGroup({
     email: new FormControl<string>('', {

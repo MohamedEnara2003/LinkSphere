@@ -5,8 +5,6 @@ import { Footer } from "./components/footer/footer";
 import { UserProfileService } from './pages/profile/services/user-profile.service';
 import { Logo } from "../../shared/components/logo/logo";
 import { LoadingService } from '../../core/services/loading.service';
-import { tap } from 'rxjs';
-import { MetaService } from '../../core/services/meta/meta.service';
 
 
 @Component({
@@ -35,8 +33,8 @@ import { MetaService } from '../../core/services/meta/meta.service';
 })
 
 export class Public {
+
 #userProfileService = inject(UserProfileService);
-#metaService = inject(MetaService);
 loadingService = inject(LoadingService);
 
 
@@ -46,19 +44,9 @@ this.#userProfileService.getReceivedFriendRequests().subscribe();
 this.#userProfileService.getSentFriendRequests().subscribe();
 }
 
-  #getUserProfile() : void {
-  this.#userProfileService.getUserProfile().pipe(
-  tap(({data : {user}}) => {
-    this.#metaService.setFullSeo({
-      title: `${user.firstName} ${user.lastName} (@${user.userName}) • Profile`,
-      description: `View ${user.firstName} ${user.lastName}'s profile and social activity.`,
-      user,
-      url: `/public/profile/user/${user._id}`,
-      image: user.picture?.url || '',
-    });
-  })
-  ).subscribe();
-  }
+#getUserProfile() : void {
+this.#userProfileService.getUserProfile().subscribe();
+}
 
 
 

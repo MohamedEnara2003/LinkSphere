@@ -1,4 +1,4 @@
-  import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
+  import { ApplicationConfig, inject, PLATFORM_ID, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
   import { provideRouter } from '@angular/router';
 
   import { routes } from './app.routes';
@@ -14,6 +14,10 @@
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { provideAuth, getAuth } from '@angular/fire/auth';
 import firebaseApp from '../environments/firebase.config';
+
+import { provideAuth0 } from '@auth0/auth0-angular';
+import { isPlatformBrowser } from '@angular/common';
+import { environment } from '../environments/environment.development';
 
   const Interceptors = [
   AuthInterceptor , ErrorInterceptor , MessageAlertInterceptor , LoadingInterceptor ,
@@ -40,6 +44,36 @@ export const appConfig: ApplicationConfig = {
       }),
       lang: 'en'
     }),
+
+
+    {
+      provide: 'AUTH0_BROWSER_ONLY',
+      useFactory: () => {
+        const platformId = inject(PLATFORM_ID);
+
+        // If running on server (SSR) → DO NOT ENABLE Auth0
+        if (!isPlatformBrowser(platformId)) {
+          return [];
+        }
+
+        const { domain, clientId, audience, redirectUri } = environment.auth0;
+
+        if (!domain || !clientId) {
+          console.warn('Auth0 domain/clientId are missing. Skipping Auth0 bootstrap.');
+          return [];
+        }
+
+        // Browser → safe to read window
+        return provideAuth0({
+          domain,
+          clientId,
+          authorizationParams: {
+            redirect_uri: redirectUri || window.location.origin,
+            audience: audience || undefined,
+          }
+        });
+      },
+    },
 
     provideFirebaseApp(() => initializeApp(firebaseApp.options)),
     provideAuth(() => getAuth()),
