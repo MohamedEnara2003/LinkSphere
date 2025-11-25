@@ -1,8 +1,8 @@
-import { Component , computed, inject } from '@angular/core';
+import { Component , computed, inject, signal } from '@angular/core';
 import { PostCard } from "../../components/post-card/ui/post-card";
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { EMPTY, map, switchMap } from 'rxjs';
+import { catchError, EMPTY, finalize, map, switchMap } from 'rxjs';
 import { Availability, IPost} from '../../../../../../core/models/posts.model';
 import { FeedAutoLoader } from "../../../../components/navigations/feed-auto-loader/feed-auto-loader";
 import { LoadingPost } from "../../components/loading/loading-post/loading-post";
@@ -18,7 +18,7 @@ import { LoadingService } from '../../../../../../core/services/loading.service'
   template: `
   
 <main class="size-full grid grid-cols-1 gap-5">
-@if(!loadingService.isLoading()){ 
+@if(!isLoading()){ 
 @for (post of posts(); track post._id) {
 <article class="w-full min-h-60">
 @defer (on viewport) {
@@ -50,7 +50,8 @@ providers : [GetPostsService]
 })
 
 export class PostsFeed {
-   loadingService = inject(LoadingService);
+    isLoading = signal<boolean>(false);
+    
     #getPostsService = inject(GetPostsService);
     #postState= inject(PostsStateService);
 
@@ -73,6 +74,7 @@ export class PostsFeed {
 
 
   constructor(){
+    this.isLoading.set(true);
     toObservable(this.postsState)
       .pipe(
         switchMap((state) => {
@@ -81,7 +83,14 @@ export class PostsFeed {
           if (cached.length > 0) return EMPTY;
           return this.#getPostsService.getPosts(currentState);
         }),
-        takeUntilDestroyed()
+        finalize(() => {
+        this.isLoading.set(false);
+        }),
+        catchError(() => {
+        this.isLoading.set(false);
+        return EMPTY
+        }),
+        takeUntilDestroyed(),
       )
       .subscribe();
     }

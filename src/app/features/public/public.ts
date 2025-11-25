@@ -39,6 +39,7 @@ import { AuthToken } from '../../core/models/auth.model';
 export class Public {
 #router = inject(Router);
 #userProfileService = inject(UserProfileService);
+
 #domService = inject(DomService);
 #storageService = inject(StorageService);
 loadingService = inject(LoadingService);
