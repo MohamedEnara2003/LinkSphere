@@ -4,7 +4,7 @@ import { SharedModule } from '../../../../shared/modules/shared.module';
 import { TranslateModule } from '@ngx-translate/core';
 import { NgControl } from "../../../../shared/components/ng-control/ng-control.";
 import { CustomValidators } from '../../../../core/validations/custom/custom-validations';
-import { AuthenticationService } from '../../service/auth.service';
+import { AuthService } from '../../service/auth.service';
 import { ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
@@ -94,7 +94,7 @@ import { ChangeForgetPassword } from '../../../../core/models/auth.model';
 export class changeForgetPassword implements OnInit  {
     
     #fb = inject(NonNullableFormBuilder);
-    #AuthenticationService = inject(AuthenticationService);
+    #authService = inject(AuthService);
     #route = inject(ActivatedRoute);
 
     email = toSignal<string | null>(this.#route.queryParamMap.pipe(map((query) => query.get('email'))));
@@ -136,7 +136,7 @@ onChangeForgetPasswordSubmit() {
     if (this.changeForgetPasswordForm.valid) {
     const data : ChangeForgetPassword = this.changeForgetPasswordForm.getRawValue();
     
-    this.#AuthenticationService.changeForgetPassword({...data , email : this.email() || ''}).subscribe();
+    this.#authService.changeForgetPassword({...data , email : this.email() || ''}).subscribe();
     return;
     }
     this.changeForgetPasswordForm.markAllAsTouched();
@@ -145,6 +145,6 @@ onChangeForgetPasswordSubmit() {
 resendForgetPasswordOTP() : void {
 const email = this.email();
 if(!email) return;
-this.#AuthenticationService.resendForgetPasswordOtp({email}).subscribe();
+this.#authService.resendForgetPasswordOtp({email}).subscribe();
 }
 }

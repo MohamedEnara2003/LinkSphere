@@ -1,4 +1,4 @@
-import { computed, effect, inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { Availability, IPost, IUpdatePostContent } from '../../../../../../core/models/posts.model';
 import { Picture } from '../../../../../../core/models/picture';
 import { UserProfileService } from '../../../profile/services/user-profile.service';
@@ -33,12 +33,6 @@ public post = computed(() => this.#post());
 
 //_____________________________________________________________________
 
-constructor(){
-  effect(() => {
-  console.log(this.#postsStateMap());
-  
-  })
-}
 
 // Update post state
 
@@ -52,11 +46,11 @@ constructor(){
 
 addPosts(filteredPosts: IPost[], availability: Availability, totalPages: number): void {
   const state = this.#postsStateMap();
-  const currentPage = state[availability].page;
 
+  const currentPage = state[availability].page;
   const reachedLastPage = currentPage === totalPages;
 
-  if (!filteredPosts || filteredPosts.length === 0 || reachedLastPage) {
+  if (!filteredPosts || filteredPosts.length === 0 || (currentPage > 1 && reachedLastPage)) {
     this.#postsStateMap.update((map) => ({
       ...map,
       [availability]: {

@@ -9,6 +9,7 @@ import { LoadingPost } from "../../components/loading/loading-post/loading-post"
 import { EmptyPosts } from "../../components/empty-posts/empty-posts";
 import { PostsStateService } from '../../service/state/posts-state.service';
 import { GetPostsService } from '../../service/api/get-posts.service';
+import { LoadingService } from '../../../../../../core/services/loading.service';
 
 
 @Component({
@@ -17,6 +18,7 @@ import { GetPostsService } from '../../service/api/get-posts.service';
   template: `
   
 <main class="size-full grid grid-cols-1 gap-5">
+@if(!loadingService.isLoading()){ 
 @for (post of posts(); track post._id) {
 <article class="w-full min-h-60">
 @defer (on viewport) {
@@ -29,7 +31,6 @@ import { GetPostsService } from '../../service/api/get-posts.service';
 <app-empty-posts class="size-full min-h-100" />
 } 
 
-
 @if(hasMorePosts()){ 
 <app-feed-auto-loader 
 loadingType="post"
@@ -38,13 +39,18 @@ aria-label="Load more posts"
 />
 }
 
+}@else {
+<app-loading-post class="w-full min-h-60"/>
+}
+
+
 </main>
 `,
 providers : [GetPostsService]
 })
 
 export class PostsFeed {
-
+   loadingService = inject(LoadingService);
     #getPostsService = inject(GetPostsService);
     #postState= inject(PostsStateService);
 

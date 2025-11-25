@@ -19,6 +19,7 @@ export interface FormControlOption {
 
   // If type select
   textForTranslate? : string ,
+  selectLabel? : string ,
   selectOptions? : string[] 
 }
 
@@ -54,24 +55,30 @@ export interface FormControlOption {
         }
 
         @case ('select') {
+        <label 
+        [class]="option().inputClass || 'ng-select'" 
+        [ngClass]="(shouldShowValidation() && isShowValidationsError()) ? 'select-error': '' " 
+        >
+        @if(option().selectLabel){
+        <span class="label mr-2">{{option().selectLabel}}</span>
+        }
         <select 
         [id]="option().id" 
         [name]="option().name"
         [formControlName]="option().formControlName" 
         [autocomplete]="option().autocomplete || 'on'"
-        [class]="'capitalize ' +(option().inputClass || 'ng-select')" 
         aria-selected="true"
+        class="capitalize"
         [attr.aria-required]="option().isRequired"
-        [attr.aria-describedby]="option().formControlName + 'Help'"
-        [ngClass]="(shouldShowValidation() && isShowValidationsError())  ? 
-        'select-error' : ''">
+        [attr.aria-describedby]="option().formControlName + 'Help'">
         @for (o of this.option().selectOptions; track o) {
-        @let option =  this.option().textForTranslate  ? this.option().textForTranslate + o : o;
+        @let option = this.option().textForTranslate  ? this.option().textForTranslate + o : o;
         <option [value]="o" class="capitalize">{{
         translationService.heroTexts(option)}}
         </option>
         }
         </select> 
+        </label>
         }
 
         @default {

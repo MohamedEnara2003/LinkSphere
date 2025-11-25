@@ -5,7 +5,7 @@ import { NgControl } from "../../../../shared/components/ng-control/ng-control."
 import { NgEmail } from "../../components/ng-email/ng-email";
 import { CustomValidators } from '../../../../core/validations/custom/custom-validations';
 import { AuthRedirectLink } from "../../components/auth-redirect-link/auth-redirect-link";
-import { AuthenticationService } from '../../service/auth.service';
+import { AuthService } from '../../service/auth.service';
 import { SignUp } from '../../../../core/models/auth.model';
 import { SignInWithGoogle } from "../../components/sign-with-google/sign-with-google";
 import { tap } from 'rxjs';
@@ -116,7 +116,7 @@ import { tap } from 'rxjs';
 })
 export class Register implements OnInit  {
   #fb = inject(NonNullableFormBuilder);
-  #AuthenticationService = inject(AuthenticationService);
+  #authService = inject(AuthService);
   
   public registerForm!: FormGroup;
 
@@ -175,7 +175,7 @@ export class Register implements OnInit  {
   onRegisterSubmit() {
     if (this.registerForm.valid) {
       const user: SignUp = this.registerForm.getRawValue();
-      this.#AuthenticationService.signUp(user).pipe(
+      this.#authService.signUp(user).pipe(
       tap(() =>  this.registerForm.reset())
       ).subscribe();
       return;

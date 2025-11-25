@@ -7,12 +7,6 @@ interface ApiResponse {
   message?: string;
   [key: string]: unknown; 
 }
-interface ErrorServer {
-  error_message  : string ,
-  error_stack  : string ,
-  name  : string ,
-  statusCode : number ,
-}
 
 export const MessageAlertInterceptor: HttpInterceptorFn = (req, next) => {
   const alertService = inject(AlertService)
@@ -71,7 +65,7 @@ export const MessageAlertInterceptor: HttpInterceptorFn = (req, next) => {
   ((errorMessage.length <= 40 ) ? errorMessage : '' ) 
   || 'Something went wrong';
 
-  if(unMessages.includes(message)){
+  if(!unMessages.includes(message)){
   initAlert('alert-warning' ,  message , 3000)
   }
 

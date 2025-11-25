@@ -1,17 +1,15 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { SingleTonApi } from '../../../core/services/api/single-ton-api.service';
-import { EMPTY, filter, from, Observable, switchMap, take, tap, throwError } from 'rxjs';
+import { EMPTY, from, Observable, switchMap, tap, throwError } from 'rxjs';
 import { AuthToken, ChangeForgetPassword, LoginBody, LoginType, logoutFlag, SignUp, Token, VerifyOtp } from '../../../core/models/auth.model';
 
 import { Router } from '@angular/router';
 import { StorageService } from '../../../core/services/locale-storage.service';
 
 import { UserProfileService } from '../../public/pages/profile/services/user-profile.service';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { firebaseAuth } from '../../../../environments/firebase.config';
 import { DomService } from '../../../core/services/dom.service';
-import { AuthService as Auth0Service } from '@auth0/auth0-angular';
-import { environment } from '../../../../environments/environment.development';
-
-
 
 
 interface Respons {
@@ -24,7 +22,7 @@ interface Respons {
   providedIn: 'root'
 })
 
-export class AuthenticationService {
+export class AuthService {
   #routeName: string = "auth";
 
   #singleTonApi = inject(SingleTonApi);
@@ -32,17 +30,14 @@ export class AuthenticationService {
   #domService = inject(DomService);
   #storageService = inject(StorageService);
   #userProfileService = inject(UserProfileService);
-  #auth0 = inject(Auth0Service, { optional: true });
 
-  #registerData = signal<{email : string} | null>(null);
-
+#registerData = signal<{email : string} | null>(null);
 
 // ____________________________________
 
 constructor() {
 this.#registerData.set(this.#storageService.getItem("register") || null);
 }
-
 
 // 🟢 Store Tokens 🟢
 #storeTokens({access_token , refresh_token } : Token) : void {
@@ -53,42 +48,26 @@ this.#registerData.set(this.#storageService.getItem("register") || null);
     this.#router.navigate(['/public'])
 }
 
+//🟢 Create Account 🟢
+signInWithGoogleFirebase(): Observable<LoginBody> {
 
-//🟢 Sign in with Google via Auth0 🟢
-signInWithGoogle(): Observable<LoginBody> {
-  if (!this.#domService.isBrowser()) {
+    if(!this.#domService.isBrowser()){
     return throwError(() => new Error('Google Sign-In only works on browser'));
-  }
+    }
 
-  if (!this.#auth0) {
-    return throwError(() => new Error('Auth0 is not available on this platform'));
-  }
+    const provider = new GoogleAuthProvider();
+    return from(signInWithPopup(firebaseAuth, provider)).pipe(
+      switchMap(result => {
 
-  const connection = environment.auth0.googleConnection || 'google-oauth2';
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      const idToken = credential?.idToken;
 
-  return from(
-    this.#auth0.loginWithPopup({
-      authorizationParams: {
-        connection,
-        prompt: 'select_account'
-      }
-    })
-  ).pipe(
-    switchMap(() =>
-      this.#auth0!.idTokenClaims$.pipe(
-        filter((claims): claims is { __raw: string; [key: string]: unknown } => !!claims?.__raw),
-        take(1)
-      )
-    ),
-    switchMap((claims) => {
-      const userName =
-        (claims['name'] as string | undefined) ||
-        (claims['nickname'] as string | undefined) ||
-        (claims['email'] as string | undefined) ||
-        '';
-      return this.#signWithGoggle(claims.__raw, userName);
-    })
-  );
+        if (!idToken) {
+          return throwError(() => new Error('No Google ID token found'));
+        }
+        return this.#signWithGoggle(idToken , result.user.displayName || '')
+      })
+    );
 }
 
 #signWithGoggle(idToken: string , userName : string): Observable<LoginBody> {
@@ -118,17 +97,20 @@ signUp(data: SignUp): Observable<Respons> {
 
 // 🟢 Confirm Email (Send OTP to Email) + Login 
 confirmEmail(OTP: string , email : string): Observable<LoginBody> {
-  return this.#singleTonApi.patch(`${this.#routeName}/confirm-email`, {
+  return this.#singleTonApi.patch<LoginBody>(`${this.#routeName}/confirm-email`, {
   email,
   OTP,
   }).pipe(
-  switchMap(() => {
+  tap(({data : {credentials}}) => {
+
   const {email} = this.#registerData()!;
+
   if(!email) {
   this.#router.navigate(['/auth/login'])
-  return EMPTY;
-  };
-  return this.login({email , password :''});
+  }
+  
+  this.#storageService.removeItem('register');
+  this.#storeTokens(credentials);
   })
   );
 }

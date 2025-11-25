@@ -81,7 +81,7 @@ import { UpdatePostService } from '../../service/api/update-posts.service';
                 id : 'availability',
                 selectOptions : ['public', 'friends', 'only-me'],
                 textForTranslate : 'posts.',
-                inputClass : 'select select-xs bg-light dark:bg-dark w-25'
+                inputClass : 'ng-select select-sm',
               }"
               [form]="postForm"
               aria-label="Select post visibility"
@@ -96,8 +96,9 @@ import { UpdatePostService } from '../../service/api/update-posts.service';
                 formControlName : 'allowComments',
                 id : 'allowComments',
                 selectOptions : ['allow' , 'deny'],
+                selectLabel : 'Comments',
                 textForTranslate : '',
-                inputClass : 'select select-xs bg-light dark:bg-dark w-25',
+                inputClass : 'ng-select select-sm',
               }"
               [form]="postForm"
               aria-label="Select comment permission"

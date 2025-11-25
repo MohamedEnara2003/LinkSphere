@@ -32,6 +32,7 @@ template: `
 
         @for (item of attachmentsService.previews(); let i = $index; track item.public_id) {
         <li class="relative w-full animate-opacity">
+          
             <app-ng-image
             [options]="{
                 src: item.url ,

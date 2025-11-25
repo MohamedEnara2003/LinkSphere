@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { SharedModule } from '../../../../shared/modules/shared.module';
-import { AuthenticationService } from '../../service/auth.service';
+import { AuthService } from '../../service/auth.service';
 import { BtnResendOtp } from "../../components/btn-resend-otp/btn-resend-otp";
 import { ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -60,7 +60,7 @@ import { UserProfileService } from '../../../public/pages/profile/services/user-
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class confirmEmail {
-  #AuthenticationService = inject(AuthenticationService);
+  #authService = inject(AuthService);
   #uerService = inject(UserProfileService);
   #route = inject(ActivatedRoute);
 
@@ -128,7 +128,7 @@ export class confirmEmail {
 
     const email = this.email();
     if(!email) return ;
-    this.#AuthenticationService.confirmEmail(code , email).subscribe();
+    this.#authService.confirmEmail(code , email).subscribe();
     return
     }
 
@@ -139,7 +139,7 @@ export class confirmEmail {
   resendConfirmEmailOtp() : void {
   const email = this.email();
   if(!email) return ;
-  this.#AuthenticationService.resendConfirmEmailOtp(email).subscribe();
+  this.#authService.resendConfirmEmailOtp(email).subscribe();
   }
 
 }

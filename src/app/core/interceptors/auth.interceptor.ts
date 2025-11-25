@@ -2,23 +2,16 @@ import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpErrorResponse } from
 import { inject } from '@angular/core';
 import { StorageService } from '../services/locale-storage.service';
 import { AuthToken } from '../models/auth.model';
-import { AuthenticationService } from '../../features/auth/service/auth.service';
+import { AuthService } from '../../features/auth/service/auth.service';
 import { catchError, switchMap, throwError } from 'rxjs';
-import { Router } from '@angular/router';
-import { DomService } from '../services/dom.service';
-
 
 
 
 export const AuthInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: HttpHandlerFn) => {
-  const router = inject(Router);
-  const domService = inject(DomService);
-  const storageService = inject(StorageService);
-  const authService = inject(AuthenticationService);
 
-  const redirectToLogin  = () => {
-  router.navigate(['/auth/login']);
-  }
+  const storageService = inject(StorageService);
+  const authService = inject(AuthService);
+
 
   const auth = storageService.getItem<AuthToken>('auth');
   let authReq = req;
@@ -68,10 +61,7 @@ export const AuthInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: 
         );
       }
 
-      // Authorization
-      if(req.url.includes('/users/profile'))  { 
-      redirectToLogin();
-      }
+
       
 
       return throwError(() => error);
