@@ -9,7 +9,7 @@ selector: 'app-post-model-header',
 imports: [RouterModule],
 template: `
 <header class="flex justify-between  gap-5 border-b-2 border-dark/25 pb-2">
-<button [routerLink]="['/public' ,{ outlets: { model: null } }]"
+<button [routerLink]="['/public' ,{ outlets: { model: null } }]" queryParamsHandling="merge"
 type="button" class="btn btn-sm btn-circle bg-transparent ngText ">
 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" 
 stroke="currentColor" class="size-6">

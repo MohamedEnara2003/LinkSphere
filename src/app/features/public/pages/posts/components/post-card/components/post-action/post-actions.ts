@@ -10,8 +10,8 @@ import { PostsStateService } from '../../../../service/state/posts-state.service
   imports: [RouterModule, LikeToggle],
   template: `
     <nav class="w-full flex items-center gap-4 border-b border-b-brand-color py-3 font-semibold ngText">
-      <!-- Likes -->
       
+      <!-- Likes -->
       <app-like-toggle
       [postId]="post()?._id || ''"
       [existingLikes]="post()?.likes || []"
@@ -40,11 +40,11 @@ import { PostsStateService } from '../../../../service/state/posts-state.service
   `
 })
 export class PostActions {
-
-  #postsStateService = inject(PostsStateService);
+  postsStateService = inject(PostsStateService);
   #router = inject(Router);
 
   post = input<IPost | null>(null);
+
 
   openPostComments(): void {
     const post = this.post();
@@ -53,7 +53,7 @@ export class PostActions {
         queryParams: { postId: post._id || '' },
         queryParamsHandling :'merge'
       });
-      this.#postsStateService.setPost(post);
+      this.postsStateService.setPost(post);
     }
   }
 }

@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, afterNextRender, OnDestroy, signal, } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, OnDestroy, signal, OnInit } from '@angular/core';
 import { DomService } from '../../../../../../../../../core/services/dom.service';
 import { SharedModule } from '../../../../../../../../../shared/modules/shared.module';
 import { UpsertComment } from "../components/upsert-comment/upsert-comment";
@@ -106,7 +106,7 @@ import { PostsStateService } from '../../../../../service/state/posts-state.serv
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PostComments implements OnDestroy{
+export class PostComments implements OnDestroy, OnInit{
     commentService = inject(CommentService);
     loadingService = inject(LoadingService);
 
@@ -123,9 +123,8 @@ export class PostComments implements OnDestroy{
     
     isOpenReplies = signal<string>('');
 
-
-    constructor(){
-    afterNextRender(() => this.#domService.setBodyOverflow('hidden'));
+    ngOnInit(): void {
+    this.#domService.setBodyOverflow('hidden');
     this.#getComments();
     }
     
@@ -136,12 +135,12 @@ export class PostComments implements OnDestroy{
       this.commentService.getPostComment(post._id).subscribe();
       }
     }
-    
+  
   closeComments(): void {
   this.#router.navigate(
     ['/public', { outlets: { model: null }}],
     {
-      queryParamsHandling: 'merge'
+    queryParamsHandling: 'merge'
     }
   );
 }

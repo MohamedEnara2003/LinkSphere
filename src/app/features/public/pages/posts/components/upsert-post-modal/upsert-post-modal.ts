@@ -18,6 +18,7 @@ import { AttachmentsService } from '../../../../../../core/services/attachments.
 import { CreatePostService } from '../../service/api/create-posts.service';
 import { PostsStateService } from '../../service/state/posts-state.service';
 import { UpdatePostService } from '../../service/api/update-posts.service';
+import { Router } from '@angular/router';
 
 
 @Component({
@@ -169,9 +170,10 @@ changeDetection : ChangeDetectionStrategy.OnPush
 export class UpsertPostModel implements  OnDestroy{
   readonly contentPlaceHolder : string = `What's on your mind? ✍️` ;
 
-    #createPostService = inject(CreatePostService);
-    #updatePostService = inject(UpdatePostService);
-    #postState= inject(PostsStateService);
+    readonly #createPostService = inject(CreatePostService);
+    readonly #updatePostService = inject(UpdatePostService);
+    readonly #postState= inject(PostsStateService);
+    readonly #router= inject(Router);
 
 
 
@@ -226,11 +228,8 @@ export class UpsertPostModel implements  OnDestroy{
   );
 
 
-  constructor(){
-  afterNextRender(() => this.#domService.setBodyOverflow('hidden'));
-  }
-
   ngOnInit(): void {
+  this.#domService.setBodyOverflow('hidden')
   this.#attachmentsService.initAttachmentsForm(this.postForm);
   this.#initExistingPost();
   }
@@ -260,11 +259,15 @@ export class UpsertPostModel implements  OnDestroy{
   const exist = this.existingPost();
 
   const updateContent = post.content !== exist?.content;
+  const updateAvailability = post.availability !== exist?.availability;
+  const updateAllowComments = post.allowComments !== exist?.allowComments;
+  const updateTags = post.tags?.length! > 0 || post.removedTags?.length! > 0;
+  
   const updateAttachments =
-    (post.attachments?.length ?? 0) > 0 ||
-    (post.removedAttachments?.length ?? 0) > 0;
+  (post.attachments?.length ?? 0) > 0 ||
+  (post.removedAttachments?.length ?? 0) > 0;
 
-  if (updateContent) {
+  if (updateContent || updateAvailability || updateAllowComments || updateTags) {
     this.#updatePostService.updatePostContent(postId, post).subscribe();
   }
 
@@ -284,7 +287,10 @@ export class UpsertPostModel implements  OnDestroy{
   existingPost ? 
   this.#updatePost(post  , existingPost._id) :
   this.#createPostService.createPost(post).subscribe();
+
+  this.#router.navigate([''] , {queryParams : {availability : post.availability }})
   }
+
 
 
 #clearForm(): void {

@@ -1,44 +1,52 @@
-import { computed, inject, Injectable, linkedSignal, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { SingleTonApi } from '../../../../../core/services/api/single-ton-api.service';
-import { catchError, EMPTY, Observable, tap } from 'rxjs';
+import { catchError, EMPTY, Observable, of, tap } from 'rxjs';
 import { IComment, ICreateComment, IPaginatedCommentsRes , IPaginatedCommentsRepliesRes, IReplyComment, IUpdateComment, CommentFlag } from '../../../../../core/models/comments.model';
 import { UserProfileService } from '../../profile/services/user-profile.service';
 import { Picture } from '../../../../../core/models/picture';
-import { Author } from '../../../../../core/models/user.model';
+import { Author, IUser, RelationshipState } from '../../../../../core/models/user.model';
+import { Pagination } from '../../../../../core/models/pagination';
+import { CommentsStateService } from './comments-state.service';
 
 
 @Injectable({
   providedIn: 'root'
 })
 export class CommentService {
-  #singleTonApi = inject(SingleTonApi);
+  readonly #singleTonApi = inject(SingleTonApi);
+  readonly #routeName: string = "posts";
 
-  #userService = inject(UserProfileService);
-  #routeName: string = "posts";
+  readonly #userService = inject(UserProfileService);
+  readonly #commentsStateService = inject(CommentsStateService);
 
-  // Post Management
 
+  // Post Comments State
+
+  // Private
   #comments = signal<IComment[]>([]);
   commentsPage = signal<number>(1);
-  hasMoreComments = linkedSignal<boolean>(() => this.commentsPage() > 1 );
-
+  hasMoreComments = signal<boolean>(false);
 
   #replies = signal<IComment[]>([]);
-
   #comment = signal<IComment | null>(null);
   #reply= signal<IComment | null>(null);
-  
+
+
+
+
+  // Public
   comments = computed<IComment[]>(() => this.#comments());
   replies = computed<IComment[]>(() => this.#replies());
-
   comment = computed<IComment | null>(() => this.#comment());
   reply = computed<IComment | null>(() => this.#reply());
 
-  updateReplies(updateFn: (replies: IComment[]) => IComment[]): void {
-    this.#replies.update(updateFn);
-  }
-// 🟢 Create Comment
 
+
+  updateReplies(updateFn: (replies: IComment[]) => IComment[]): void {
+  this.#replies.update(updateFn);
+  }
+
+// 🟢 Create Comment
 getCommentItems (
   postId : string ,
   id : string ,
@@ -325,11 +333,31 @@ likeComment(postId: string, commentId: string, userId: string): Observable<void>
     );
 }
 
+getCommentLikes(postId: string, commentId: string): Observable<{data: {likedUsers: IUser[] , pagination?: Pagination}}> {
+  const cacheCommentId = this.#commentsStateService.commentIdLikedUsers().commentId;
+  const likedUsers = this.#commentsStateService.commentIdLikedUsers().likedUsers;
+
+  if (cacheCommentId === commentId && likedUsers.length > 0) {
+    return of({data: {likedUsers}});
+  }
+
+  return this.#singleTonApi.find<{data: {likedUsers: IUser[] , pagination?: Pagination}}>(
+    `${this.#routeName}/${postId}/${commentId}/liked-users`
+  ).pipe(
+    tap(({data: {likedUsers}}) => {
+    this.#commentsStateService.updateCommentIdLikedUsers(commentId , likedUsers);
+    }),
+    catchError(() => EMPTY)
+  );
+}
 clearData() : void {
 this.#comments.set([]);
 this.#replies.set([]);
 this.commentsPage.set(1);
 this.hasMoreComments.set(this.commentsPage() > 1);
 }
+
+
+
 
 }

@@ -8,7 +8,6 @@ import {
   IUpdateBasicInfo, 
   IUpdateEmail, 
   IUser, 
-  RelationshipState, 
   UnfreezePayload, 
   UserProfile
 } from '../../../../../core/models/user.model';
@@ -16,6 +15,8 @@ import { catchError, EMPTY, map, Observable, of, shareReplay, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import { FriendRequestResponse, ReceivedFriendRequest, SentFriendRequest } from '../../../../../core/models/friends-requst.model';
 import { Picture } from '../../../../../core/models/picture';
+import { PostsStateService } from '../../posts/service/state/posts-state.service';
+import { CommentsStateService } from '../../posts/services/comments-state.service';
 
 
 
@@ -27,6 +28,8 @@ export class UserProfileService {
   
   readonly #singleTonApi = inject(SingleTonApi);
   readonly #router = inject(Router);
+  readonly #postsStateService = inject(PostsStateService);
+  readonly #commentsStateService = inject(CommentsStateService);
 
   readonly routeName: string = "users";
 
@@ -51,32 +54,7 @@ export class UserProfileService {
   return (!userId && !userProfileId) ? false : userId === userProfileId ;
   });
 
-  
-  public relationshipState = computed<RelationshipState>(() => {
-  const user =  this.#user();
-  const userProfile =  this.#userProfile();
-  if(!user || !userProfile) return 'myProfile'
-  const {_id : userId} = user;
-  const {_id : userProfileId} = userProfile;
 
-  // My Profile
-  if(userId === userProfileId ) return 'myProfile';
-
-  // My Firend
-  if(userProfile.isFriend) return 'friend';
-
-  // Not Friend
-  if(userId !== userProfileId && !userProfile.isFriend && !userProfile.friendRequest) return 'notFriend';
-  
-  // Request Sent
-  if(userProfile.friendRequest ===  FriendRequestEnum.sent) return 'requestSent';
-
-  // Request Received
-  if(userProfile.friendRequest ===  FriendRequestEnum.resaved) return 'requestReceived';
-
-  return 'myProfile';
-  });
-  
   
   public pictures = computed<string[]>(() => {
     const userProfile = this.userProfile();
@@ -281,8 +259,6 @@ getUserProfileById(userId: string): Observable<{data : IUser}> {
   // 👥 Friends
   // ==============================
 
-
-
   sendFriendRequest(userReceiver : IUser): Observable<FriendRequestResponse> {
     return this.#singleTonApi.create<FriendRequestResponse>(
       `${this.routeName}/friend-request/${userReceiver._id}`).pipe(
@@ -302,12 +278,21 @@ getUserProfileById(userId: string): Observable<{data : IUser}> {
         receiver
         }
 
-        this.#userProfile.update((u) => u ?
-        (u._id === receiver._id) ? ({...u  , friendRequest : FriendRequestEnum.sent}) : u 
-        : null
-        )
+        this.#userProfile.update((u) => {
+        if (!u) return null;
+        if (u._id !== receiver._id) return u;
+        return {
+          ...u,
+          friendRequest: FriendRequestEnum.sent,
+          isFriend: false,
+          flag: 'requestSent',
+        };
+        });
 
         this.#sentRequests.update((prevRequests) => [newRequests , ...prevRequests])
+
+        this.#postsStateService.updatePostLikerFlag(receiver._id, 'requestSent');
+        this.#commentsStateService.updatePostLikerFlag(receiver._id, 'requestSent');
         
         })
       );
@@ -343,7 +328,6 @@ getSentFriendRequests(): Observable<{
     )
     .pipe(  
     tap(({data : {requests}}) => {
-
       const sentRequests : SentFriendRequest[] = requests.map((request) => 
       ({...request,
       receiver : {
@@ -390,11 +374,14 @@ acceptFriendRequest(requestId: string, sender: Author): Observable<void> {
             if (!user) return user;
             return {
               ...user,
-              isFriend: true,
+              flag: 'isFriend',
               friends: [newFriend, ...(user.friends || [])],
             };
           });
         }
+
+        this.#postsStateService.updatePostLikerFlag(sender._id, 'isFriend');
+        this.#commentsStateService.updatePostLikerFlag(sender._id, 'notFriend');
       }),
     );
 }
@@ -405,11 +392,18 @@ acceptFriendRequest(requestId: string, sender: Author): Observable<void> {
   this.#receivedRequests.update((r) => r.filter((r) => r._id !== RequestId));
   this.#sentRequests.update((r) => r.filter((r) => r._id !== RequestId));
 
-  this.#userProfile.update((u) => u ?
-  (u._id === receiverId) ? ({...u  , friendRequest : null}) : u 
-  : null
-  )
+  this.#userProfile.update((u) => {
+    if (!u) return null;
+    if (u._id !== receiverId) return u;
+    return {
+      ...u,
+      flag: 'notFriend',
+    };
+  });
+  this.#postsStateService.updatePostLikerFlag(receiverId, 'notFriend');
+  this.#commentsStateService.updatePostLikerFlag(receiverId, 'notFriend');
   }
+  
   cancelFriendRequest(RequestId: string , receiverId : string): Observable<void> {
   return this.#singleTonApi.deleteById<void>(`${this.routeName}/cancel-friend-request`, RequestId).pipe(
   tap(() =>  this.#handleLogicCancelFriendRequest(RequestId , receiverId)),
@@ -438,11 +432,12 @@ unFriend(friendId: string): Observable<void> {
         if (currentProfile) {
           this.#userProfile.update((p) => ({
             ...p!,
-            isFriend: false,
-            friendRequest : null ,
+            flag: 'notFriend',
             friends: (p?.friends || []).filter((f) => f._id !== friendId),
           }));
         }
+        this.#postsStateService.updatePostLikerFlag(friendId, 'notFriend');
+        this.#commentsStateService.updatePostLikerFlag(friendId, 'notFriend');
       }),
     );
 }
@@ -456,7 +451,6 @@ unFriend(friendId: string): Observable<void> {
     return this.#singleTonApi.patch<IUser>(`${this.routeName}/update-basic-info` , data).pipe(
       tap(() => {
         this.#user.update((currentUser) => currentUser ? ({...currentUser , ...data}) : null);
-        console.log(this.#user());
         this.#router.navigate([] ,{ queryParams : {edit : null} , queryParamsHandling : 'merge'});
       })
     );

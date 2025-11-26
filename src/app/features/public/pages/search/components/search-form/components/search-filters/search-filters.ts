@@ -1,5 +1,6 @@
-import { Component, inject, model } from '@angular/core';
+import { Component, inject, model, OnDestroy, OnInit } from '@angular/core';
 import { SearchService } from '../../../../service/search.service';
+import { DomService } from '../../../../../../../../core/services/dom.service';
 
 @Component({
 	selector: 'app-search-filters',
@@ -71,9 +72,16 @@ import { SearchService } from '../../../../service/search.service';
     </section>
 `
 })
-export class SearchFilters{
+export class SearchFilters implements OnInit, OnDestroy{
 readonly searchService = inject(SearchService);
-
+readonly #domService = inject(DomService);
 isFilter = model<boolean>(false);
 
+ngOnInit(): void {
+this.#domService.setBodyOverflow('hidden');
+}
+
+ ngOnDestroy(): void {
+ this.#domService.setBodyOverflow('auto');
+ }
 }

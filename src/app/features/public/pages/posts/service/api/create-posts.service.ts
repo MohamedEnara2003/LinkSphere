@@ -1,7 +1,7 @@
 import { inject, Injectable } from "@angular/core";
 
 import { Observable, tap } from "rxjs";
-import { Availability, FormPost, ICreatePost, IPost } from "../../../../../../core/models/posts.model";
+import {  FormPost, ICreatePost, IPost } from "../../../../../../core/models/posts.model";
 import { Picture } from "../../../../../../core/models/picture";
 import { AppPostsService } from "../app/app-posts.service";
 import { PostsStateService } from "../state/posts-state.service";
@@ -75,8 +75,7 @@ export class CreatePostService {
       updatedAt: new Date().toISOString(),
     } 
 
-    this.#appPostsService.closeUpsertModelPost(availability);;
-    this.#postsStateService.addPost(newPost);
+    this.#postsStateService.addPost(newPost, user._id || '');
     })
     );
   }

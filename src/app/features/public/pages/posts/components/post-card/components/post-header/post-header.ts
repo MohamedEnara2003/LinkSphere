@@ -89,8 +89,8 @@ export class PostHeader {
   
 
   menuActions = computed<IMenuAction[]>(() => [
-  {type: 'edit', label: 'Edit Comment', icon: 'edit', variant: 'info' },
-  {type: 'delete', label: 'Delete Comment', icon: 'delete', variant: 'danger' },
+  {type: 'edit', label: 'Edit Post', icon: 'edit', variant: 'info' },
+  {type: 'delete', label: 'Delete Post', icon: 'delete', variant: 'danger' },
   {
   type: this.post()?.isFreezed ? 'unFreeze' : 'freeze', 
   label: this.post()?.isFreezed ? 'UnFreeze Post' : 'Freeze Post', 
@@ -114,7 +114,9 @@ export class PostHeader {
   editPost() : void {
   const post = this.post();
   if(post){
-  this.#router.navigate(['/public' ,{ outlets: { 'model': ['upsert-post'] } }])
+  this.#router.navigate(['/public' ,{ outlets: { 'model': ['upsert-post'] } }] , {
+    queryParamsHandling : 'merge'
+  })
   this.#postsState.setPost(post);
   }
   }

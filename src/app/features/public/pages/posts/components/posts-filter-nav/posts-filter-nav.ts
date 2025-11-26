@@ -6,8 +6,9 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 
 interface NavLink {
+  id : number ,
   label: string;
-  state: Availability;
+  availability: Availability;
   ariaLabel: string;
 }
 
@@ -24,13 +25,14 @@ interface NavLink {
     class="w-full grid grid-cols-3 ngText font-bold gap-2 text-sm sm:text-base"
     role="menubar"
   >
-    @for (link of navLinks(); track link.state) {
+
+    @for (link of navLinks(); track link.id) {
       <li role="listitem">
         <a
           [routerLink]="[]"
-          [queryParams]="{ state: link.state }"
+          [queryParams]="{ availability: link.availability }"
           class="w-full flex justify-center pb-2 duration-300 transition-colors hover:text-brand-color border-b"
-          [ngClass]="(postsState() === link.state || !postsState() && link.state === 'public') ? 
+          [ngClass]="(postsAvailability() === link.availability || !postsAvailability() && link.availability === 'public') ? 
           'border-b-brand-color text-brand-color' : ''"
           [attr.aria-label]="link.ariaLabel"
           role="menuitem"
@@ -47,15 +49,15 @@ interface NavLink {
 export class PostsFilterNavComponent {
     #route = inject(ActivatedRoute);
 
-    postsState = toSignal<Availability , Availability>(
+    postsAvailability = toSignal<Availability , Availability>(
     this.#route.queryParamMap.pipe(
-    map((query) => query.get('state') as Availability),
+    map((query) => query.get('availability') as Availability),
     ) 
     , {initialValue : 'public'});
 
   navLinks = signal<NavLink[]>([
-    { label: 'Only Me', state: 'only-me', ariaLabel: 'View only my posts' },
-    { label: 'Friends', state: 'friends', ariaLabel: 'View friends posts' },
-    { label: 'For You', state: 'public', ariaLabel: 'View public posts'},
+    { id : 1 , label: 'Only Me', availability: 'only-me', ariaLabel: 'View only my posts' },
+    { id : 2 , label: 'Friends', availability: 'friends', ariaLabel: 'View friends posts' },
+    { id : 3 , label: 'For You', availability: 'public', ariaLabel: 'View public posts'},
   ]).asReadonly();
 }

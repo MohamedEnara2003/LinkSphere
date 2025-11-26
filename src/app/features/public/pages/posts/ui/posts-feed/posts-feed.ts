@@ -17,7 +17,7 @@ import { GetPostsService } from '../../service/api/get-posts.service';
   imports: [PostCard, RouterModule, FeedAutoLoader, LoadingPost, EmptyPosts],
   template: `
   
-<main class="size-full grid grid-cols-1 gap-5">
+<main class="size-full flex flex-col gap-5">
 
 
 @if(!isLoading()){ 
@@ -42,9 +42,8 @@ aria-label="Load more posts"
 }
 
 }@else {
-<app-loading-post class="w-full min-h-60"/>
+<app-loading-post class="w-full min-h-full"/>
 }
-
 
 </main>
 `,
@@ -59,19 +58,19 @@ export class PostsFeed {
 
     #route = inject(ActivatedRoute);
 
-    postsState = toSignal<Availability , Availability>(
+    postsAvailability = toSignal<Availability , Availability>(
     this.#route.queryParamMap.pipe(
-    map((query) => query.get('state') as Availability),
+    map((query) => query.get('availability') as Availability),
     ) 
     , {initialValue : 'public'});
 
     
     posts = computed<IPost[]>(() => 
-    this.#postState.getPostsByState()[this.postsState() || 'public'].posts ?? []
+    this.#postState.getPostsByState()[this.postsAvailability() || 'public'].posts ?? []
     );
 
     hasMorePosts = computed<boolean>(() =>  
-    this.#postState.getPostsByState()[this.postsState() || 'public'].hasMorePosts
+    this.#postState.getPostsByState()[this.postsAvailability() || 'public'].hasMorePosts
     );
 
 
@@ -80,11 +79,11 @@ export class PostsFeed {
   }
 
  #getPosts(): void {
-  toObservable(this.postsState)
+  toObservable(this.postsAvailability)
     .pipe(
-      switchMap((state) => {
-        const currentState = state || "public";
-        const stateData = this.#postState.getPostsByState()[currentState];
+      switchMap((availability) => {
+        const currentAvailability = availability || "public";
+        const stateData = this.#postState.getPostsByState()[currentAvailability];
 
         if (stateData.posts.length > 0) {
         this.isLoading.set(false);
@@ -92,7 +91,7 @@ export class PostsFeed {
         }
 
         this.isLoading.set(true);
-        return this.#getPostsService.getPosts(currentState).pipe(
+        return this.#getPostsService.getPosts(currentAvailability).pipe(
         finalize(() => this.isLoading.set(false))
       );
       }),
@@ -107,8 +106,8 @@ export class PostsFeed {
 
     
     loadMore() {  
-    const currentState = this.postsState() || 'public';
-    this.#getPostsService.getPosts(currentState ).subscribe();
+    const currentAvailability = this.postsAvailability() || 'public';
+    this.#getPostsService.getPosts(currentAvailability ).subscribe();
     }
 
 }

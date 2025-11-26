@@ -1,7 +1,9 @@
 import { inject, Injectable } from "@angular/core";
 import { AppPostsService } from "../app/app-posts.service";
 import { PostsStateService } from "../state/posts-state.service";
-import { catchError, EMPTY, Observable } from "rxjs";
+import { catchError, EMPTY, Observable, of, tap } from "rxjs";
+import { IUser } from "../../../../../../core/models/user.model";
+import { Pagination } from "../../../../../../core/models/pagination";
 
 
 @Injectable()
@@ -25,6 +27,32 @@ toggleLikePost(postId: string, userId: string): Observable<void> {
         })
     );
 }
+
+
+getLikedUsers(postId: string) : Observable<{data : {likedUsers : IUser[] , pagination? : Pagination}}> {
+    const cachePostId = this.#postsStateService.postLikers().postId;
+    const likedUsers = this.#postsStateService.postLikers().likedUsers;
+    
+    if (cachePostId === postId && likedUsers.length > 0) {
+        return of({
+        data: {likedUsers}
+        });
+    }
+
+    return this.#appPostsService
+    .singleTonApi.find<{ data : {likedUsers : IUser[] , pagination : Pagination}}>
+    (`${this.#appPostsService.routeName}/${postId}/liked-users`)
+    .pipe(
+        tap(({data : {likedUsers}}) => {
+        this.#postsStateService.addPostLikedUsers(likedUsers , postId);
+        }),
+        catchError(() => {
+        return EMPTY;
+        })
+    );
+}
+
+
 
 
 }

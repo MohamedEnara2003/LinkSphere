@@ -1,19 +1,24 @@
-import { Component, computed, DestroyRef, inject, input} from '@angular/core';
+import { Component, computed, DestroyRef, inject, input, signal} from '@angular/core';
 import { SharedModule } from '../../../../../../shared/modules/shared.module';
 import { CommentService } from '../../services/comments.service';
 import { UserProfileService } from '../../../profile/services/user-profile.service';
 import { debounceTime, Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ToggleLikePost } from '../../service/api/like-toggle-post.service';
+import { UsersLikesModel } from "../users-likes-model/users-likes-model";
+import { IUser } from '../../../../../../core/models/user.model';
+import { PostsStateService } from '../../service/state/posts-state.service';
+import { CommentsStateService } from '../../services/comments-state.service';
 
 
 @Component({
 selector: 'app-like-toggle',
-imports: [SharedModule],
+imports: [SharedModule, UsersLikesModel],
 template: `
      <button 
      [attr.aria-label]="'Button ' + (commentId() ? 'like comment' : 'like post')" role="button"
      (click)="onClickLike()" type="button" class="flex items-center gap-1 ngBtnIcon">
+
         @if (!isLiked()) {
           <span title="Like">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -39,8 +44,24 @@ template: `
             </svg>
         </span>
         }
+
+        <span 
+        title="Show users likes"
+        (click)="openUsersLikes($event)" 
+        aria-label="Likes count"
+        >
         {{ existingLikes().length || 0 }}
+        </span>
     </button>
+    
+    @if(isOpenUserLikes()){
+    <app-users-likes-model  
+    [likedUsers]="displayLikedUsers() || []"
+    [isLoad]="isOpenUserLikes()"
+    (isLoadChange)="isOpenUserLikes.set($event)"
+    /> 
+    }
+
 `,
 providers : [
 ToggleLikePost,
@@ -48,12 +69,13 @@ ToggleLikePost,
 })
 export class LikeToggle {
 
-  #userService = inject(UserProfileService);
-  #commentService = inject(CommentService);
+  readonly #userService = inject(UserProfileService);
+  readonly #commentService = inject(CommentService);
+  readonly #commentsStateService = inject(CommentsStateService);
+  readonly #postsStateService = inject(PostsStateService);
 
-
-  #toggleLikePost = inject(ToggleLikePost);
-  #destroyRef = inject(DestroyRef);
+  readonly #toggleLikePost = inject(ToggleLikePost);
+  readonly #destroyRef = inject(DestroyRef);
 
   
   postId = input.required<string>();
@@ -62,6 +84,40 @@ export class LikeToggle {
 
   //  Streams
   #likeClick$ = new Subject<void>();
+
+  isOpenUserLikes = signal<boolean>(false)
+
+
+
+  // Computed signal for comment likes that reads from service
+  commentLikedUsers = computed<IUser[]>(() => {
+    const commentId = this.commentId();
+    if (!commentId) return [];
+    
+    const cached = this.#commentsStateService.commentIdLikedUsers();
+    if (cached.commentId === commentId) {
+      return cached.likedUsers;
+    }
+    return [];
+  });
+
+  postLikedUsers = computed<IUser[]>(() => {
+    const postId = this.postId();
+    if (!postId) return [];
+    const cached = this.#postsStateService.postLikers();
+    if (cached.postId === postId) {
+      return cached.likedUsers;
+    }
+    return [];
+  });
+
+  // Combined liked users - use service cache for comments, input for posts
+  displayLikedUsers = computed<IUser[]>(() => {
+    if (this.commentId()) {
+      return this.commentLikedUsers();
+    }
+    return this.postLikedUsers();
+  });
 
   ngOnInit() {
     this.#likeClick$
@@ -91,6 +147,23 @@ export class LikeToggle {
       this.#toggleLikePost.toggleLikePost(postId, userId).subscribe();
     }
   }
+
+openUsersLikes(event: Event) : void {
+event.stopPropagation();
+const postId = this.postId() || '';
+const commentId = this.commentId() || '';
+this.isOpenUserLikes.set(true);
+
+if(postId && !commentId) {
+this.#toggleLikePost.getLikedUsers(postId).subscribe();
+}
+
+if(postId && commentId) {
+this.#commentService.getCommentLikes(postId, commentId).subscribe();
+}
+
+
+}
 
 
 }

@@ -32,7 +32,7 @@ import { FormatDatePipe } from '../../../../../../../../../../shared/pipes/forma
         { outlets: { primary: ['profile', 'user', comment().author._id || ''], model: null } }
       ]"
       [options]="{
-        src: comment().author.picture ?.url|| '',
+        src: comment().author.picture ?.url || '/user-placeholder.webp',
         placeholder:  '/user-placeholder.webp',
         alt: comment().author.userName + ' profile picture',
         width:  100,
@@ -90,7 +90,7 @@ import { FormatDatePipe } from '../../../../../../../../../../shared/pipes/forma
       <!-- Comment Text -->
   <article 
   role="article"
-  class="text-sm leading-relaxed break-words flex flex-col gap-2">
+  class="text-sm break-words flex flex-col gap-2">
 
   <!-- Reply Tag -->
   @if (isReplyTagName()) {
@@ -99,11 +99,12 @@ import { FormatDatePipe } from '../../../../../../../../../../shared/pipes/forma
       role="text"
       [attr.aria-label]="'Replying to ' + isReplyTagName()"
     >
-    Replying to  {{isReplyTagName() }}
+     <span class="text-brand-color">Replying to </span> {{isReplyTagName() }}
     </span>
   }
 
   <p class="flex items-center gap-1"> 
+
     <!-- Tagged Users -->
   @if (comment().tags.length) {
     @for (tag of comment().tags; track tag) {
@@ -125,7 +126,7 @@ import { FormatDatePipe } from '../../../../../../../../../../shared/pipes/forma
       role="text"
       aria-label="Comment content"
       >
-        {{ comment().content }}
+      {{ comment().content }}
       </span> 
       </p>
       </article>
@@ -155,7 +156,6 @@ import { FormatDatePipe } from '../../../../../../../../../../shared/pipes/forma
       [commentId]="comment()._id || ''"
       [existingLikes]="comment().likes || []"
       />
-
           <a
             [routerLink]="[]"
             [queryParams]="{ commentId: comment()._id || '', type: 'reply' }"

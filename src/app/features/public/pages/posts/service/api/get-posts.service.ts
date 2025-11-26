@@ -23,11 +23,10 @@ availability: Availability ,
 
 const page = this.#postsStateService.getPostsByState()[availability].page;
 return this.#appPostsService.singleTonApi.find<{data: IPaginatedPostsResponse }>(
-`${this.#appPostsService.routeName}?page=${page}&limit=${5}`).pipe(
+`${this.#appPostsService.routeName}?availability=${availability}&page=${page}&limit=${5}`).pipe(
 
 tap(({ data: { posts : newPosts , pagination} }) => {
-const filteredPosts = newPosts.filter(p => p.availability === availability);
-this.#postsStateService.addPosts(filteredPosts , availability , pagination.totalPages);
+this.#postsStateService.addPosts(newPosts , availability , pagination.totalPages);
 }),
 );
 }

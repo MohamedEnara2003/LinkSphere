@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component,inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component,computed,inject } from '@angular/core';
 import { NgImage } from "../../../../../../../../shared/components/ng-image/ng-image";
 import { SharedModule } from '../../../../../../../../shared/modules/shared.module';
 import { UserProfileService } from '../../../../services/user-profile.service';
@@ -73,11 +73,13 @@ import { FriendActionButton } from "../friend-action-button/friend-action-button
 
     <nav class="w-full grid grid-cols-1 sm:grid-cols-2 gap-4">  
 
-    @if(userProfileService.relationshipState() !== 'myProfile'){
-    <app-friend-action-button />
+    @if(!userProfileService.isMyProfile() && userProfile()){
+    <app-friend-action-button
+    [relationshipState]="userProfile().flag"
+    [userProfile]="userProfile()"
+    />
     }
   
-
 <button 
 routerLink="/public/chats"
 type="button" 
@@ -98,4 +100,5 @@ changeDetection : ChangeDetectionStrategy.OnPush
 
 export class userProfileHeader {
 userProfileService = inject(UserProfileService);
+userProfile = computed(() =>this.userProfileService.userProfile()!);
 }

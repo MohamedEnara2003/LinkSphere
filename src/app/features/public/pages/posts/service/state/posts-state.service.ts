@@ -1,7 +1,7 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, Injectable, signal } from '@angular/core';
 import { Availability, IPost, IUpdatePostContent } from '../../../../../../core/models/posts.model';
 import { Picture } from '../../../../../../core/models/picture';
-import { UserProfileService } from '../../../profile/services/user-profile.service';
+import { IUser, RelationshipState } from '../../../../../../core/models/user.model';
 
 
 
@@ -11,9 +11,9 @@ providedIn: 'root'
 })
 
 export class PostsStateService{
-#userService = inject(UserProfileService);
 
 // Posts State:
+
 // Private 
 #postsStateMap = signal<Record<Availability, { posts: IPost[]; page: number , hasMorePosts : boolean}>>({
 public: { posts: [], page: 1   , hasMorePosts : false},
@@ -25,11 +25,15 @@ friends: { posts: [], page: 1  , hasMorePosts : false},
 #post = signal<IPost | null>(null);
 
 
+#postLikers = signal<{postId: string, likedUsers: IUser[]}>({postId: '', likedUsers: []});
+
 // Public 
 public getPostsByState = computed(() => this.#postsStateMap())
 public userProfilePosts = computed(() => this.#userProfilePosts());
 public userFreezedPosts = computed(() => this.#userFreezedPosts());
 public post = computed(() => this.#post());
+
+public postLikers = computed(() => this.#postLikers());
 
 //_____________________________________________________________________
 
@@ -40,17 +44,32 @@ public post = computed(() => this.#post());
   //  Get POSTS STATE
   // ---------------------------
   
+  
+  addPostLikedUsers (users : IUser[] , postId : string) : void {
+  this.#postLikers.set({postId, likedUsers: users});
+  }
+
+  updatePostLikerFlag(userId: string, flag: RelationshipState) : void {
+  if(!userId) return;
+  this.#postLikers.update(({postId, likedUsers}) => ({
+    postId,
+    likedUsers: likedUsers.map((user) =>
+      user._id === userId ? { ...user, flag } : user
+    )
+  }));
+  }
+
   addFreezePosts(posts : IPost[]) : void {
   this.#userFreezedPosts.set(posts.map((p) => ({...p , isFreezed : true})))
   }
 
-addPosts(filteredPosts: IPost[], availability: Availability, totalPages: number): void {
+addPosts(posts: IPost[], availability: Availability, totalPages: number): void {
   const state = this.#postsStateMap();
 
   const currentPage = state[availability].page;
   const reachedLastPage = currentPage === totalPages;
 
-  if (!filteredPosts || filteredPosts.length === 0 || (currentPage > 1 && reachedLastPage)) {
+  if (!posts || posts.length === 0 || (currentPage > 1 && reachedLastPage)) {
     this.#postsStateMap.update((map) => ({
       ...map,
       [availability]: {
@@ -65,7 +84,7 @@ addPosts(filteredPosts: IPost[], availability: Availability, totalPages: number)
     const oldPosts = map[availability].posts;
 
     // Merge then unique by id
-    const mergedPosts = [...oldPosts, ...filteredPosts];
+    const mergedPosts = [...oldPosts, ...posts];
 
     const uniquePosts = Array.from(
       new Map(mergedPosts.map(p => [p.id, p])).values()
@@ -95,7 +114,7 @@ addPosts(filteredPosts: IPost[], availability: Availability, totalPages: number)
   // ---------------------------
   // ADD NEW POST
   // ---------------------------
-  addPost(post: IPost) {
+  addPost(post: IPost, currentUserId?: string) {
     const a = post.availability;
 
     this.#postsStateMap.update((state) => ({
@@ -106,8 +125,8 @@ addPosts(filteredPosts: IPost[], availability: Availability, totalPages: number)
       }
     }));
 
-    if (post.createdBy === this.#userService.user()?._id) {
-    this.#userProfilePosts.update((p) => [post, ...p]);
+    if (currentUserId && post.createdBy === currentUserId) {
+      this.#userProfilePosts.update((p) => [post, ...p]);
     }
   }
 
@@ -126,67 +145,83 @@ addPosts(filteredPosts: IPost[], availability: Availability, totalPages: number)
     this.#userProfilePosts.update(p => p.filter(x => x._id !== postId));
   }
 
-#buildUpdatedPost(
-  post: IPost,
-  payload:  Partial<IUpdatePostContent>,
-  attachments: Picture[]
-): IPost {
+  #buildUpdatedPost(
+    post: IPost,
+    payload: Partial<IUpdatePostContent>,
+    attachments: Picture[]
+  ): IPost {
+    // clone to avoid mutating original
+    const updatedPost: IPost = { ...post };
+  
+    // content / availability / allowComments
+    if (payload.content !== undefined) {
+      updatedPost.content = payload.content;
+    }
+  
+    if (payload.availability !== undefined) {
+      updatedPost.availability = payload.availability;
+    }
+  
+    if (payload.allowComments !== undefined) {
+      updatedPost.allowComments = payload.allowComments;
+    }
+  
+    // tags: start from current tags (ensure array)
+    const currentTags = Array.isArray(post.tags) ? [...post.tags] : [];
+  
+    // addToTags -> merge unique
+    if (payload.addToTags && payload.addToTags.length) {
+      const merged = [...currentTags, ...payload.addToTags];
+      updatedPost.tags = Array.from(new Set(merged));
+    } else {
+      // if no addToTags present, keep currentTags for now
+      updatedPost.tags = currentTags;
+    }
+  
+    if (payload.removeFromTags && payload.removeFromTags.length) {
+      updatedPost.tags = (updatedPost.tags || []).filter(
+        (t) => !payload.removeFromTags!.includes(t)
+      );
+    }
+  
 
-  const updatedPost: IPost = { ...post};
+    if (attachments && attachments.length) {
+      updatedPost.attachments = attachments;
+    }
 
-  if (payload.content !== undefined) {
-    updatedPost.content = payload.content;
+    return updatedPost;
   }
+  
+  UpdatePostsStateMap(
+    postId: string,
+    payload: Partial<IUpdatePostContent>,
+    attachments: Picture[] ,
+    availability : Availability
+    ): void {
 
-  if (payload.availability !== undefined) {
-    updatedPost.availability = payload.availability;
-  }
+      this.#postsStateMap.update((state) => {
+        const target = state[availability];
+        const updatedPosts = target.posts.map((p) =>
+          p._id === postId
+            ? this.#buildUpdatedPost(p, payload, attachments)
+            : p
+        );
+        return {
+          ...state,
+          [availability]: {
+            ...target,
+            posts: updatedPosts,
+          },
+        };
+      });
 
-  if (payload.allowComments !== undefined) {
-    updatedPost.allowComments = payload.allowComments;
-  }
-
-  // tags – دمج بدون تكرار
-  if (payload.addToTags?.length) {
-    updatedPost.tags = Array.from(
-      new Set([...(post.tags || []), ...payload.addToTags])
+  
+    this.#userProfilePosts.update((posts) =>
+    posts.map((post) => (post._id === postId ? this.#buildUpdatedPost(post, payload, attachments) : post))
     );
   }
 
-if (attachments?.length) {
-updatedPost.attachments = attachments;
-}
-
-return updatedPost;
-}
-
-UpdatePostsStateMap(postId: string, payload: Partial<IUpdatePostContent>, attachments: Picture[]): void {
-  this.#postsStateMap.update((map) => {
-    const newMap = { ...map };
-
-    for (const key of Object.keys(newMap) as Availability[]) {
-    newMap[key] = {
-        ...newMap[key],
-        posts: newMap[key].posts.map((post) =>
-        post._id === postId
-            ? this.#buildUpdatedPost(post, payload, attachments)
-            : post
-        )
-    };
-    }
-
-    return newMap;
-});
-
-this.#userProfilePosts.update((posts) =>
-    posts.map((post) =>
-    post._id === postId
-        ? this.#buildUpdatedPost(post, payload, attachments)
-        : post
-    )
-);
-}
-
+  
   // ---------------------------
   // 🔥 FREEZE
   // ---------------------------

@@ -22,8 +22,4 @@ readonly router = inject(Router);
 readonly routeName: string = "posts";
 
 
-closeUpsertModelPost(availability : Availability) : void {
-this.router.navigate([''] , {queryParams : {state : availability }})
-}
-
 }

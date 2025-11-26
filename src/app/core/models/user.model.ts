@@ -22,12 +22,12 @@ export enum ProviderEnum {
   google = "google",
 }
 
-export type RelationshipState =
-  | 'myProfile'
-  | 'notFriend'
-  | 'requestSent'
-  | 'requestReceived'
-  | 'friend';
+export type RelationshipState  =
+|'me'
+|'isFriend'
+|'notFriend'
+|'requestSent'
+|'requestReceived';
 
 
 export interface IFriend {
@@ -59,8 +59,7 @@ export interface IUser {
   coverImage?: Picture;
 
   friends?: IFriend[];
-  isFriend : boolean ,
-  friendRequest : FriendRequestEnum | null ,
+  flag : RelationshipState 
   createdAt: string;
   updatedAt: string;
   __v: number;

@@ -133,7 +133,7 @@ body {
 }
 
 .ngBtn {
-@apply btn btn-info;
+@apply btn btn-info btn-sm sm:btn-md;
 }
 
 .ngText {
