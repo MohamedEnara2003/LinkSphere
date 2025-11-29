@@ -5,7 +5,7 @@ import { BtnResendOtp } from "../../components/btn-resend-otp/btn-resend-otp";
 import { ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
-import { UserProfileService } from '../../../public/pages/profile/services/user-profile.service';
+import { UserProfileService } from '../../../public/features/profile/services/user-profile.service';
 
 @Component({
   selector: 'app-confirm-email',
@@ -18,9 +18,14 @@ import { UserProfileService } from '../../../public/pages/profile/services/user-
     border rounded-box p-5 space-y-5"
     (ngSubmit)="onSubmit($event)">
     
-    <header class="w-full flex flex-col items-center gap-2">
+    <header class="w-full flex flex-col justify-center items-center gap-2">
       <h1 class="text-brand-color font-bold text-xl md:text-2xl">Verify OTP</h1>
-      <p>Enter the 6-digit code sent to {{email()}}</p>
+
+      <p class="w-full text-center text-sm sm:text-base ngText">
+      Enter the 6-digit code sent to 
+      <span class="text-brand-color/80">{{email()}}</span>
+      </p>
+
     </header>
 
     <legend class="fieldset-legend sr-only">OTP</legend>
@@ -64,7 +69,11 @@ export class confirmEmail {
   #uerService = inject(UserProfileService);
   #route = inject(ActivatedRoute);
 
-  email = toSignal<string | null>(this.#route.queryParamMap.pipe(map((query) => query.get('email'))));
+  email = toSignal<string | null>(
+    this.#route.queryParamMap.pipe(
+    map((query) => query.get('email') || this.#authService.registerData()?.email!))
+  );
+  
   state = toSignal<string | null>(this.#route.queryParamMap.pipe(map((query) => query.get('state'))));
 
   otpLength = signal<number>(6).asReadonly();
@@ -137,8 +146,7 @@ export class confirmEmail {
   }
 
   resendConfirmEmailOtp() : void {
-  const email = this.email();
-  if(!email) return ;
+  const email = this.email()!;
   this.#authService.resendConfirmEmailOtp(email).subscribe();
   }
 

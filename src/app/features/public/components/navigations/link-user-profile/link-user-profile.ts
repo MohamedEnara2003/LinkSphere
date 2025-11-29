@@ -1,7 +1,7 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { SharedModule } from '../../../../../shared/modules/shared.module';
-import { UserPicture } from "../../../pages/profile/components/user-picture/user-picture";
-import { UserProfileService } from '../../../pages/profile/services/user-profile.service';
+import { UserPicture } from "../../../features/profile/components/user-picture/user-picture";
+import { UserProfileService } from '../../../features/profile/services/user-profile.service';
 
 
 

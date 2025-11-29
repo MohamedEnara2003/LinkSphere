@@ -2,29 +2,36 @@ import { Component, inject } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { Header } from "./components/header/header";
 import { Footer } from "./components/footer/footer";
-import { UserProfileService } from './pages/profile/services/user-profile.service';
+import { UserProfileService } from './features/profile/services/user-profile.service';
 import { Logo } from "../../shared/components/logo/logo";
 import { LoadingService } from '../../core/services/loading.service';
-import { DomService } from '../../core/services/dom.service';
-import { StorageService } from '../../core/services/locale-storage.service';
+import { DomService } from '../../core/services/document/dom.service';
+import { StorageService } from '../../core/services/storage/locale-storage.service';
 import { catchError, EMPTY, tap } from 'rxjs';
 import { AuthToken } from '../../core/models/auth.model';
+import { NgImageFullscreen } from "./components/ng-image-fullscreen/ng-image-fullscreen";
+import { ImageFullscreenService } from '../../core/services/style/image-fullscreen.service';
 
 
 @Component({
   selector: 'app-public',
-  imports: [RouterOutlet, Header, Footer, Logo ],
+  imports: [RouterOutlet, Header, Footer, Logo, NgImageFullscreen],
   template: `
   <main>
   @defer(when !loadingService.isLoading()){
-  <app-header />
 
+  <app-header />
   <section class="relative">
   <router-outlet />
   <router-outlet name="model"/>
   </section>
-
   <app-footer />
+
+  @if(imageFullscreen.isLoad()){
+  <app-ng-image-fullscreen />
+  }
+
+
   }@placeholder {
   <section class="w-full h-svh flex items-center justify-center ">
   <app-logo  styleClass="text-5xl animate-pulse"/>
@@ -37,12 +44,12 @@ import { AuthToken } from '../../core/models/auth.model';
 })
 
 export class Public {
-#router = inject(Router);
-#userProfileService = inject(UserProfileService);
-
-#domService = inject(DomService);
-#storageService = inject(StorageService);
-loadingService = inject(LoadingService);
+readonly #router = inject(Router);
+readonly #userProfileService = inject(UserProfileService);
+readonly #domService = inject(DomService);
+readonly #storageService = inject(StorageService);
+readonly imageFullscreen = inject(ImageFullscreenService);
+readonly loadingService = inject(LoadingService);
 
 
 ngOnInit(): void {

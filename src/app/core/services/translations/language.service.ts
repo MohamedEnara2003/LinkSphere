@@ -2,7 +2,7 @@ import { Inject, Injectable, signal, effect } from '@angular/core';
 import { TranslationService } from './translation.service';
 
 import { DOCUMENT } from '@angular/common';
-import { StorageService } from '../locale-storage.service';
+import { StorageService } from '../storage/locale-storage.service';
 
 export enum SupportedLanguages {
   EN = 'en',

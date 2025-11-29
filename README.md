@@ -37,12 +37,23 @@ npm install
 ```bash
 npm install tailwindcss @tailwindcss/postcss postcss --force
 npm install -D daisyui@latest
+npm install swiper
 ```
 
 ### 🌍 Translation packages
 ```bash
 npm install @ngx-translate/core
 npm install @ngx-translate/http-loader
+```
+
+###  Api packages
+```bash
+npm install firebase
+```
+
+###  Real time packages
+```bash
+npm install socket.io-client
 ```
 
 ---
@@ -103,4 +114,5 @@ Front-End Developer — Angular Specialist
 
 ## 📄 License
 MIT License — free for personal & commercial use.
+
 

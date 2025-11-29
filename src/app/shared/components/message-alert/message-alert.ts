@@ -1,6 +1,6 @@
 import { Component,  effect,  inject, input } from '@angular/core';
 import { SharedModule } from '../../modules/shared.module';
-import { AlertOption, AlertService } from '../../../core/services/alert.service';
+import { AlertOption, AlertService } from '../../../core/services/style/alert.service';
 
 
 @Component({

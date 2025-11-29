@@ -11,17 +11,11 @@ import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessC
   import { ErrorInterceptor } from './core/interceptors/error.interceptor';
   import { MessageAlertInterceptor } from './core/interceptors/message-alert.interceptor';
   import { LoadingInterceptor } from './core/interceptors/loading.interceptor';
-import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
-import { provideAuth, getAuth } from '@angular/fire/auth';
-import firebaseApp from '../environments/firebase.config';
-
 
 
   const Interceptors = [
   AuthInterceptor , ErrorInterceptor , MessageAlertInterceptor , LoadingInterceptor ,
   ]
-
-
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -44,8 +38,8 @@ export const appConfig: ApplicationConfig = {
       }),
       lang: 'en'
     }),
-    provideFirebaseApp(() => initializeApp(firebaseApp.options)),
-    provideAuth(() => getAuth()),
+
+
   ]
 };
 

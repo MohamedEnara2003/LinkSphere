@@ -1,6 +1,6 @@
 import { Component, signal, inject } from '@angular/core';
 import { SharedModule } from '../../../../shared/modules/shared.module';
-import { UserProfileService } from '../../pages/profile/services/user-profile.service';
+import { UserProfileService } from '../../features/profile/services/user-profile.service';
 import { IconRenderer } from "./Icon-renderer/Icon-renderer";
 
 @Component({

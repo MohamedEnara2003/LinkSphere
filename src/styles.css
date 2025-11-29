@@ -117,7 +117,7 @@ body {
     bg-gradient-to-t  bg-card-light dark:bg-card-dark
     from-card-light via-light/60 to-light 
     dark:from-card-dark dark:via-dark/60 dark:to-dark 
-    rounded-2xl 
+    rounded-[24px] 
     shadow shadow-dark/30 
     border border-light/20 dark:border-dark/40 
     transition-all duration-300 ease-in-out;
@@ -160,6 +160,10 @@ text-text-light dark:text-text-dark  ;
 
 .ng-textarea {
 @apply  w-full  textarea textarea-sm sm:textarea-md textarea-info bg-card-light  dark:bg-card-dark text-text-light dark:text-text-dark ;
+}
+
+.ng-badge {
+@apply  text-brand-color badge badge-xs p-1 bg-brand-color/20 border-none;
 }
 
 

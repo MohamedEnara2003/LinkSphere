@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
-import { DomService } from '../dom.service';
+import { DomService } from '../document/dom.service';
 import { IUser } from '../../models/user.model';
 import { environment } from '../../../../environments/environment.development';
 

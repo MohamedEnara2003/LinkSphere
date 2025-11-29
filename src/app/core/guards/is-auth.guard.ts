@@ -1,8 +1,8 @@
 import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
-import { UserProfileService } from '../../features/public/pages/profile/services/user-profile.service';
+import { UserProfileService } from '../../features/public/features/profile/services/user-profile.service';
 import { catchError, map, of } from 'rxjs';
-import { DomService } from '../services/dom.service';
+import { DomService } from '../services/document/dom.service';
 
 export const isAuthGuard: CanActivateFn = () => {
   const  domService = inject(DomService);

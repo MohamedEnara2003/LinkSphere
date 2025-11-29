@@ -1,5 +1,5 @@
 import { HttpErrorResponse, HttpInterceptorFn, HttpResponse } from '@angular/common/http';
-import { AlertOption, AlertService } from '../services/alert.service';
+import { AlertOption, AlertService } from '../services/style/alert.service';
 import { inject } from '@angular/core';
 import { catchError, tap, throwError } from 'rxjs';
 

@@ -7,12 +7,14 @@ import {
   output,
   input,
 } from '@angular/core';
-import { LoadingComment } from "../../../pages/posts/components/loading/loading-comment/loading-comment";
-import { LoadingPost } from "../../../pages/posts/components/loading/loading-post/loading-post";
+import { LoadingPost } from "../../../features/posts/components/loading-post/loading-post";
+import { LoadingComment } from "../../../features/comments/components/loading-comment/loading-comment";
+
 
 
 @Component({
   selector: 'app-feed-auto-loader',
+  imports: [LoadingPost, LoadingComment] ,
   template: `
     <nav class="w-full flex justify-center items-center" >
     @if(!loadingType()){
@@ -32,7 +34,6 @@ import { LoadingPost } from "../../../pages/posts/components/loading/loading-pos
     }
     </nav>
   `,
-  imports: [LoadingComment, LoadingPost],
 })
 export class FeedAutoLoader  implements OnDestroy {
   loadingType = input<'comment' | 'post' | 'chat' | 'users'>();

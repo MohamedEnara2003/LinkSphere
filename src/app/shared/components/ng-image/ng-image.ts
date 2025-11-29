@@ -1,6 +1,6 @@
 import { CommonModule,  } from '@angular/common';
 import { Component, inject, input, model, signal } from '@angular/core';
-import { DomService } from '../../../core/services/dom.service';
+import { ImageFullscreenService } from '../../../core/services/style/image-fullscreen.service';
 
 export interface ImageOption {
   src: string;
@@ -49,78 +49,14 @@ export interface ImageOption {
     <div [ngClass]="options().class" class="ng-skeleton"></div>
     }
 
-  <!-- Fullscreen Preview -->
-  @if (preview()) {
-  <section
-  class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm
-  transition-opacity duration-300 ease-out animate-fadeIn"
-  role="dialog"
-  aria-modal="true"
-  aria-labelledby="image-preview-title"
-  (click)="closePreview()"
->
-  
-  <div
-    class="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-300 ease-out"
-    aria-hidden="true"
-  ></div>
 
-  <!-- المحتوى -->
-  <div
-    class="relative z-50 p-4 flex items-center justify-center max-h-[95vh] max-w-[95vw]"
-    (click)="$event.stopPropagation()"
-  >
-
-    <h2 id="image-preview-title" class="sr-only">Image preview</h2>
-
-    <button
-      type="button"
-      (click)="closePreview()"
-      class="absolute top-4 right-5 btn btn-sm btn-circle ngBtn"
-      aria-label="Close image preview"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        class="size-6">
-        <path fill-rule="evenodd"
-        d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 
-        1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 
-        13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 
-        5.47 6.53a.75.75 0 0 1 0-1.06Z"
-        clip-rule="evenodd" />
-      </svg>
-    </button>
-
-    
-    <img
-      [src]="options().src"
-      [alt]="options().alt || 'Preview image'"
-      [loading]="options().loading || 'lazy'"
-      [decoding]="options().decoding || 'async'"
-      [attr.fetchpriority]="options().fetchpriority || 'auto'"
-      [attr.referrerpolicy]="options().referrerpolicy || 'no-referrer'"
-      class="max-h-[95vh] max-w-[95vw] w-auto h-auto object-contain
-      rounded-lg shadow-2xl transition-transform duration-300
-      ease-out animate-scaleIn cursor-zoom-out"
-      (click)="closePreview()"
-      (error)="onError()"
-    />
-  </div>
-</section>
-
-
-    }
   `,
 })
 export class NgImage {
-  #domService = inject(DomService);
-
+  readonly #imageFullscreen = inject(ImageFullscreenService);
   public options = model.required<ImageOption>();
   isPreview = input<boolean>(false);
-
   isError = signal<boolean>(false);
-  preview = signal<boolean>(false);
 
 
   onError(): void {
@@ -131,15 +67,18 @@ export class NgImage {
     this.isError.set(true);
   }
 
-openPreview(): void {
-  this.preview.set(true);
-  this.#domService.setBodyOverflow('hidden')
+  public closePreview() : void {
+  this.#imageFullscreen.closePreview();
+  }
+
+public openPreview(): void {
+const src = this.options().src;
+const isPreview = this.isPreview();
+if(isPreview && src){
+this.#imageFullscreen.openPreview(src);
+}
 }
 
-closePreview(): void {
-  this.preview.set(false)
-  this.#domService.setBodyOverflow('auto')
-}
 
 
 

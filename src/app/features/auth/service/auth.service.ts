@@ -1,15 +1,15 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { SingleTonApi } from '../../../core/services/api/single-ton-api.service';
-import { EMPTY, from, Observable, switchMap, tap, throwError } from 'rxjs';
+import {catchError, from, Observable, of, switchMap, tap, throwError } from 'rxjs';
 import { AuthToken, ChangeForgetPassword, LoginBody, LoginType, logoutFlag, SignUp, Token, VerifyOtp } from '../../../core/models/auth.model';
 
 import { Router } from '@angular/router';
-import { StorageService } from '../../../core/services/locale-storage.service';
+import { StorageService } from '../../../core/services/storage/locale-storage.service';
 
-import { UserProfileService } from '../../public/pages/profile/services/user-profile.service';
+import { UserProfileService } from '../../public/features/profile/services/user-profile.service';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { firebaseAuth } from '../../../../environments/firebase.config';
-import { DomService } from '../../../core/services/dom.service';
+import { DomService } from '../../../core/services/document/dom.service';
 
 
 interface Respons {
@@ -31,12 +31,12 @@ export class AuthService {
   #storageService = inject(StorageService);
   #userProfileService = inject(UserProfileService);
 
-#registerData = signal<{email : string} | null>(null);
+registerData = signal<{email : string} | null>(null);
 
 // ____________________________________
 
 constructor() {
-this.#registerData.set(this.#storageService.getItem("register") || null);
+this.registerData.set(JSON.parse(this.#storageService.getItem("register")!) || null);
 }
 
 // 🟢 Store Tokens 🟢
@@ -45,11 +45,11 @@ this.#registerData.set(this.#storageService.getItem("register") || null);
         access_token: access_token,
         refresh_token:refresh_token
       });
-    this.#router.navigate(['/public'])
+    this.#router.navigate(['/public/feed'])
 }
 
 //🟢 Create Account 🟢
-signInWithGoogleFirebase(): Observable<LoginBody> {
+signInWithGoogleFirebase(): Observable<LoginBody | null> {
 
     if(!this.#domService.isBrowser()){
     return throwError(() => new Error('Google Sign-In only works on browser'));
@@ -66,7 +66,10 @@ signInWithGoogleFirebase(): Observable<LoginBody> {
           return throwError(() => new Error('No Google ID token found'));
         }
         return this.#signWithGoggle(idToken , result.user.displayName || '')
-      })
+      }),
+    catchError(() => {
+    return of(null);
+  })
     );
 }
 
@@ -97,15 +100,14 @@ signUp(data: SignUp): Observable<Respons> {
 
 // 🟢 Confirm Email (Send OTP to Email) + Login 
 confirmEmail(OTP: string , email : string): Observable<LoginBody> {
+  const userEmail = this.registerData()?.email || email;
   return this.#singleTonApi.patch<LoginBody>(`${this.#routeName}/confirm-email`, {
-  email,
+  email : userEmail,
   OTP,
   }).pipe(
   tap(({data : {credentials}}) => {
 
-  const {email} = this.#registerData()!;
-
-  if(!email) {
+  if(!userEmail) {
   this.#router.navigate(['/auth/login'])
   }
   
@@ -116,7 +118,9 @@ confirmEmail(OTP: string , email : string): Observable<LoginBody> {
 }
 
 resendConfirmEmailOtp(email: string): Observable<void> {
-return this.#singleTonApi.create(`${this.#routeName}/re-send-confirm-email-otp`, {email});
+const userEmail = this.registerData()?.email || email;
+console.log(userEmail);
+return this.#singleTonApi.create(`${this.#routeName}/re-send-confirm-email-otp`, {email : userEmail});
 }
 
 // ___________________________

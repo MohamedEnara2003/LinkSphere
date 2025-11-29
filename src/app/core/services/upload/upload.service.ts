@@ -1,6 +1,6 @@
 import { computed, Injectable, signal, inject } from "@angular/core";
-import { DomService } from "../dom.service";
-import { AlertService } from "../alert.service";
+import { DomService } from "../document/dom.service";
+import { AlertService } from "../style/alert.service";
 import { Picture } from "../../models/picture";
 
 @Injectable({ providedIn: 'root' })

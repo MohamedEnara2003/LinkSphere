@@ -1,6 +1,6 @@
 import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { StorageService } from '../services/locale-storage.service';
+import { StorageService } from '../services/storage/locale-storage.service';
 import { AuthToken } from '../models/auth.model';
 import { AuthService } from '../../features/auth/service/auth.service';
 import { catchError, switchMap, throwError } from 'rxjs';

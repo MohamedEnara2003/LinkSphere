@@ -1,6 +1,6 @@
 import { Injectable, inject, signal, effect, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser, DOCUMENT } from '@angular/common';
-import { StorageService } from '../locale-storage.service';
+import { StorageService } from '../storage/locale-storage.service';
 
 export enum DarkMode {
   Dark = 'dark',

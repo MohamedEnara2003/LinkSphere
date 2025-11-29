@@ -1,6 +1,6 @@
 import { Component, HostListener, output, input, signal, computed, inject } from '@angular/core';
 import { SharedModule } from '../../../../../shared/modules/shared.module';
-import { UserProfileService } from '../../../pages/profile/services/user-profile.service';
+import { UserProfileService } from '../../../features/profile/services/user-profile.service';
 
 export type ActionType = 'edit' | 'delete' | 'freeze' | 'unFreeze';
 

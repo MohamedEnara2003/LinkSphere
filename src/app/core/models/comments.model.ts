@@ -37,10 +37,8 @@ export interface IComment {
 // ---- Paginated Response ----
 export interface IPaginatedCommentsRes{
   data : {
-    statusCode?: number;
-    message?: string;
     comments: IComment[];
-    pagination: Pagination
+    pagination?: Pagination
   }
 }
 export interface IPaginatedCommentsRepliesRes{

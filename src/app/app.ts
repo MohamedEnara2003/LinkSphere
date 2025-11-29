@@ -1,6 +1,6 @@
 import { Component, inject} from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { AlertService } from './core/services/alert.service';
+import { AlertService } from './core/services/style/alert.service';
 import { messageAlert } from "./shared/components/message-alert/message-alert";
 import { LanguageService } from './core/services/translations/language.service';
 import { ThemeService } from './core/services/theme/theme.service';
