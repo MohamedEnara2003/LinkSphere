@@ -5,16 +5,16 @@
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
 @theme {
-    --color-dark: #0F0F0F;
-  --color-light: #E5E5E5;        /* بديل عن F9FAFB */
+  --color-dark: #0F0F0F;
+  --color-light: #F5F6F7;       
 
-    --color-card-dark: #1A1A1A;
-  --color-card-light: #D1D5DB;   /* بديل عن E5E7EB */
+  --color-card-dark: #1A1A1A;
+  --color-card-light: #FFFFFF;   
 
-    --color-text-dark: #E5E7EB;
-  --color-text-light: #1F1F1F;   /* بديل عن 0F0F0F */
+  --color-text-dark: #E5E7EB;
+  --color-text-light: #1F1F1F;  
 
-    --color-brand-color: var(--color-info);
+  --color-brand-color: var(--color-info);
 }
 
 
@@ -117,7 +117,7 @@ body {
     bg-gradient-to-t  bg-card-light dark:bg-card-dark
     from-card-light via-light/60 to-light 
     dark:from-card-dark dark:via-dark/60 dark:to-dark 
-    rounded-[24px] 
+    rounded-2xl
     shadow shadow-dark/30 
     border border-light/20 dark:border-dark/40 
     transition-all duration-300 ease-in-out;

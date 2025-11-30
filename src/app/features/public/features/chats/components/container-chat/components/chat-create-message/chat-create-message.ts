@@ -1,11 +1,12 @@
-import { Component } from '@angular/core';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Component, inject, output } from '@angular/core';
+
 import { NgControl } from "../../../../../../../../shared/components/ng-control/ng-control.";
-import { TranslateModule } from '@ngx-translate/core';
+import { SharedModule } from '../../../../../../../../shared/modules/shared.module';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-chat-create-message',
-  imports: [ReactiveFormsModule, NgControl, TranslateModule],
+  imports: [SharedModule, NgControl],
   template: `
     <form 
       [formGroup]="messageForm"
@@ -46,23 +47,21 @@ import { TranslateModule } from '@ngx-translate/core';
   `
 })
 export class ChatCreateMessageComponent {
-  messageForm: FormGroup;
+  #fb = inject(FormBuilder)
+  messageForm: FormGroup = this.#fb.group({
+  message: ['', [Validators.required, Validators.minLength(1)]]
+  });;
 
-  constructor(private fb: FormBuilder) {
-    this.messageForm = this.fb.group({
-      message: ['', [Validators.required, Validators.minLength(1)]]
-    });
-  }
+  sendMessage = output<string>();
 
   onSendMessage() {
     if (this.messageForm.valid) {
       const msg = this.messageForm.value.message.trim();
       if (!msg) return;
-
-      console.log('Message sent:', msg);
-
-      // Reset the form
+      this.sendMessage.emit(msg);
       this.messageForm.reset();
     }
   }
+
+
 }

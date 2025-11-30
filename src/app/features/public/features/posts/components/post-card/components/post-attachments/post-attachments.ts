@@ -12,7 +12,9 @@ template: `
 @if(attachments() && attachments().length > 0){
 
 <swiper-container #swiperRef
-aria-label="Container Products Slider" role="container" 
+aria-label="Images Slider"
+role="region"
+aria-roledescription="carousel"
 [slidesPerView]="1"
 [spaceBetween]="0"
 [mousewheel]="true"
@@ -34,7 +36,7 @@ class="size-full " >
                         height:  300,
                         decoding : 'async',
                         fetchpriority : 'high',
-                        loading : 'lazy',
+                        loading : 'eager',
                         class: 'object-cover w-full h-full   aspect-square shadow-xs shadow-card-dark/50 hover:opacity-90 duration-200 transition-opacity',
                         }"
                         [isPreview]="true"
@@ -48,7 +50,6 @@ class="size-full " >
             </swiper-slide>
         }
 </swiper-container>
-
 }
 
 `,

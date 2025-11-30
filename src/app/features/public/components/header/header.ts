@@ -1,6 +1,6 @@
 import { afterRenderEffect, Component, DestroyRef, inject, signal } from '@angular/core';
 import { Logo } from "../../../../shared/components/logo/logo";
-import { MainLinks } from "../navigations/main-links";
+import { MainLinks } from "../navigations/main-links/main-links";
 import { ResponsiveNavLinks } from "../navigations/responsive-nav-links/responsive-nav-links";
 import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -20,16 +20,17 @@ import { SharedModule } from '../../../../shared/modules/shared.module';
 
 @if(!isHide()){ 
   
-<header aria-label="Header" role="heading"
+<header aria-label="Header" 
 class="w-full h-[10svh] ngCard rounded-none  px-4  grid  grid-cols-2 md:grid-cols-3
 items-center z-50 border-b border-b-brand-color/10 sticky top-0 ">
 
+  <h1 class="sr-only">Site Header</h1> 
 
   <nav  role="navigation" class="w-ful">
   <app-logo />
   </nav>
 
-  <nav  role="navigation" class="w-full  hidden md:block">
+  <nav  role="navigation" class="w-full   hidden md:block">
   <app-main-links />
   </nav>
  

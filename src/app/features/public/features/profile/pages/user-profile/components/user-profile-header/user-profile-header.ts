@@ -30,7 +30,7 @@ import { FriendActionButton } from "../friend-action-button/friend-action-button
         fetchpriority : 'high', 
         class : 'object-cover size-full rounded-full  transition-transform duration-500 hover:scale-115'
         }"
-      [isPreview]="userProfileService.userProfile()?.picture ? true : false"
+      [isPreview]="true"
     />
 
     @if(userProfileService.isMyProfile()){

@@ -1,10 +1,12 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { SharedModule } from '../../../../../../shared/modules/shared.module';
 import { BackLink } from "../../../../../../shared/components/links/back-link";
 import { ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
+import { UserProfileService } from '../../../profile/services/user-profile.service';
+import { IFriend } from '../../../../../../core/models/user.model';
 
 
 @Component({
@@ -12,7 +14,7 @@ import { TranslateModule } from '@ngx-translate/core';
     imports: [SharedModule, BackLink, TranslateModule],
     template: `
 <aside 
-  class="w-full h-svh ngCard rounded-none overflow-y-auto border-r border-brand-color/25 
+  class="w-full h-svh ngCard rounded-none overflow-y-auto 
   p-4 flex flex-col gap-4"
   [ngClass]="chatId() ? 'hidden md:flex' : ''"
   aria-labelledby="chat-sidebar-title">
@@ -50,20 +52,19 @@ import { TranslateModule } from '@ngx-translate/core';
 <!-- Chats Navigation -->
 <nav aria-label="Chat conversations" class="flex-1 overflow-y-auto">
   <ul role="list" class="space-y-2">
-    @for (chat of chats(); track chat.id) {
+    @for (friend of friends(); track friend.id) {
     <li role="listitem">
       <a 
-        [href]="['/public/chats/', chat.id]"
-        [routerLink]="['/public/chats/', chat.id]"
+        [href]="['/public/chats/', friend.id]"
+        [routerLink]="['/public/chats/', friend.id]"
         class="w-full flex items-center gap-3 p-2 rounded-lg 
-        hover:bg-brand-color/20 transition text-left"
-        [attr.aria-current]="chatId() === chat.id ? 'page' : null"
-        [ngClass]="chatId() === chat.id ? 'bg-brand-color/20' : ''">
+        hover:bg-brand-color/25 duration-200 transition-colors5 text-left"
+        [ngClass]="chatId() === friend._id ? 'bg-brand-color/50' : ''">
         
         <!-- Avatar -->
         <img 
-          [src]="chat.avatar" 
-          [alt]="('chats.profile_picture_of' | translate) + ' ' + chat.name" 
+          [src]="friend.picture?.url || ''" 
+          [alt]="('chats.profile_picture_of' | translate) + ' ' + friend.userName " 
           class="w-10 h-10 rounded-full object-cover border border-gray-300 dark:border-gray-600" 
           loading="lazy"
         />
@@ -71,10 +72,10 @@ import { TranslateModule } from '@ngx-translate/core';
         <!-- Chat Info -->
         <div class="flex flex-col overflow-hidden">
           <span class="font-medium text-sm text-gray-900 dark:text-gray-100">
-            {{ chat.name }}
+            {{ friend.userName }}
           </span>
           <span class="text-xs text-gray-500 dark:text-gray-400 truncate">
-            {{ chat.lastMessage }}
+        
           </span>
         </div>
       </a>
@@ -89,10 +90,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 })
 export class ChatSidebarComponent {
+  readonly #userProfile = inject(UserProfileService);
   #route = inject(ActivatedRoute);
-  chatId = toSignal( this.#route.paramMap.pipe(map(params => +params.get('chatId')!)),
-  { initialValue: null }
+  chatId = toSignal( this.#route.paramMap.pipe(map(params => params.get('chatId')!)),
+  { initialValue: '' }
   );
 
-  chats = signal<any[]>([]);
+  friends = computed<IFriend[]>(() => this.#userProfile.user()?.friends || []);
 }

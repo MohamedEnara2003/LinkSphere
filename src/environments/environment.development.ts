@@ -1,7 +1,7 @@
 export const environment = {
   production: false,
   appUrl: "http://localhost:4200/",
-  apiUrl: "http://localhost:3000/",
+  apiUrl: "http://localhost:3000",
   firebase: {
     apiKey: "AIzaSyB4YcTKG4WqFYdJYtLolotx4ablG4TeHic",
     authDomain: "link-sphere-31f4e.firebaseapp.com",

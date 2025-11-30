@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 
-import { MainLinks } from "../main-links";
+import { MainLinks } from "../main-links/main-links";
 
 @Component({
   selector: 'app-responsive-nav-links',

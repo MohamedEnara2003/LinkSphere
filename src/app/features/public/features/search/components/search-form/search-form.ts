@@ -14,24 +14,27 @@ import { SearchFilters } from "./components/search-filters/search-filters";
 <form role="search" aria-label="Form search" (ngSubmit)="onSubmit()"
 class="w-full flex items-center gap-2">
 <app-back-link [path]="searchService.searchValue() ? '/public/search' : '/'" />
+
   <label for="search-input" class="sr-only">Search</label>
-    <label class="w-full input dark:bg-dark bg-light rounded input-sm sm:input-md">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" 
-    stroke="currentColor" class="size-5">
-    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-    </svg>
+
+      <label class="w-full input input-neutral bg-dark/50 border-transparent">
+
+      <button type="submit" class="label cursor-pointer">    
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" 
+          stroke="currentColor" class="size-6">
+          <path stroke-linecap="round" stroke-linejoin="round" 
+            d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+        </svg>
+      </button>
+
       <input #searchInput
-        id="search-input"
         type="search"
+        id="search-input"
         autocomplete="off"
         value="{{searchValue()}}"
         (input)="onSearch($event.target.value)"
-        aria-autocomplete="list"
-        aria-controls="search-results"
-        aria-describedby="search-help"
-        class="grow"
         [placeholder]="'Search ' + (searchService.searchResult() || 'people,post' )+ '...'"
-      />
+        class="placeholder:text-gray-400">
     </label>
   
 @if(searchService.searchResult()){

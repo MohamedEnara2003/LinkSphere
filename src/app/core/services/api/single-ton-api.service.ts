@@ -19,7 +19,7 @@ export class SingleTonApi {
 
 
 public find<G>(routeName : string ) : Observable<G> {
-return this.#httpClient.get<G>(`${this.#baseUrlApi}${routeName}` , {
+return this.#httpClient.get<G>(`${this.#baseUrlApi}/${routeName}` , {
 withCredentials : true ,
 }).pipe(
 take(1),
@@ -28,7 +28,7 @@ takeUntilDestroyed(this.#destroyRef)
 }
 
 findById<G>(routeName : string , id : string | number) : Observable<G> {
-return this.#httpClient.get<G>(`${this.#baseUrlApi}${routeName}/${id}` , {
+return this.#httpClient.get<G>(`${this.#baseUrlApi}/${routeName}/${id}` , {
 withCredentials : true,
 }).pipe(
   take(1),
@@ -37,7 +37,7 @@ withCredentials : true,
 }
 
 create<G>(routeName : string , data? : unknown) : Observable<G> {
-return this.#httpClient.post<G>(`${this.#baseUrlApi}${routeName}`, data , {
+return this.#httpClient.post<G>(`${this.#baseUrlApi}/${routeName}`, data , {
 withCredentials : true
 }).pipe(
 take(1),
@@ -46,7 +46,7 @@ takeUntilDestroyed(this.#destroyRef)
 }
 
 public update<G>(routeName : string , data : unknown , id : string | number) : Observable<G> {
-return this.#httpClient.put<G>(`${this.#baseUrlApi}${routeName}/${id}`, data ,{
+return this.#httpClient.put<G>(`${this.#baseUrlApi}/${routeName}/${id}`, data ,{
 withCredentials : true
 }).pipe(
   take(1),
@@ -56,7 +56,7 @@ withCredentials : true
     
 
 public patchById<G>(routeName: string, data: unknown, id: string | number): Observable<G> {
-  return this.#httpClient.patch<G>(`${this.#baseUrlApi}${routeName}/${id}`, data, {
+  return this.#httpClient.patch<G>(`${this.#baseUrlApi}/${routeName}/${id}`, data, {
     withCredentials: true,
   }).pipe(
     take(1),
@@ -66,7 +66,7 @@ public patchById<G>(routeName: string, data: unknown, id: string | number): Obse
 
 
 public patch<G>(routeName: string, data?: unknown): Observable<G> {
-  return this.#httpClient.patch<G>(`${this.#baseUrlApi}${routeName}`, data, {
+  return this.#httpClient.patch<G>(`${this.#baseUrlApi}/${routeName}`, data, {
     withCredentials: true,
   }).pipe(
     take(1),
@@ -80,7 +80,7 @@ const formData = new FormData();
 files.forEach((file) => {
 formData.append(formDataName , file);
 });
-return this.#httpClient.patch<G>(`${this.#baseUrlApi}${routeName}`, formData  , {
+return this.#httpClient.patch<G>(`${this.#baseUrlApi}/${routeName}`, formData  , {
 withCredentials : true,
 }).pipe(   
   take(1),
@@ -93,20 +93,20 @@ withCredentials : true,
 }
 
 public deleteImage(routeName : string , id : string) : Observable<void> {
-return this.#httpClient.delete<void>(`${this.#baseUrlApi}${routeName}` , {
+return this.#httpClient.delete<void>(`${this.#baseUrlApi}/${routeName}` , {
 withCredentials : true,
 body : {id}
 });
 }
 
 public deleteById<G>(routeName : string , id : string |  number) : Observable<G> {
-return this.#httpClient.delete<G>(`${this.#baseUrlApi}${routeName}/${id}` , {
+return this.#httpClient.delete<G>(`${this.#baseUrlApi}/${routeName}/${id}` , {
 withCredentials : true ,
 });
 }
 
 public deleteByIdWithBody<G>(routeName : string , data? : unknown) : Observable<G> {
-return this.#httpClient.delete<G>(`${this.#baseUrlApi}${routeName}` , {
+return this.#httpClient.delete<G>(`${this.#baseUrlApi}/${routeName}` , {
 withCredentials : true,
 body : data
 });

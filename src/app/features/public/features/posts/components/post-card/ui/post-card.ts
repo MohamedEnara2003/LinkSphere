@@ -13,7 +13,7 @@ import { LoadingPost } from "../../loading-post/loading-post";
   template: `
 @defer (on viewport) { 
 <article 
-  class="w-full min-h-70 relative  ngCard p-4 grid grid-cols-1  "
+  class="w-full min-h-70 relative  ngCard p-5 grid grid-cols-1  "
   [attr.aria-labelledby]="'post-title-' + post()._id || ''"
   [attr.aria-describedby]="'post-desc-' + post()._id || ''">
 

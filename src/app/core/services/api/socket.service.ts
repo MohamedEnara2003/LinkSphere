@@ -1,42 +1,49 @@
-import { Injectable } from '@angular/core';
-import { from, fromEvent, Observable, switchMap } from 'rxjs';
+import { inject, Injectable } from '@angular/core';
+import { fromEvent, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment.development';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Socket } from 'socket.io-client';
+import { io, Socket } from 'socket.io-client';
+import { StorageService } from '../storage/locale-storage.service';
+import { AuthToken } from '../../models/auth.model';
+import { DomService } from '../document/dom.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SocketService {
-  #socket!: Socket;
+    readonly #storageService = inject(StorageService);
+    readonly #domService = inject(DomService);
+    #socket!: Socket;
 
-  #initSocket(): Observable<any> {
-    if (this.#socket) {
-      return from([this.#socket]); 
-    }
 
-    return from(import('socket.io-client')).pipe(
-      switchMap(({ io }) => {
-        this.#socket = io(environment.apiUrl, {
-          transports: ['websocket'],
-        });
-        return from([this.#socket]);
-      }),
-      takeUntilDestroyed()
-    );
+  constructor() {
+  if(this.#domService.isBrowser()) {
+  this.#initSocket()
+  }
   }
 
-  emit(event: string, data?: any) {
-    this.#initSocket().subscribe(socket => {
-      socket.emit(event, data);
+  #initSocket(): void {
+  const {access_token} = this.#storageService.getItem<AuthToken>('auth')!;
+  const auth =  { auth: { authorization: `Bearer ${access_token}` }}
+
+  this.#socket = io(environment.apiUrl, auth);
+  this.#socket.on('connect_error', (err: any) => {
+  console.error('Socket Connect Error' , err);
+
+  this.disconnect()
+    
     });
   }
 
-  listen<T>(event: string): Observable<T> {
-    return this.#initSocket().pipe(
-      switchMap(socket => fromEvent<T>(socket, event))
-    );
+
+  on<T = unknown>(event: string): Observable<T> {
+    return fromEvent<T>(this.#socket, event);
   }
+
+  // Emit messages
+  emit<T = unknown>(event: string, data?: T, callback?: (response: any) => void) {
+    this.#socket.emit(event, data, callback);
+  }
+
 
   disconnect() {
     if (this.#socket) {

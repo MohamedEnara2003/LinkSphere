@@ -15,24 +15,24 @@ import { SharedModule } from '../../../../../../shared/modules/shared.module';
 
     <!-- Friends List -->
     <ul 
-    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5 "
+    class="flex items-center gap-5 px-2 p-2"
     role="list">
     @for (friend of friends(); track friend._id) {
     <li 
-    class="flex flex-col items-center rounded-lg p-2 "
+    class="flex flex-col items-center  p-2 "
     role="listitem"
     >
-    
+        
     <!-- Avatar -->
     <app-ng-image
     [routerLink]="['/public/profile/user/' , friend._id]"
     [options]="{
-    src : friend.picture?.url || '',
+    src : friend.picture?.url || 'user-placeholder.jpg',
     placeholder : 'user-placeholder.jpg',
     alt :('profile.friends.profile_picture_of' | translate) + ' ' + friend.firstName,
     width :  48,
     height : 48,
-    class : 'size-12 rounded-full object-cover border-2 border-brand-color mb-1  cursor-pointer '
+    class : 'size-10 rounded-full object-cover border-2 border-brand-color mb-1  cursor-pointer '
     }"
     />
         <!-- Username -->

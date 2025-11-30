@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { SettingsSideBarComponent } from "./components/settings-side-bar/settings-side-bar";
 import { RouterOutlet } from '@angular/router';
 import { BackLink } from "../../../../shared/components/links/back-link";
+import { MetaService } from '../../../../core/services/meta/meta.service';
 
 
 
@@ -26,5 +27,16 @@ import { BackLink } from "../../../../shared/components/links/back-link";
   `,
 })
 export class Settings {
+readonly #metaService = inject(MetaService);
+
+ngOnInit() {
+    this.#metaService.setMeta({
+    title: `Settings | Link Sphere Social`,
+    description: `Manage your account settings, privacy preferences, and security options on Link Sphere Social.`,
+    image: "",  
+    url: "settings",
+    });
+}
+
 
 }

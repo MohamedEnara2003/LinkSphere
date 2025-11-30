@@ -1,18 +1,24 @@
 
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject } from '@angular/core';
 import { ChatHeaderComponent } from "../components/chat-header/chat-header";
 import { ChatCreateMessageComponent } from "../components/chat-create-message/chat-create-message";
-import { NgImage } from "../../../../../../../shared/components/ng-image/ng-image";
 import { SharedModule } from '../../../../../../../shared/modules/shared.module';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
-import { map } from 'rxjs';
+import {  map, of, switchMap } from 'rxjs';
+import { GetChatService } from '../../../services/api/get-chat.service';
+import { SocketService } from '../../../../../../../core/services/api/socket.service';
+import { ICreateMessage, IMessage } from '../../../../../../../core/models/chats.model';
+import { ChatsStateService } from '../../../services/state/chats-state.service';
+import { Picture } from '../../../../../../../core/models/picture';
+import { Author } from '../../../../../../../core/models/user.model';
+import { NgImage } from "../../../../../../../shared/components/ng-image/ng-image";
+import { UserProfileService } from '../../../../profile/services/user-profile.service';
 
 
 @Component({
   selector: 'app-chat-container',
-  imports: [SharedModule, TranslateModule, ChatHeaderComponent, ChatCreateMessageComponent, NgImage],
+  imports: [SharedModule, ChatHeaderComponent, ChatCreateMessageComponent, NgImage],
   template: `
 
   <section 
@@ -41,20 +47,24 @@ import { map } from 'rxjs';
       role="log"
       style="scrollbar-width: none;"
     >
-      @for (chat of chats(); track chat.id) {
-        @let isMyMessage = chat.userId === 'user1';
-        
+
+
+
+      @for (chat of userChat(); track chat._id) {
+ 
+
         <article 
           class="chat"
-          [ngClass]="isMyMessage ? 'chat-end' : 'chat-start'"
+          [ngClass]="chat.isMyMessage ? 'chat-end' : 'chat-start'"
           [attr.aria-label]="'chats.chat_message' | translate"
         >
+        
           <!-- Avatar -->
           <div class="chat-image avatar">
             <app-ng-image
               [options]="{
-                src : chat.image,
-                alt : ('chats.profile_picture_of' | translate) + ' ' + chat.userId,
+                src : chat.sender.picture?.url || '/user-placeholder.webp',
+                alt : ('chats.profile_picture_of' | translate) + ' ' + chat._id,
                 width : 40,
                 height : 40,
                 class : 'object-cover rounded-full'
@@ -66,9 +76,9 @@ import { map } from 'rxjs';
           <!-- Message Text -->
           <p 
             class="chat-bubble"
-            [ngClass]="isMyMessage ? 'bg-brand-color/50 text-white' : 'bg-card-dark text-light'"
+            [ngClass]="chat.isMyMessage ? 'bg-brand-color/50 text-white' : 'bg-card-dark text-light'"
           >
-            {{ chat.message }}
+            {{ chat.content }} 
           </p>
         </article>
       }
@@ -76,11 +86,13 @@ import { map } from 'rxjs';
 
     <!-- Create Message -->
     <footer>
-      <app-chat-create-message />
+      <app-chat-create-message 
+      (sendMessage)="sendMessage($event)"
+      />
     </footer>
   </main>
   }@else {
- <main class="flex-1  flex-col hidden md:flex">
+ <main class="size-full flex-1  flex-col hidden md:flex">
         <header class="p-4 border-b border-gray-200 dark:border-gray-700">
           <h1 class="text-lg font-bold">{{ 'chats.select_chat' | translate }}</h1>
         </header>
@@ -92,28 +104,104 @@ import { map } from 'rxjs';
   }
 </section>
 
-  `
+  `,
+  providers : [
+  GetChatService
+  ]
 })
 export class ChatContainer{
-  #route = inject(ActivatedRoute);
-  chatId = toSignal( this.#route.paramMap.pipe( map(params => params.get('chatId'))),
+  readonly #route = inject(ActivatedRoute);
+  readonly #getChatService = inject(GetChatService);
+  readonly #socketService = inject(SocketService);
+  readonly #userProfile = inject(UserProfileService);
+
+  readonly chatsStateService = inject(ChatsStateService);
+
+
+  readonly chatId = toSignal( this.#route.paramMap.pipe( map(params => params.get('chatId'))),
   { initialValue: null }
   );
 
-  chats = signal([
-  {id : 1 , userId : 'user1' , message : 'Hello Mohamed 👋' ,image : 'https://randomuser.me/api/portraits/men/1.jpg'},
-  {id : 2 , userId : 'user2' , message : 'Hi! How are you?' , image : 'https://randomuser.me/api/portraits/men/2.jpg'},
-  {id : 3 , userId : 'user1' , message : 'Hello Mohamed 👋' ,image : 'https://randomuser.me/api/portraits/men/1.jpg'},
-  {id : 4 , userId : 'user2' , message : 'Hi! How are you?' , image : 'https://randomuser.me/api/portraits/men/2.jpg'},
-  {id : 5 , userId : 'user1' , message : 'Hello Mohamed 👋' ,image : 'https://randomuser.me/api/portraits/men/1.jpg'},
-  {id : 6 , userId : 'user2' , message : 'Hi! How are you?' , image : 'https://randomuser.me/api/portraits/men/2.jpg'},
-  {id : 7 , userId : 'user1' , message : 'Hello Mohamed 👋' ,image : 'https://randomuser.me/api/portraits/men/1.jpg'},
-  {id : 8 , userId : 'user2' , message : 'Hi! How are you?' , image : 'https://randomuser.me/api/portraits/men/2.jpg'},
-  {id : 9 , userId : 'user1' , message : 'Hello Mohamed 👋' ,image : 'https://randomuser.me/api/portraits/men/1.jpg'},
-  {id :10 , userId : 'user2' , message : 'Hi! How are you?' , image : 'https://randomuser.me/api/portraits/men/2.jpg'},
-  {id :11 , userId : 'user1' , message : 'Hello Mohamed 👋' ,image : 'https://randomuser.me/api/portraits/men/1.jpg'},
-  {id :12 , userId : 'user2' , message : 'Hi! How are you?' , image : 'https://randomuser.me/api/portraits/men/2.jpg'},
-  ])
+  userChat = computed(() => this.chatsStateService.userChat() || [])
+
+
+
+  constructor(){
+  this.#getChats();
+  this.listenToSocketEvents();
+  }
+
+  #getChats() : void {
+  toObservable(this.chatId).pipe(
+  switchMap((chatId) => {
+  if(!chatId) return of(null);
+  return this.#getChatService.getUserChats(chatId);
+  }),
+  takeUntilDestroyed()
+  ).subscribe()
+  }
+
+
+  sendMessage(msg : string) : void {
+  const user = this.#userProfile.user();
+
+  const sendTo = this.chatId()|| '';
+
+  if(!msg || !sendTo || !user) return;
+
+  const data : ICreateMessage = {
+    content: msg ,
+    sendTo,
+  }
+
+  const  message : IMessage = {
+    sender: user as any,
+    isMyMessage: true,
+    _id: crypto.randomUUID(),
+    content: msg,
+    createdBy: user._id,
+    seen: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+
+
+  this.#socketService.emit<ICreateMessage>('send-message', data , () => {
+
+  });
+  
+  this.chatsStateService.updateCreatedNewMessage(message);
+  }
+
+    private listenToSocketEvents() {
+    // connect error
+    this.#socketService.on<Error>('connect_error')
+      .pipe(takeUntilDestroyed())
+      .subscribe(err => console.error('Connection failed:', err.message));
+
+    // custom error
+    this.#socketService.on<{ message: string }>('custom_error')
+      .pipe(takeUntilDestroyed())
+      .subscribe(err => console.log('custom_error:', err));
+
+    // like post
+    this.#socketService.on<{ postId: string; userId: string }>('like-post')
+      .pipe(takeUntilDestroyed())
+      .subscribe(data => console.log('likeData:', data));
+
+    // offline user
+    this.#socketService.on<{ userId: string }>('offline-user')
+      .pipe(takeUntilDestroyed())
+      .subscribe(data => console.log('offline-user:', data));
+
+  }
+
+
+  ngOnDestroy(): void {
+  this.#socketService.disconnect()
+  }
+
+
 }
 
 

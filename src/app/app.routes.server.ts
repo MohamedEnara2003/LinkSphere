@@ -5,12 +5,4 @@ export const serverRoutes: ServerRoute[] = [
     path: '**',
     renderMode: RenderMode.Server
   },
-  {
-    path: 'auth',
-    renderMode: RenderMode.Client
-  },
-  {
-    path: 'error',
-    renderMode: RenderMode.Client
-  },
 ];
