@@ -76,10 +76,11 @@ import { UserProfileService } from '../../../../profile/services/user-profile.se
           <!-- Message Text -->
           <p 
             class="chat-bubble"
-            [ngClass]="chat.isMyMessage ? 'bg-brand-color/50 text-white' : 'bg-card-dark text-light'"
+            [ngClass]="chat.isMyMessage ? 'bg-brand-color text-dark' : 'bg-card-dark text-light'"
           >
-            {{ chat.content }} 
+            {{ chat.content }}  
           </p>
+ 
         </article>
       }
     </section>
@@ -143,34 +144,20 @@ export class ChatContainer{
 
 
   sendMessage(msg : string) : void {
-  const user = this.#userProfile.user();
+
 
   const sendTo = this.chatId()|| '';
 
-  if(!msg || !sendTo || !user) return;
+  if(!msg || !sendTo ) return;
 
   const data : ICreateMessage = {
     content: msg ,
     sendTo,
   }
 
-  const  message : IMessage = {
-    sender: user as any,
-    isMyMessage: true,
-    _id: crypto.randomUUID(),
-    content: msg,
-    createdBy: user._id,
-    seen: false,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }
 
+  this.#socketService.emit<ICreateMessage>('send-message', data);
 
-  this.#socketService.emit<ICreateMessage>('send-message', data , () => {
-
-  });
-  
-  this.chatsStateService.updateCreatedNewMessage(message);
   }
 
     private listenToSocketEvents() {
@@ -194,8 +181,34 @@ export class ChatContainer{
       .pipe(takeUntilDestroyed())
       .subscribe(data => console.log('offline-user:', data));
 
+    this.#socketService.on<{content : string}>('success-message')
+    .pipe(takeUntilDestroyed())
+    .subscribe(({content}) => {
+    const user = this.#userProfile.user();
+    if(!user) return;
+    this.#updateCreatedNewMessage(content , user as any)
+    });
+
+    this.#socketService.on<{content : string , from : Author}>('new-message')
+    .pipe(takeUntilDestroyed())
+    .subscribe(({content , from}) => {
+    this.#updateCreatedNewMessage(content , from)
+    });
   }
 
+  #updateCreatedNewMessage(content :string , user : Author) : void {
+    const  message : IMessage = {
+    sender: user as any,
+    isMyMessage: true,
+    _id: crypto.randomUUID(),
+    content,
+    createdBy: user._id,
+    seen: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+  this.chatsStateService.updateCreatedNewMessage(message);
+  }
 
   ngOnDestroy(): void {
   this.#socketService.disconnect()

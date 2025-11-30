@@ -23,12 +23,15 @@ return this.#appChatsService.singleTonApi.find<{data : {chat :IChat}}>
 map(({data : {chat}}) => {
 
 const userId = (this.#appChatsService.userProfile.user()?._id || '')
+
+
 const messages = chat.messages.map((message) => {
-const sender = chat.participants.find((u) => u._id === chat.createdBy)! as Author
+const sender = chat.participants.find((u) => u._id === message.createdBy)! as Author;
+const isMyMessage = message.createdBy === userId ;
 return {
 ...message ,
 sender,
-isMyMessage : userId === chat.createdBy
+isMyMessage,
 }
 })
 return messages
