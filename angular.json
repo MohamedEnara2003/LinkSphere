@@ -28,7 +28,12 @@
             "outputMode": "server",
             "ssr": {
               "entry": "src/server.ts"
-            }
+            },
+            "allowedCommonJsDependencies": [
+              "debug",
+              "engine.io-client",
+              "xmlhttprequest-ssl"
+            ]
           },
           "configurations": {
             "production": {

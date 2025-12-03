@@ -1,8 +1,9 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { AuthService } from '../../../../../auth/service/auth.service';
 import { logoutFlag } from '../../../../../../core/models/auth.model';
 import { tap } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
+import { MetaService } from '../../../../../../core/services/meta/meta.service';
 
 @Component({
   selector: 'app-log-out',
@@ -68,11 +69,20 @@ import { TranslateModule } from '@ngx-translate/core';
 `,
 
 })
-export class logOut {
+export class logOut implements OnInit {
     
     isLoading = signal<boolean>(false);
     #authService = inject(AuthService);
+    readonly #metaService = inject(MetaService);
 
+    ngOnInit() {
+      this.#metaService.setMeta({
+        title: 'Log Out | Link Sphere Social',
+        description: 'Securely log out from your Link Sphere Social account on this device or all devices.',
+        image: '',
+        url: 'settings/log-out'
+      });
+    }
 
     logOut(logOutFlag : logoutFlag) : void {
     this.isLoading.set(true);

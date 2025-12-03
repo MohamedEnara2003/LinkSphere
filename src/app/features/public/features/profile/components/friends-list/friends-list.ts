@@ -10,12 +10,12 @@ import { SharedModule } from '../../../../../../shared/modules/shared.module';
   imports: [NgImage, SharedModule],
   template: `
     <section 
-    class="w-full ngCard " 
+    class="w-full ngCard" 
     aria-labelledby="friends-title">
 
     <!-- Friends List -->
     <ul 
-    class="flex items-center gap-5 px-2 p-2"
+    class="flex items-center gap-5 px-2 "
     role="list">
     @for (friend of friends(); track friend._id) {
     <li 

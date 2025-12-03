@@ -20,29 +20,32 @@ import { FriendsList } from "../../profile/components/friends-list/friends-list"
   FriendsList],
   template: `
 
-<section aria-label="Feed Pgae" role="region"
-class="w-full min-h-[90svh] relative  grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-5 px-2  ">
-  
+<section aria-label="Home feed" role="region"
+class="w-full min-h-[90svh] relative  grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-5 px-2   ">
+
   <!-- Profile Aside -->
-  <aside class="w-full h-[90svh] hidden md:block sticky  top-[10svh]">
-  <app-profile-card  /> 
+  <aside class="w-full h-[90svh] hidden md:block sticky  top-[10svh]" role="complementary" aria-label="User profile card">
+    <app-profile-card  /> 
   </aside>
 
   <!-- Main Content -->
-  <main role="main" class="w-full min-h-full  flex flex-col  gap-4 md:col-span-2">
-  <header class="flex flex-col gap-4 ">
-  <app-friends-list/>
-  <app-btn-open-model-upsert-post />
-  <app-posts-filter-nav />
-  </header>
-  <app-posts-feed class="size-full"/>
+  <main role="main" aria-labelledby="feed-heading" 
+  class="w-full min-h-full  flex flex-col  gap-4 md:col-span-2 overflow-hidden">
+    <header id="feed-heading" class="flex flex-col gap-4">
+      <h1 class="sr-only">Feed</h1>
+      <app-friends-list aria-label="Friends list"/>
+      <app-btn-open-model-upsert-post aria-label="Create a new post"/>
+      <app-posts-filter-nav aria-label="Filter posts"/>
+    </header>
+    <section aria-label="Posts" class="w-full" role="region">
+      <app-posts-feed class="size-full"/>
+    </section>
   </main>
   
   <!-- Friend-Requests Aside -->
-  <aside class="w-full h-[90svh] hidden md:block sticky  top-[10svh]  ngCard">
-  <app-friend-requests class="w-full h-full"/>
+  <aside class="w-full h-[90svh] hidden md:block sticky  top-[10svh]  ngCard" role="complementary" aria-label="Friend requests">
+    <app-friend-requests class="w-full h-full"/>
   </aside>
-
 
 </section>
   `,

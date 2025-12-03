@@ -37,7 +37,7 @@ export interface ImageOption {
         [width]="options().width"
         [height]="options().height"
         [ngClass]="options().class"
-        [loading]="options().loading || 'lazy'"
+        [loading]="options().loading || (options().fetchpriority === 'high' ? 'eager' : 'lazy')"
         [decoding]="options().decoding || 'async'"
         [attr.fetchpriority]="options().fetchpriority || 'auto'"
         [attr.referrerpolicy]="options().referrerpolicy || 'no-referrer'"

@@ -58,8 +58,8 @@ import { IFriend } from '../../../../../../core/models/user.model';
         [href]="['/public/chats/', friend.id]"
         [routerLink]="['/public/chats/', friend.id]"
         class="w-full flex items-center gap-3 p-2 rounded-lg 
-        hover:bg-brand-color/25 duration-200 transition-colors5 text-left"
-        [ngClass]="chatId() === friend._id ? 'bg-brand-color/50' : ''">
+        duration-200 transition-colors5 text-left"
+        [ngClass]="chatId() === friend._id ? 'border border-brand-color' : ''">
         
         <!-- Avatar -->
         <img 
@@ -71,7 +71,7 @@ import { IFriend } from '../../../../../../core/models/user.model';
 
         <!-- Chat Info -->
         <div class="flex flex-col overflow-hidden">
-          <span class="font-medium text-sm text-gray-900 dark:text-gray-100">
+          <span class="font- text-sm ngText">
             {{ friend.userName }}
           </span>
           <span class="text-xs text-gray-500 dark:text-gray-400 truncate">

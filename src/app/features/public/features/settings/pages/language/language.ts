@@ -1,6 +1,7 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, OnInit } from '@angular/core';
 import { LanguageService, SupportedLanguages } from '../../../../../../core/services/translations/language.service';
 import { SharedModule } from '../../../../../../shared/modules/shared.module';
+import { MetaService } from '../../../../../../core/services/meta/meta.service';
 
 @Component({
   selector: 'app-language',
@@ -22,27 +23,31 @@ aria-labelledby="account-settings-heading">
     <section role="region" aria-labelledby="language-legend">
         <form class="grid grid-cols-1 gap-3">
         <legend id="language-legend" class="fieldset-legend">{{ 'settings.language.languages' | translate }}</legend>
-        <fieldset class="fieldset gap-y-3" role="radiogroup" aria-labelledby="language-legend">
+        <fieldset class="fieldset gap-y-3" role="radiogroup" aria-labelledby="language-legend" aria-label="Choose language">
             
             <!-- English -->
-            <label class="flex items-center gap-2 cursor-pointer rounded-md p-2 transition-colors hover:bg-brand-color/5 focus-within:ring-2 focus-within:ring-brand-color/40">
+            <label for="lang-en" class="flex items-center gap-2 cursor-pointer rounded-md p-2 transition-colors hover:bg-brand-color/5 focus-within:ring-2 focus-within:ring-brand-color/40">
             <input 
+                id="lang-en"
                 type="radio" 
                 name="language"
                 class="ng-radio focus:ring-2 focus:ring-brand-color/50"
                 [checked]="currentLanguage() === 'en'"
+                [attr.aria-checked]="currentLanguage() === 'en'"
                 (change)="selectLanguage('en')"
             />
             <span class="ngText">{{ 'settings.language.english' | translate }}</span>
             </label>
 
             <!-- Arabic -->
-            <label class="flex items-center gap-2 cursor-pointer rounded-md p-2 transition-colors hover:bg-brand-color/5 focus-within:ring-2 focus-within:ring-brand-color/40">
+            <label for="lang-ar" class="flex items-center gap-2 cursor-pointer rounded-md p-2 transition-colors hover:bg-brand-color/5 focus-within:ring-2 focus-within:ring-brand-color/40">
               <input 
+                id="lang-ar"
                 type="radio" 
                 name="language"
                 class="ng-radio focus:ring-2 focus:ring-brand-color/50"
                 [checked]="currentLanguage() === 'ar'"
+                [attr.aria-checked]="currentLanguage() === 'ar'"
                 (change)="selectLanguage('ar')"
               />
               <span class="ngText">{{ 'settings.language.arabic' | translate }}</span>
@@ -56,11 +61,22 @@ aria-labelledby="account-settings-heading">
   </article>
   `,
 })
-export class Language {
+export class Language implements OnInit {
   private readonly languageService = inject(LanguageService);
+  readonly #metaService = inject(MetaService);
 
 
   currentLanguage = computed(() => this.languageService.currentLanguage());
+
+  ngOnInit() {
+    this.#metaService.setMeta({
+      title: 'Language Settings | Link Sphere Social',
+      description: 'Select your preferred language (English or Arabic) for Link Sphere Social.',
+      image: '',
+      url: 'settings/language'
+    });
+  }
+
   selectLanguage(lang: string): void {
   this.languageService.onChangeLanguage(lang as SupportedLanguages);
   }

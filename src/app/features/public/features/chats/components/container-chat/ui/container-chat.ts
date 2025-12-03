@@ -1,121 +1,70 @@
 
-import { Component, computed, effect, inject } from '@angular/core';
+import { Component, computed, effect, inject, OnInit } from '@angular/core';
 import { ChatHeaderComponent } from "../components/chat-header/chat-header";
 import { ChatCreateMessageComponent } from "../components/chat-create-message/chat-create-message";
 import { SharedModule } from '../../../../../../../shared/modules/shared.module';
-import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
-import {  map, of, switchMap } from 'rxjs';
-import { GetChatService } from '../../../services/api/get-chat.service';
+import {  catchError, map, of, tap } from 'rxjs';
 import { SocketService } from '../../../../../../../core/services/api/socket.service';
 import { ICreateMessage, IMessage } from '../../../../../../../core/models/chats.model';
 import { ChatsStateService } from '../../../services/state/chats-state.service';
-import { Picture } from '../../../../../../../core/models/picture';
-import { Author } from '../../../../../../../core/models/user.model';
-import { NgImage } from "../../../../../../../shared/components/ng-image/ng-image";
+import { Author, IFriend } from '../../../../../../../core/models/user.model';
 import { UserProfileService } from '../../../../profile/services/user-profile.service';
+import { DomService } from '../../../../../../../core/services/document/dom.service';
+import { ChatBody } from "../components/chat-body/chat-body";
+import { SoundService } from '../../../../../../../core/services/sound/sound.service';
 
 
 @Component({
   selector: 'app-chat-container',
-  imports: [SharedModule, ChatHeaderComponent, ChatCreateMessageComponent, NgImage],
+  imports: [SharedModule, ChatHeaderComponent, ChatCreateMessageComponent, ChatBody],
   template: `
-
-  <section 
-  class="w-full h-svh ngCard rounded-none border-card-light dark:border-card-dark border"
-  ngClass="{{chatId() ? 'block' : 'hidden md:block'}}"
-  [attr.aria-label]="'chats.chat_container' | translate"
->
+<section class="w-full min-h-svh ngCard rounded-none "
+  ngClass="{{ chatId() ? 'block' : 'hidden md:block' }}"
+  [attr.aria-label]="'chats.chat_container' | translate">
 
   @if (chatId()) {
-  <!-- Main Chat Area -->
-  <main [aria-label]="'Chat container ' + chatId()" role="main" 
-  class="size-full flex flex-col justify-between">
-    
+    <main class="w-full flex flex-col justify-between ">
     <!-- Chat Header -->
     <app-chat-header
-      [title]="'Mohamed Enara'" 
-      [status]="'Online'" 
-      [avatar]="'https://randomuser.me/api/portraits/men/1.jpg'"
+    [user]="friend()"
+    class="w-full h-[10svh] sticky top-0 bg-dark z-50"
     />
 
     <!-- Messages -->
-    <section 
-      class="flex-1 overflow-y-auto p-4 space-y-3 bg-light dark:bg-dark"
-      aria-live="polite"
-      [attr.aria-label]="'chats.chat_messages' | translate"
-      role="log"
-      style="scrollbar-width: none;"
-    >
+    <app-chat-body [chatId]="chatId()!"  />
 
-
-
-      @for (chat of userChat(); track chat._id) {
- 
-
-        <article 
-          class="chat"
-          [ngClass]="chat.isMyMessage ? 'chat-end' : 'chat-start'"
-          [attr.aria-label]="'chats.chat_message' | translate"
-        >
-        
-          <!-- Avatar -->
-          <div class="chat-image avatar">
-            <app-ng-image
-              [options]="{
-                src : chat.sender.picture?.url || '/user-placeholder.webp',
-                alt : ('chats.profile_picture_of' | translate) + ' ' + chat._id,
-                width : 40,
-                height : 40,
-                class : 'object-cover rounded-full'
-              }" 
-              class="size-10"
-            />
-          </div>
-
-          <!-- Message Text -->
-          <p 
-            class="chat-bubble"
-            [ngClass]="chat.isMyMessage ? 'bg-brand-color text-dark' : 'bg-card-dark text-light'"
-          >
-            {{ chat.content }}  
-          </p>
- 
-        </article>
-      }
-    </section>
 
     <!-- Create Message -->
-    <footer>
-      <app-chat-create-message 
-      (sendMessage)="sendMessage($event)"
-      />
+    <footer class="w-full h-[10svh] sticky bottom-0 z-50 px-2  ngCard rounded-none">
+      <app-chat-create-message (sendMessage)="sendMessage($event)" />
     </footer>
-  </main>
-  }@else {
- <main class="size-full flex-1  flex-col hidden md:flex">
-        <header class="p-4 border-b border-gray-200 dark:border-gray-700">
-          <h1 class="text-lg font-bold">{{ 'chats.select_chat' | translate }}</h1>
-        </header>
 
-        <div class="flex-1 flex items-center justify-center text-gray-400">
-          <p>{{ 'chats.no_chat_selected' | translate }}</p>
-        </div>
-  </main>
+    </main>
+
+  } @else {
+    <main class="w-full h-svh flex-1 flex-col hidden md:flex">
+      <header class="p-4 border-b border-gray-200 dark:border-gray-700">
+        <h1 class="text-lg font-bold">{{ 'chats.select_chat' | translate }}</h1>
+      </header>
+      <div class="flex-1 flex items-center justify-center text-gray-400">
+        <p>{{ 'chats.no_chat_selected' | translate }}</p>
+      </div>
+    </main>
   }
-</section>
+</section> 
 
   `,
-  providers : [
-  GetChatService
-  ]
+
 })
-export class ChatContainer{
+export class ChatContainer implements OnInit {
   readonly #route = inject(ActivatedRoute);
-  readonly #getChatService = inject(GetChatService);
+
   readonly #socketService = inject(SocketService);
   readonly #userProfile = inject(UserProfileService);
-
+  readonly #domService = inject(DomService);
+  readonly #soundService = inject(SoundService);
   readonly chatsStateService = inject(ChatsStateService);
 
 
@@ -125,90 +74,118 @@ export class ChatContainer{
 
   userChat = computed(() => this.chatsStateService.userChat() || [])
 
+  friend = computed<IFriend>(() => {
+  const me = this.#userProfile.user();
+  const chatId = this.chatId();
+  if(!me || !chatId) return {} as IFriend;
+  const friend  = (me.friends || []).find((f) => f._id === chatId)!;
+  return friend ;
+  })
 
 
   constructor(){
-  this.#getChats();
-  this.listenToSocketEvents();
+  this.#listenToSocketEvents();
+  effect(() => { 
+  if(this.userChat()) {
+  this.#initScrollDown();
+  }
+  })
+  }
+  
+  ngOnInit(): void {
+  this.#soundService.loadSound('send-message', '/sounds/SendMessage.wav');
+  this.#soundService.loadSound('receive-message', '/sounds/ReceiveMessage.wav');
   }
 
-  #getChats() : void {
-  toObservable(this.chatId).pipe(
-  switchMap((chatId) => {
-  if(!chatId) return of(null);
-  return this.#getChatService.getUserChats(chatId);
-  }),
-  takeUntilDestroyed()
-  ).subscribe()
-  }
 
-
-  sendMessage(msg : string) : void {
-
-
+  public sendMessage(content : string) : void {
   const sendTo = this.chatId()|| '';
-
-  if(!msg || !sendTo ) return;
-
-  const data : ICreateMessage = {
-    content: msg ,
-    sendTo,
+  if(!content || !sendTo ) return;
+  const data : ICreateMessage = { content, sendTo };
+  this.#socketService.emit<ICreateMessage>('send-message', data , () => {});
   }
 
+#listenToSocketEvents() {
+  this.#handleSendMessage();
+  this.#handleReceiveMessage();
+}
 
-  this.#socketService.emit<ICreateMessage>('send-message', data);
 
-  }
+#handleSendMessage() {
+  this.#socketService.on<{ content: string; messageId: string }>('success-message')
+    .pipe(
+      tap(({ content, messageId }) => {
+        const user = this.#userProfile.user();
+        if (!user) return;
 
-    private listenToSocketEvents() {
-    // connect error
-    this.#socketService.on<Error>('connect_error')
-      .pipe(takeUntilDestroyed())
-      .subscribe(err => console.error('Connection failed:', err.message));
+        const sender: Author = {
+          _id: user._id,
+          id: user._id,
+          picture: user.picture,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          userName: user.userName,
+        };
 
-    // custom error
-    this.#socketService.on<{ message: string }>('custom_error')
-      .pipe(takeUntilDestroyed())
-      .subscribe(err => console.log('custom_error:', err));
+        this.#updateCreatedNewMessage(content, messageId, sender, true);
+        this.#playSoundEffect('send-message');
+      }),
+      catchError((err) => {
+        console.error('Error sending message', err);
+        return of({ content: '', messageId: '' });
+      }),
+      takeUntilDestroyed(),
+    )
+    .subscribe();
+}
 
-    // like post
-    this.#socketService.on<{ postId: string; userId: string }>('like-post')
-      .pipe(takeUntilDestroyed())
-      .subscribe(data => console.log('likeData:', data));
 
-    // offline user
-    this.#socketService.on<{ userId: string }>('offline-user')
-      .pipe(takeUntilDestroyed())
-      .subscribe(data => console.log('offline-user:', data));
+#handleReceiveMessage() {
+  this.#socketService.on<{ content: string; messageId: string; from: Author }>('new-message')
+    .pipe(
+      tap(({ content, messageId, from }) => {
+        this.#updateCreatedNewMessage(content, messageId, from, false);
+        this.#playSoundEffect('receive-message');
+      }),
+      catchError((err) => {
+      console.error('Error receiving message', err);
+      return of({ content: '', messageId: '' });
+      }),
+      takeUntilDestroyed(),
+    )
+    .subscribe();
+}
 
-    this.#socketService.on<{content : string}>('success-message')
-    .pipe(takeUntilDestroyed())
-    .subscribe(({content}) => {
-    const user = this.#userProfile.user();
-    if(!user) return;
-    this.#updateCreatedNewMessage(content , user as any)
-    });
 
-    this.#socketService.on<{content : string , from : Author}>('new-message')
-    .pipe(takeUntilDestroyed())
-    .subscribe(({content , from}) => {
-    this.#updateCreatedNewMessage(content , from)
-    });
-  }
-
-  #updateCreatedNewMessage(content :string , user : Author) : void {
+  #updateCreatedNewMessage(content :string , messageId : string , user : Author , isMyMessage : boolean) : void {
     const  message : IMessage = {
-    sender: user as any,
-    isMyMessage: true,
-    _id: crypto.randomUUID(),
+    sender: user,
+    isMyMessage,
+    _id: messageId,
     content,
     createdBy: user._id,
     seen: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   }
+
+
   this.chatsStateService.updateCreatedNewMessage(message);
   }
+
+
+#playSoundEffect(name :  string) : void {
+this.#soundService.play(name);
+}
+
+#initScrollDown() {
+requestAnimationFrame(() => {
+const body = this.#domService.document.documentElement;
+body.scrollTop = body.scrollHeight;
+});
+}
+
+
 
   ngOnDestroy(): void {
   this.#socketService.disconnect()

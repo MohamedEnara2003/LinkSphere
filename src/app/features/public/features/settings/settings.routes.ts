@@ -37,14 +37,19 @@ export const settingsRoutes: Routes = [
                 import('./pages/language/language').then((c) => c.Language),
             },
             {
-                path: 'sent-friend-requests',
-                loadComponent: () =>
-                import('./pages/sent-friend-requests/sent-friend-requests').then((c) => c.SentFriendRequests),
+            path: 'sent-friend-requests',
+            loadComponent: () =>
+            import('./pages/sent-friend-requests/sent-friend-requests').then((c) => c.SentFriendRequests),
             },
             {
-                path: 'log-out',
-                loadComponent: () =>
-                import('./pages/log-out/log-out').then((c) => c.logOut),
+            path: 'notifications',
+            loadComponent: () =>
+            import('./pages/notifications/notifications').then((c) => c.NotificationSettings),
+            },
+            {
+            path: 'log-out',
+            loadComponent: () =>
+            import('./pages/log-out/log-out').then((c) => c.logOut),
             },
             { path: '', redirectTo: 'account', pathMatch: 'full' },
             { path: '**', redirectTo: 'account', pathMatch: 'full' },

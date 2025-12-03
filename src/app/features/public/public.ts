@@ -13,6 +13,7 @@ import { NgImageFullscreen } from "./components/ng-image-fullscreen/ng-image-ful
 import { ImageFullscreenService } from '../../core/services/style/image-fullscreen.service';
 
 
+
 @Component({
   selector: 'app-public',
   imports: [RouterOutlet, Header, Footer, Logo, NgImageFullscreen],
@@ -54,13 +55,10 @@ readonly loadingService = inject(LoadingService);
 
 ngOnInit(): void {
 this.#getUserProfile();
-this.#userProfileService.getReceivedFriendRequests().subscribe();
-this.#userProfileService.getSentFriendRequests().subscribe();
 }
 
   #getUserProfile() : void {
   if (!this.#domService.isBrowser()) return;
-  
   const auth = this.#storageService.getItem<AuthToken>('auth');
   if (!auth?.access_token) {
   this.#redirectToLogin();

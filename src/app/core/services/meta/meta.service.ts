@@ -19,6 +19,27 @@ export class MetaService {
 #title = inject(Title);
 #meta = inject(Meta);
 
+  /**
+   * Preload an image by adding a <link rel="preload" as="image"> to the document head.
+   * If the link already exists for the same href, it will be updated.
+   */
+  public setPreloadImage(url: string | null | undefined): void {
+    if (!url) return;
+    // avoid running on non-DOM environments
+    if (!this.#dom.isBrowser()) return;
+
+    // Try to find an existing preload with same href
+    let link = this.#dom.document.querySelector(`link[rel="preload"][as="image"][href="${url}"]`) as HTMLLinkElement | null;
+    if (!link) {
+      link = this.#dom.document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'image';
+      // append to head so browser discovers it
+      this.#dom.document.head.appendChild(link);
+    }
+    link.href = url;
+  }
+
 
 #setTitle(title: string) {
 this.#title.setTitle(title);

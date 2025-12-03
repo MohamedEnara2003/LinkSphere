@@ -301,10 +301,12 @@ getUserProfileById(userId: string): Observable<{data : IUser}> {
 
 
   getReceivedFriendRequests(): Observable<{data: {requests: ReceivedFriendRequest[] }}> {
+  const  receivedRequests = this.#receivedRequests();
+  if(receivedRequests.length > 0) return EMPTY;
+
   return this.#singleTonApi.find<{ data: {requests: ReceivedFriendRequest[] } }>(
   `${this.routeName}/received-friend-requests`).pipe(
   tap(({data : {requests}}) => {
-    
       const receivedRequests : ReceivedFriendRequest[] = requests.map((request) => 
       ({...request,
       sender : {
@@ -323,6 +325,8 @@ getUserProfileById(userId: string): Observable<{data : IUser}> {
 getSentFriendRequests(): Observable<{
   data : {requests: SentFriendRequest[] }
 }>{
+  const sentRequests = this.#sentRequests();
+  if(sentRequests.length > 0) return EMPTY;
   return this.#singleTonApi
     .find<{ data: { requests: SentFriendRequest[] } }>(
     `${this.routeName}/sent-friend-requests`

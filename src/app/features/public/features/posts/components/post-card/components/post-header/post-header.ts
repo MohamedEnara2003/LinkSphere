@@ -17,9 +17,9 @@ selector: 'app-post-header',
 imports: [NgImage, RouterModule, NgMenuActions , FormatDatePipe],
 template: `
 
-  <header class="flex justify-between items-center border-b border-brand-color/10 pb-1">
+  <header class="flex justify-between items-center border-b border-brand-color/10 pb-1" role="banner" aria-label="Post header">
     
-    <address class="not-italic flex  gap-2">
+    <address class="not-italic flex  gap-2" aria-label="Author information">
       <!-- Profile Image -->
       <app-ng-image  
         [routerLink]="userId() ? ['/public/profile/user', userId()] : []"
@@ -33,26 +33,27 @@ template: `
       />
 
       <!-- Author Info -->
-<section class="flex flex-col gap-2">
+      <section class="flex flex-col gap-2" aria-labelledby="post-author-name">
 
-<div class="flex  flex-wrap items-center gap-2">
-  <h2  class="text-base sm:text-lg card-title ngText capitalize ">
-    {{ post()?.author?.userName}}
-  </h2>
+        <div class="flex  flex-wrap items-center gap-2">
+          <h2 id="post-author-name" class="text-base sm:text-lg card-title ngText capitalize " aria-level="2" role="heading">
+            {{ post()?.author?.userName}}
+          </h2>
 
-    <time 
-          class="ng-badge"
-          [attr.datetime]="post()?.createdAt || ''">
-          {{ post()?.createdAt! | formatDate }}
-      </time>
-</div>
+          <time 
+            class="ng-badge"
+            [attr.datetime]="post()?.createdAt || ''"
+            aria-label="Posted on">
+            {{ post()?.createdAt! | formatDate }}
+          </time>
+        </div>
 
-@if(post()?.tags && post()?.tags?.length){
-<p class="text-brand-color badge badge-xs sm:badge-sm  p-1 bg-brand-color/20">
-{{tag.initTagText(post()?.tags || [])}}
-</p>
-}
-</section>
+        @if(post()?.tags && post()?.tags?.length){
+          <p class="text-brand-color badge badge-xs sm:badge-sm  p-1 bg-brand-color/20" aria-label="Post tags">
+            {{tag.initTagText(post()?.tags || [])}}
+          </p>
+        }
+      </section>
 </address>
 
 

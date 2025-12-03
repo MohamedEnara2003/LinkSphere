@@ -1,4 +1,4 @@
-import { Component, input, OnInit } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { Picture } from '../../../../../../../../core/models/picture';
 import { NgImage } from "../../../../../../../../shared/components/ng-image/ng-image";
 

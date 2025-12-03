@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { SharedModule } from '../../../../../../shared/modules/shared.module';
 import { UserProfileService } from '../../services/user-profile.service';
 import { NgImage } from "../../../../../../shared/components/ng-image/ng-image";
@@ -96,10 +96,9 @@ import { Author } from '../../../../../../core/models/user.model';
   `,
   changeDetection : ChangeDetectionStrategy.OnPush
 })
-export class FriendRequests {
+export class FriendRequests implements OnInit {
       userProfileService = inject(UserProfileService);
   
-
       cancelRequest(requestId : string , receiverId : string) : void {
       if(!requestId || !receiverId) return ;
       this.userProfileService.cancelFriendRequest(requestId , receiverId ).subscribe()
@@ -110,5 +109,9 @@ export class FriendRequests {
       this.userProfileService.acceptFriendRequest(requestId , sender).subscribe()
       }
 
+
+      ngOnInit(): void {
+      this.userProfileService.getReceivedFriendRequests().subscribe();
+      }
 
 }

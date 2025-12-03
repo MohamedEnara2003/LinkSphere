@@ -136,9 +136,14 @@
 
     "title": "Settings",
 
+    "profile_details" : {
+    "title" : "Profile Details"
+    },
+
     "account": {
       "title": "Account",
       "subtitle": "Manage security preferences for your account.",
+
       "freeze_account": {
         "title": "Freeze account",
         "description": "Temporarily disable activity and hide your profile from others. You can unfreeze at any time.",
@@ -153,7 +158,7 @@
       },
 
       "two_step": {
-        "title": "Two‑step verification",
+        "title": "Two-step verification",
         "description": "Add an extra layer of security to your account using a verification step when signing in.",
         "enabled": "Enabled",
         "disabled": "Disabled",
@@ -168,7 +173,9 @@
         "enable_two_step": "Enable two-step verification",
         "disable_two_step": "Disable two-step verification"
       }
+      
     },
+
     "update_email" : {
     "title" : "Update Email" ,
     "old_password" : "Old Password" ,
@@ -213,6 +220,11 @@
     "no_sent_requests": "No sent friend requests",
     "you_have_not_sent_any_requests": "You haven't sent any friend requests yet",
     "subtitle": "These are the friend requests you have sent to other users."
+    },
+
+    "notifications": {
+    "title": "Notifications",
+    "subtitle": "Manage how you receive alerts, updates, and messages from the app."
     },
 
     "logout": {

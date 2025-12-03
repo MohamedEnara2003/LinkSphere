@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component,computed,inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component,computed,inject, effect } from '@angular/core';
 import { NgImage } from "../../../../../../../../shared/components/ng-image/ng-image";
 import { SharedModule } from '../../../../../../../../shared/modules/shared.module';
 import { UserProfileService } from '../../../../services/user-profile.service';
+import { MetaService } from '../../../../../../../../core/services/meta/meta.service';
 import { FriendActionButton } from "../friend-action-button/friend-action-button";
 
 @Component({
@@ -101,4 +102,19 @@ changeDetection : ChangeDetectionStrategy.OnPush
 export class userProfileHeader {
 userProfileService = inject(UserProfileService);
 userProfile = computed(() =>this.userProfileService.userProfile()!);
+
+  #metaService = inject(MetaService);
+
+  constructor() {
+    effect(() => this.setPreloadImage());
+  }
+
+
+setPreloadImage() : void {
+const user = this.userProfileService.userProfile();
+if(user && user.picture && user.picture.url){
+this.#metaService.setPreloadImage( user.picture.url);
+}
+} 
+
 }

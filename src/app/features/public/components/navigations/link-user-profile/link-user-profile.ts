@@ -15,7 +15,9 @@ import { UserProfileService } from '../../../features/profile/services/user-prof
         [routerLink]="profileLink()" 
         [queryParams]="{list : profileLink() === '/public' ? null : 'Posts'} "
         class="indicator  group relative flex items-center  p-1 duration-300 transition-all ">
+
         <app-user-picture styleClass="size-8 sm:size-8 object-cover rounded-full" />
+
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" 
         class="size-4 duration-300 transition-transform"
         [ngClass]="isProfile() ? 'rotate-180' : ''">
@@ -25,8 +27,8 @@ import { UserProfileService } from '../../../features/profile/services/user-prof
         </svg>
         
         @if(userName()){ 
-        <span class="indicator-item indicator-bottom -translate-x-5 translate-y-6 badge bg-brand-color 
-        text-dark opacity-0 group-hover:opacity-100  transition-opacity duration-400 mt-1">
+        <span class="indicator-item indicator-start  mt-12   badge bg-brand-color 
+        text-dark opacity-0 group-hover:opacity-100  transition-opacity duration-400 ">
         {{userName() }}
         </span>
         }

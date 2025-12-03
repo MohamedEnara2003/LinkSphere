@@ -119,6 +119,12 @@ export class UserProfile {
 userProfileService = inject(UserProfileService);
 
 
+
+ngOnInit(): void {
+this.userProfileService.getReceivedFriendRequests().subscribe();
+this.userProfileService.getSentFriendRequests().subscribe();
+}
+
 #route = inject(ActivatedRoute);
 
 listType = toSignal<ProfileListTypes | null>(

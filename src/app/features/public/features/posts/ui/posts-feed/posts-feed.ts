@@ -1,4 +1,4 @@
-import { Component , computed, inject, signal , CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component , computed, inject, signal } from '@angular/core';
 import { PostCard } from "../../components/post-card/ui/post-card";
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
@@ -8,40 +8,35 @@ import { FeedAutoLoader } from "../../../../components/navigations/feed-auto-loa
 import { EmptyPosts } from "../../components/empty-posts/empty-posts";
 import { PostsStateService } from '../../service/state/posts-state.service';
 import { GetPostsService } from '../../service/api/get-posts.service';
-import { LoadingPost } from "../../components/loading-post/loading-post";
-
 
 
 @Component({
   selector: 'app-posts-feed',
-  imports: [PostCard, RouterModule, FeedAutoLoader, EmptyPosts, LoadingPost],
+  imports: [PostCard, RouterModule, FeedAutoLoader, EmptyPosts],
   template: `
   
-<main class="size-full flex flex-col gap-5">
-@if(!isLoading()){ 
-@for (post of posts(); track post._id) {
-<app-post-card [post]="post" class="size-full animate-opacity"/>
-}@empty {
-<app-empty-posts class="w-full min-h-70" />
-} 
+<main class="w-full flex flex-col gap-5 " role="main" aria-labelledby="feed-posts-heading">
+  <h2 id="feed-posts-heading" class="sr-only">Posts feed</h2>
 
-@if(hasMorePosts()){ 
-<app-feed-auto-loader 
-loadingType="post"
-(loadData)="loadMore()"
-aria-label="Load more posts"
-/>
-}
+    <section role="region" aria-label="Feed posts">
+      @for (post of posts(); track post._id) {
+          <app-post-card [post]="post" />
+      }@empty {
+        <app-empty-posts class="w-full h-70" />
+      } 
 
-}@else {
-<app-loading-post />
-<app-loading-post />
-}
+      @if(hasMorePosts()){ 
+        <app-feed-auto-loader 
+          loadingType="post"
+          (loadData)="loadMore()"
+          aria-label="Load more posts"
+        />
+      }
+    </section>
 
 </main>
-`,
-schemas : [CUSTOM_ELEMENTS_SCHEMA],
-providers : [GetPostsService]
+  `,
+  providers: [GetPostsService]
 })
 
 export class PostsFeed {

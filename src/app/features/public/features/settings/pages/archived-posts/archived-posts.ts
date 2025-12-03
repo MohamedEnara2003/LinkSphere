@@ -1,8 +1,9 @@
-  import { Component} from '@angular/core';
-  import { SharedModule } from '../../../../../../shared/modules/shared.module';
+import { Component, inject, OnInit } from '@angular/core';
+import { SharedModule } from '../../../../../../shared/modules/shared.module';
 import { FreezedPosts } from "../../../posts/ui/freezed-posts/freezed-posts";
+import { MetaService } from '../../../../../../core/services/meta/meta.service';
 
-  @Component({
+@Component({
   selector: 'app-archived-posts',
   imports: [SharedModule, FreezedPosts],
   template: `
@@ -18,12 +19,23 @@ import { FreezedPosts } from "../../../posts/ui/freezed-posts/freezed-posts";
       <p class="text-sm text-gray-400">{{ 'settings.posts.subtitle' | translate }}</p>
       </header>
 
-  <app-freezed-posts />
+  <section role="region" aria-label="Frozen posts list">
+    <app-freezed-posts />
+  </section>
 
 
   </article>
   `,
   })
-  export class ArchivedPosts  {
+  export class ArchivedPosts implements OnInit {
+    readonly #metaService = inject(MetaService);
 
+    ngOnInit() {
+      this.#metaService.setMeta({
+        title: 'Archived Posts | Link Sphere Social',
+        description: 'View and manage your archived and frozen posts. Keep important posts private or access them later.',
+        image: '',
+        url: 'settings/archived-posts'
+      });
+    }
   }

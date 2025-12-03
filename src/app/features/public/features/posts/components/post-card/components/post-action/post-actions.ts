@@ -11,12 +11,13 @@ import { LikeToggle } from "../../../../../../components/social/like-toggle/like
   selector: 'app-post-actions',
   imports: [RouterModule, LikeToggle],
   template: `
-    <nav class="w-full flex items-center gap-4 border-b border-b-brand-color py-3 font-semibold ngText">
+    <nav class="w-full flex items-center gap-4 border-b border-b-brand-color py-3 font-semibold ngText" role="navigation" aria-label="Post actions">
       
       <!-- Likes -->
       <app-like-toggle
-      [postId]="post()?._id || ''"
-      [existingLikes]="post()?.likes || []"
+        [postId]="post()?._id || ''"
+        [existingLikes]="post()?.likes || []"
+        aria-label="Like post"
       />
 
       <!-- Comments -->
@@ -25,7 +26,9 @@ import { LikeToggle } from "../../../../../../components/social/like-toggle/like
         [title]="post()?.allowComments === 'deny' ? 'Disabled comments' : 'Comments'"
         type="button"
         [disabled]="post()?.allowComments === 'deny'"
-        class="flex items-center gap-1 ngBtnIcon disabled:text-gray-600 disabled:cursor-not-allowed">
+        class="flex items-center gap-1 ngBtnIcon disabled:text-gray-600 disabled:cursor-not-allowed"
+        [attr.aria-disabled]="post()?.allowComments === 'deny'"
+        aria-label="Open comments">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none"
           viewBox="0 0 24 24" stroke-width="1.5"
           stroke="currentColor" class="size-6">
@@ -36,7 +39,7 @@ import { LikeToggle } from "../../../../../../components/social/like-toggle/like
             5.969 0 0 0 6 21c1.282 0 2.47-.402
             3.445-1.087.81.22 1.668.337 2.555.337Z" />
         </svg>
-        {{post()?.commentsCount || 0}}
+        <span aria-hidden="true">{{post()?.commentsCount || 0}}</span>
       </button>
     </nav>
   `

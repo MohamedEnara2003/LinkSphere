@@ -1,7 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { NgImage } from '../../../../../../shared/components/ng-image/ng-image';
 import { SharedModule } from '../../../../../../shared/modules/shared.module';
 import { UserProfileService } from '../../../profile/services/user-profile.service';
+import { MetaService } from '../../../../../../core/services/meta/meta.service';
 
 
 @Component({
@@ -110,13 +111,23 @@ import { UserProfileService } from '../../../profile/services/user-profile.servi
   </article>
   `,
 })
-export class SentFriendRequests{
+export class SentFriendRequests implements OnInit {
   userService = inject(UserProfileService);
+  readonly #metaService = inject(MetaService);
 
+  ngOnInit() {
+    this.#metaService.setMeta({
+      title: 'Sent Friend Requests | Link Sphere Social',
+      description: 'View and manage friend requests you have sent to other users.',
+      image: '',
+      url: 'settings/sent-friend-requests'
+    });
 
+  this.userService.getSentFriendRequests().subscribe();
+  }
 
   public cancelRequet(requestId : string , receiverId : string ) : void {
-  this.userService.cancelFriendRequest(requestId , receiverId).subscribe()
+  this.userService.cancelFriendRequest(requestId , receiverId).subscribe();
   }
 
 }

@@ -1,6 +1,7 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { MetaService } from '../../../../../../core/services/meta/meta.service';
 
 @Component({
   selector: 'app-account-setting',
@@ -124,10 +125,20 @@ import { TranslateModule } from '@ngx-translate/core';
 
   `,
 })
-export class AccountSetting {
+export class AccountSetting implements OnInit {
+  readonly #metaService = inject(MetaService);
   isFrozen = signal(false);
   twoStepEnabled = signal(false);
   twoStepVerified = signal(false);
+
+  ngOnInit() {
+    this.#metaService.setMeta({
+      title: 'Account Settings | Link Sphere Social',
+      description: 'Manage your account settings including account freeze and two-step verification options.',
+      image: '',
+      url: 'settings/account'
+    });
+  }
 
   toggleFreeze(): void {
     this.isFrozen.update((current) => !current);

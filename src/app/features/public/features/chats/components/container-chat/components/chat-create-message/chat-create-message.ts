@@ -11,19 +11,20 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
     <form 
       [formGroup]="messageForm"
       (ngSubmit)="onSendMessage()"
-      class="w-full flex justify-between items-center gap-2 p-3 border-t border-brand-color/50  "
+      class="size-full flex justify-between items-center gap-2 p-3  "
       role="form"
       aria-label="Create new chat message"
     >
 
       <!-- Input -->
-      <label for="chat-message-input" class="sr-only ">{{ 'chats.type_message' | translate }}</label>
+      <label for="chat-message" class="sr-only ">{{ 'chats.type_message' | translate }}</label>
+      
       <app-ng-control 
       [option]="{
       type : 'text' ,
       formControlName : 'message' ,
-      id : 'message' ,
-      name : 'message' ,
+      id : 'chat-message' ,
+      name : 'chat-message' ,
       placeHolder : ('chats.write_message' | translate) ,
       inputClass : 'w-full input input-neutral   bg-dark '
       }"

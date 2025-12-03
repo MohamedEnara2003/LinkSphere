@@ -1,10 +1,11 @@
 import { inject, Injectable } from '@angular/core';
-import { fromEvent, Observable } from 'rxjs';
+import { fromEvent, merge, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment.development';
 import { io, Socket } from 'socket.io-client';
 import { StorageService } from '../storage/locale-storage.service';
 import { AuthToken } from '../../models/auth.model';
 import { DomService } from '../document/dom.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Injectable({
   providedIn: 'root',
@@ -24,15 +25,18 @@ export class SocketService {
   #initSocket(): void {
   const {access_token} = this.#storageService.getItem<AuthToken>('auth')!;
   const auth =  { auth: { authorization: `Bearer ${access_token}` }}
-
   this.#socket = io(environment.apiUrl, auth);
-  this.#socket.on('connect_error', (err: any) => {
-  console.error('Socket Connect Error' , err);
-
-  this.disconnect()
-    
-    });
+  this.#listenToSocketEvents()
   }
+  
+
+  #listenToSocketEvents() : void {
+  this.on<Error>('connect_error')
+    .pipe(takeUntilDestroyed())
+    .subscribe(() => {
+      this.disconnect();
+    });
+}
 
 
   on<T = unknown>(event: string): Observable<T> {

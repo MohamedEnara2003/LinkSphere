@@ -11,13 +11,16 @@ import { PostsStateService } from '../../service/state/posts-state.service';
   imports: [PostCard, EmptyPosts],
   template: `
   
-      <main class="size-full grid grid-cols-1 gap-5">
-            @for (post of userPosts(); track post.id) {
-                <app-post-card [post]="post" />
-            } @empty {
-            <app-empty-posts [isCreatePost]="userProfile.isMyProfile()" class="w-full min-h-70"/>
-            }
-        </main>
+            <main class="size-full grid grid-cols-1 gap-5" role="main" aria-labelledby="user-posts-title">
+                <h2 id="user-posts-title" class="sr-only">User posts</h2>
+                @for (post of userPosts(); track post.id) {
+                    <article role="article" aria-label="User post">
+                        <app-post-card [post]="post" />
+                    </article>
+                } @empty {
+                    <app-empty-posts [isCreatePost]="userProfile.isMyProfile()" class="w-full min-h-70"/>
+                }
+            </main>
 `,
 providers : [
 GetPostsService

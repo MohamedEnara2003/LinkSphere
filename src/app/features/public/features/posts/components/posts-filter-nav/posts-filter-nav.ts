@@ -27,7 +27,7 @@ interface NavLink {
   >
 
     @for (link of navLinks(); track link.id) {
-      <li>
+      <li role="none">
         <a
           [routerLink]="[]"
           [queryParams]="{ availability: link.availability }"

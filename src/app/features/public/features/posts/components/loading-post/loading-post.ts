@@ -4,7 +4,7 @@ import { Component } from '@angular/core';
   selector: 'app-loading-post',
   template: `
 <article
-  class="w-full h-[70px] flex flex-col gap-4 p-2"
+  class="w-full h-70 flex flex-col gap-4 p-2"
   role="status"
   aria-busy="true"
   aria-label="Loading post content"

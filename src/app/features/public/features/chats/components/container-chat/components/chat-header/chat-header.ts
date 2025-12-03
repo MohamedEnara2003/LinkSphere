@@ -1,12 +1,13 @@
 import { Component, input,  } from '@angular/core';
 import { NgImage } from "../../../../../../../../shared/components/ng-image/ng-image";
 import { BackLink } from "../../../../../../../../shared/components/links/back-link";
+import { IFriend } from '../../../../../../../../core/models/user.model';
 
 @Component({
   selector: 'app-chat-header',
   template: `
     <header 
-      class="w-full flex items-center justify-between p-4 border-b border-brand-color/50 "
+      class="size-full flex items-center justify-between px-2  ngCard rounded-none"
       role="banner"
       aria-label="Chat header"
     >
@@ -15,20 +16,20 @@ import { BackLink } from "../../../../../../../../shared/components/links/back-l
         <app-back-link  />
         <app-ng-image
               [options]="{
-                src : avatar(),
-                alt : 'Profile picture of ' + title,
+                src : user()?.picture?.url || '',
+                alt : 'Profile picture of ' + user()?.userName || '',
                 width : 40,
                 height : 40,
-                class : 'w-10 h-10 rounded-full object-cover border border-gray-300 dark:border-gray-60'
+                class : 'size-10 rounded-full object-cover border border-gray-300 dark:border-gray-60'
               }" 
             />
         <div>
 
           <h2 class="font-semibold ngText ">
-            {{ title() }}
+          {{user()?.userName || ''}}
           </h2>
           <p class="text-xs text-brand-color">
-            {{ status() }}
+            Online
           </p>
         </div>
       </div>
@@ -70,7 +71,10 @@ import { BackLink } from "../../../../../../../../shared/components/links/back-l
   imports: [NgImage, BackLink]
 })
 export class ChatHeaderComponent {
-title  =  input('Chat Name' );
-status = input( 'Online' );
-avatar = input( 'https://randomuser.me/api/portraits/men/1.jpg' );
+
+user = input<IFriend>();
+
+
+
+
 }

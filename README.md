@@ -113,6 +113,47 @@ Front-End Developer — Angular Specialist
 ---
 
 ## 📄 License
-MIT License — free for personal & commercial use.
+MIT License — free for personal & commercial 
 
 
+Components:
+
+Feed component
+
+Account component
+
+Archived-posts component
+
+Update-email component
+
+Change-password component
+
+Dark-mode component
+
+Language component
+
+Sent-friend-requests component
+
+Log-out component
+
+Search component
+
+Chats component
+chat-sidebar component
+container-chat component
+chat-body component
+chat-create-message component
+chat-header component
+
+Freezed Posts component
+PostsFeed component
+UserPosts component
+PostCard and child components for PostCard
+upsert-post-modal component
+
+upsert-comme-modal component
+
+not-found-profile component
+
+update-profile and child components for update-profile
+user-profile and child components for user-profile 
